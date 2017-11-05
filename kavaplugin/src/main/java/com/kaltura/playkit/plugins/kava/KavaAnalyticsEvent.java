@@ -10,7 +10,7 @@
  * ============================================================================
  */
 
-package com.kaltura.playkit.plugin.kava;
+package com.kaltura.playkit.plugins.kava;
 
 import com.kaltura.playkit.PKEvent;
 

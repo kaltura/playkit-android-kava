@@ -26,7 +26,7 @@ android {
 
 dependencies {
 
-    compile ('com.kaltura:playkit-android:FEM-1710-SNAPSHOT')
+    compile ('com.kaltura:playkit-android:develop-SNAPSHOT')
 
     testCompile 'junit:junit:4.12'
     androidTestCompile 'com.android.support.test:runner:0.5'
