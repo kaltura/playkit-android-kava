@@ -259,6 +259,8 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             } else {
                                 errorCode = -1;
                             }
+                            log.e("Playback ERROR errorCode : " + errorCode);
+
                             sendAnalyticsEvent(KavaEvents.ERROR);
                             break;
                     }
@@ -299,7 +301,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                 messageBus.post(new KavaAnalyticsEvent.KavaAnalyticsReport(event.name()));
             }
         });
-        log.e("request sent " + requestBuilder.build().getUrl());
+        log.d("request sent " + requestBuilder.build().getUrl());
         requestExecutor.queue(requestBuilder.build());
 
         eventIndex++;
