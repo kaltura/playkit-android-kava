@@ -1,1 +1,3 @@
 include ':kavaplugin'
+include ':playkit'
+project(':playkit').projectDir = new File('../playkit-android/playkit')
