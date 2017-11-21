@@ -37,6 +37,7 @@ import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.Utils;
 import com.kaltura.playkit.ads.PKAdErrorType;
 import com.kaltura.playkit.api.ovp.services.KavaService;
+import com.kaltura.playkit.mediaproviders.base.FormatsHelper;
 import com.kaltura.playkit.player.PKPlayerErrorType;
 import com.kaltura.playkit.utils.Consts;
 
@@ -54,13 +55,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private static final PKLog log = PKLog.get(KavaAnalyticsPlugin.class.getSimpleName());
     private static final long ONE_SECOND_IN_MS = 1000;
     private static final int TEN_SECONDS_IN_MS = 10000;
-    private static final long DISTANCE_FROM_LIVE_THRESHOLD = 15000;
-
-    private static final String DELIVERY_TYPE_HLS = "hls";
-    private static final String DELIVERY_TYPE_DASH = "dash";
-    private static final String DELIVERY_TYPE_OTHER = "url";
-
-    private static final String DVR = "Dvr";
 
     private Player player;
     private Context context;
@@ -461,11 +455,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     private void updateDeliveryType(PKMediaFormat mediaFormat) {
         if (mediaFormat == PKMediaFormat.dash) {
-            deliveryType = DELIVERY_TYPE_DASH;
+            deliveryType = FormatsHelper.StreamFormat.MpegDash.formatName;
         } else if (mediaFormat == PKMediaFormat.hls) {
-            deliveryType = DELIVERY_TYPE_HLS;
+            deliveryType = FormatsHelper.StreamFormat.AppleHttp.formatName;
         } else {
-            deliveryType = DELIVERY_TYPE_OTHER;
+            deliveryType = FormatsHelper.StreamFormat.Url.formatName;
         }
     }
 
@@ -476,12 +470,12 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     private String getPlaybackType() {
 
-        if (!player.isLiveStream()) {
+        if (!player.isLive()) {
             return PKMediaEntry.MediaEntryType.Vod.name();
         }
 
         long distanceFromLive = player.getDuration() - player.getCurrentPosition();
-        return distanceFromLive > DISTANCE_FROM_LIVE_THRESHOLD ? DVR : PKMediaEntry.MediaEntryType.Live.name();
+        return player.hasDvr() ? LiveMediaEntryType.Dvr.name() : LiveMediaEntryType.Live.name();
     }
 
     private void resetFlags() {
@@ -496,6 +490,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         errorCode = -1;
         totalBufferTimePerEntry = 0;
         totalBufferTimePerViewEvent = 0;
+    }
+
+    private enum LiveMediaEntryType {
+        Live,
+        Dvr,
     }
 
 }
