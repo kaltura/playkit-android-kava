@@ -85,6 +85,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private long lastKnownBufferingTimestamp;
     private long totalBufferTimePerViewEvent;
     private long targetSeekPositionInSeconds;
+    private String lastKnownPlaybakType = KavaMediaEntryType.Unknown.name();
 
     private String referrer;
     private String deliveryType;
@@ -161,6 +162,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         if (referrer == null) {
             referrer = buildDefaultReferrer();
         }
+        lastKnownPlaybakType = KavaMediaEntryType.Unknown.name();
     }
 
     @Override
@@ -211,6 +213,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                                     sendAnalyticsEvent(KavaEvents.RESUME);
                                 }
                             }
+                            lastKnownPlaybakType = getPlaybackType();
                             isPaused = false;
                             break;
                         case SEEKING:
@@ -323,7 +326,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         params.put("eventIndex", Integer.toString(eventIndex));
         params.put("referrer", referrer);
         params.put("deliveryType", deliveryType);
-        params.put("playbackType", getPlaybackType());
+        params.put("playbackType", (KavaMediaEntryType.Unknown.name().equals(lastKnownPlaybakType)) ? getPlaybackType() : lastKnownPlaybakType);
         params.put("clientVer", PlayKitManager.CLIENT_TAG);
         params.put("clientTag", PlayKitManager.CLIENT_TAG);
         params.put("position", Float.toString(player.getCurrentPosition() / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
@@ -417,6 +420,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private void maybeSentPlayerReachedEvent() {
+        if (!lastKnownPlaybakType.equals(KavaMediaEntryType.Vod.name())) {
+            return;
+        }
+
         float progress = (float) player.getCurrentPosition() / player.getDuration();
 
         if (progress < 0.25) {
@@ -474,6 +481,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private String getPlaybackType() {
+        if (KavaMediaEntryType.Vod.name().equals(lastKnownPlaybakType)) {
+            return lastKnownPlaybakType;
+        }
         if (player == null) {
             return KavaMediaEntryType.Unknown.name();
         }
@@ -514,7 +524,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         Vod,
         Live,
         Dvr,
-        Offline,
         Unknown
     }
 
