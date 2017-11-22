@@ -41,7 +41,7 @@ import com.kaltura.playkit.mediaproviders.base.FormatsHelper;
 import com.kaltura.playkit.player.PKPlayerErrorType;
 import com.kaltura.playkit.utils.Consts;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -307,10 +307,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             pluginConfig = new KavaAnalyticsConfig();
         }
 
-        Map<String, String> params = new HashMap<>();
+        Map<String, String> params = new LinkedHashMap<>();
 
         String sessionId = player.getSessionId() != null ? player.getSessionId() : "";
-
+        params.put("service", "analytics");
+        params.put("action", "trackEvent");
         params.put("eventType", Integer.toString(event.getValue()));
         params.put("partnerId", Integer.toString(pluginConfig.getPartnerId()));
         params.put("entryId", mediaConfig.getMediaEntry().getId());
