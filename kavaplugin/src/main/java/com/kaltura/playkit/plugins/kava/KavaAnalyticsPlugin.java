@@ -26,7 +26,6 @@ import com.kaltura.playkit.PKError;
 import com.kaltura.playkit.PKEvent;
 import com.kaltura.playkit.PKLog;
 import com.kaltura.playkit.PKMediaConfig;
-import com.kaltura.playkit.PKMediaEntry;
 import com.kaltura.playkit.PKMediaFormat;
 import com.kaltura.playkit.PKMediaSource;
 import com.kaltura.playkit.PKPlugin;
@@ -35,6 +34,7 @@ import com.kaltura.playkit.PlaybackInfo;
 import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.Utils;
+import com.kaltura.playkit.ads.AdEvent;
 import com.kaltura.playkit.ads.PKAdErrorType;
 import com.kaltura.playkit.api.ovp.services.KavaService;
 import com.kaltura.playkit.mediaproviders.base.FormatsHelper;
@@ -45,6 +45,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import static com.kaltura.playkit.utils.Consts.DISTANCE_FROM_LIVE_THRESHOLD;
 
 /**
  * Created by anton.afanasiev on 27/09/2017.
@@ -258,6 +260,8 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             sendAnalyticsEvent(KavaEvents.ERROR);
                             break;
                     }
+                } else if (event instanceof AdEvent) {
+
                 }
             }
         };
@@ -322,7 +326,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         params.put("playbackType", getPlaybackType());
         params.put("clientVer", PlayKitManager.CLIENT_TAG);
         params.put("clientTag", PlayKitManager.CLIENT_TAG);
-        params.put("position", Long.toString(player.getCurrentPosition()));
+        params.put("position", Float.toString(player.getCurrentPosition() / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
 
         if (sessionStartTime != null) params.put("sessionStartTime", sessionStartTime);
 
@@ -330,14 +334,14 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             case VIEW:
             case PLAY:
             case RESUME:
-                float curBufferTimeInSeconds = totalBufferTimePerViewEvent == 0 ? 0 : totalBufferTimePerViewEvent / 1000.0f;
-                float totalBufferTimeInSeconds = totalBufferTimePerEntry == 0 ? 0 : totalBufferTimePerEntry / 1000.0f;
+                float curBufferTimeInSeconds = totalBufferTimePerViewEvent == 0 ? 0 : totalBufferTimePerViewEvent / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
+                float totalBufferTimeInSeconds = totalBufferTimePerEntry == 0 ? 0 : totalBufferTimePerEntry / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
                 params.put("bufferTime", Float.toString(curBufferTimeInSeconds));
                 params.put("bufferTimeSum", Float.toString(totalBufferTimeInSeconds));
                 params.put("actualBitrate", Long.toString(actualBitrate));
                 break;
             case SEEK:
-                params.put("targetPosition", Long.toString(targetSeekPositionInSeconds));
+                params.put("targetPosition", Float.toString(targetSeekPositionInSeconds));
                 break;
             case CAPTIONS:
                 params.put("caption", currentCaptionLanguage);
@@ -470,15 +474,28 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private String getPlaybackType() {
-
-        if (!player.isLive()) {
-            return PKMediaEntry.MediaEntryType.Vod.name();
+        if (player == null) {
+            return KavaMediaEntryType.Unknown.name();
         }
 
-        long distanceFromLive = player.getDuration() - player.getCurrentPosition();
-        return player.hasDvr() ? LiveMediaEntryType.Dvr.name() : LiveMediaEntryType.Live.name();
+        if (!player.isLive()) {
+            return KavaMediaEntryType.Vod.name();
+        }
+
+        return hasDvr() ? KavaMediaEntryType.Dvr.name() : KavaMediaEntryType.Live.name();
     }
 
+    public boolean hasDvr() {
+        if (player == null) {
+            return false;
+        }
+
+        if (player.isLive()) {
+            long distanceFromLive = player.getDuration() - player.getCurrentPosition();
+            return (distanceFromLive > DISTANCE_FROM_LIVE_THRESHOLD) ? true : false;
+        }
+        return false;
+    }
     private void resetFlags() {
         isPaused = true;
         isFirstPlay = true;
@@ -493,9 +510,12 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         totalBufferTimePerViewEvent = 0;
     }
 
-    private enum LiveMediaEntryType {
+    private enum KavaMediaEntryType {
+        Vod,
         Live,
         Dvr,
+        Offline,
+        Unknown
     }
 
 }
