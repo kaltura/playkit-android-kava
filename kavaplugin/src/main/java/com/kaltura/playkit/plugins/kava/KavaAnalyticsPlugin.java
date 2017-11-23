@@ -328,7 +328,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         params.put("clientTag", PlayKitManager.CLIENT_TAG);
         params.put("position", Float.toString(player.getCurrentPosition() / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
 
-        if (sessionStartTime != null) params.put("sessionStartTime", sessionStartTime);
+        if (sessionStartTime != null) {
+            params.put("sessionStartTime", sessionStartTime);
+        }
 
         switch (event) {
             case VIEW:
