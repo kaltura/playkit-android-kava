@@ -34,7 +34,6 @@ import com.kaltura.playkit.PlaybackInfo;
 import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.Utils;
-import com.kaltura.playkit.ads.AdEvent;
 import com.kaltura.playkit.ads.PKAdErrorType;
 import com.kaltura.playkit.api.ovp.services.KavaService;
 import com.kaltura.playkit.mediaproviders.base.FormatsHelper;
@@ -263,8 +262,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             sendAnalyticsEvent(KavaEvents.ERROR);
                             break;
                     }
-                } else if (event instanceof AdEvent) {
-
                 }
             }
         };
