@@ -89,6 +89,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private String sessionStartTime;
     private String currentCaptionLanguage;
     private int dvrThreshold;
+    private Boolean isAutoPlay;
 
     public static final Factory factory = new Factory() {
         @Override
@@ -162,6 +163,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         }
         dvrThreshold = pluginConfig.getDvrThreshold();
         lastKnownPlaybakType = KavaMediaEntryType.Unknown.name();
+        isAutoPlay = null;
     }
 
     @Override
@@ -194,10 +196,17 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                                 isImpressionSent = true;
                                 startAnalyticsTimer();
                                 sendAnalyticsEvent(KavaEvents.IMPRESSION);
+                                if (isAutoPlay == Boolean.FALSE) {
+                                    sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
+                                }
                             }
                             break;
                         case PLAY:
-                            sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
+                            if (isImpressionSent) {
+                                sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
+                            } else {
+                                isAutoPlay = Boolean.FALSE;
+                            }
                             break;
                         case PAUSE:
                             isPaused = true;
