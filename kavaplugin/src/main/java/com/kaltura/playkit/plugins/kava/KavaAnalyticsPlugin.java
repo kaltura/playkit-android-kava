@@ -45,8 +45,6 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static com.kaltura.playkit.utils.Consts.DISTANCE_FROM_LIVE_THRESHOLD;
-
 /**
  * Created by anton.afanasiev on 27/09/2017.
  */
@@ -90,6 +88,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private String deliveryType;
     private String sessionStartTime;
     private String currentCaptionLanguage;
+    private int dvrThreshold;
 
     public static final Factory factory = new Factory() {
         @Override
@@ -161,6 +160,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         if (referrer == null) {
             referrer = buildDefaultReferrer();
         }
+        dvrThreshold = pluginConfig.getDvrThreshold();
         lastKnownPlaybakType = KavaMediaEntryType.Unknown.name();
     }
 
@@ -499,7 +499,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
         if (player.isLive()) {
             long distanceFromLive = player.getDuration() - player.getCurrentPosition();
-            return (distanceFromLive > DISTANCE_FROM_LIVE_THRESHOLD) ? true : false;
+            return (distanceFromLive > dvrThreshold) ? true : false;
         }
         return false;
     }
