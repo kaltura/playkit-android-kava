@@ -520,9 +520,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             return false;
         }
 
-        //Make sure that first events (Impression/Play_Requested (in case of autoplay))
-        // will send live as playbackType.
-        if (player.isLive() && isImpressionSent) {
+        if (player.isLive()) {
             long distanceFromLive = player.getDuration() - player.getCurrentPosition();
             return distanceFromLive >= pluginConfig.getDvrThreshold();
         }
