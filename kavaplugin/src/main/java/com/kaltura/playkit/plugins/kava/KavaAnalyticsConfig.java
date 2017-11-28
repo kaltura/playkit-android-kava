@@ -33,7 +33,7 @@ public class KavaAnalyticsConfig {
     private String playbackContext;
     private String referrerAsBase64;
     private String baseUrl = DEFAULT_BASE_URL;
-    private int  dvrThreshold = Consts.DISTANCE_FROM_LIVE_THRESHOLD;
+    private long  dvrThreshold = Consts.DISTANCE_FROM_LIVE_THRESHOLD;
     private String customVar1, customVar2, customVar3;
 
     public KavaAnalyticsConfig setUiConfId(int uiConfId) {
@@ -108,7 +108,7 @@ public class KavaAnalyticsConfig {
         return baseUrl;
     }
 
-    int getDvrThreshold() {
+    long getDvrThreshold() {
         return dvrThreshold;
     }
 
