@@ -56,7 +56,7 @@ public class KavaAnalyticsConfig {
         return this;
     }
 
-    public KavaAnalyticsConfig setDvrThreshold(int dvrThreshold) {
+    public KavaAnalyticsConfig setDvrThreshold(long dvrThreshold) {
         this.dvrThreshold = dvrThreshold;
         return this;
     }
