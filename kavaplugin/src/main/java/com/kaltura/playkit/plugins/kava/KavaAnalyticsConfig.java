@@ -14,6 +14,7 @@ package com.kaltura.playkit.plugins.kava;
 
 import com.kaltura.playkit.PKLog;
 import com.kaltura.playkit.Utils;
+import com.kaltura.playkit.utils.Consts;
 
 /**
  * Created by anton.afanasiev on 04/10/2017.
@@ -32,6 +33,7 @@ public class KavaAnalyticsConfig {
     private String playbackContext;
     private String referrerAsBase64;
     private String baseUrl = DEFAULT_BASE_URL;
+    private long  dvrThreshold = Consts.DISTANCE_FROM_LIVE_THRESHOLD;
     private String customVar1, customVar2, customVar3;
 
     public KavaAnalyticsConfig setUiConfId(int uiConfId) {
@@ -51,6 +53,11 @@ public class KavaAnalyticsConfig {
 
     public KavaAnalyticsConfig setKs(String ks) {
         this.ks = ks;
+        return this;
+    }
+
+    public KavaAnalyticsConfig setDvrThreshold(long dvrThreshold) {
+        this.dvrThreshold = dvrThreshold;
         return this;
     }
 
@@ -99,6 +106,10 @@ public class KavaAnalyticsConfig {
 
     String getBaseUrl() {
         return baseUrl;
+    }
+
+    long getDvrThreshold() {
+        return dvrThreshold;
     }
 
     String getCustomVar1() {

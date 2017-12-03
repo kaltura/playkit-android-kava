@@ -37,10 +37,11 @@ import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.Utils;
 import com.kaltura.playkit.ads.PKAdErrorType;
 import com.kaltura.playkit.api.ovp.services.KavaService;
+import com.kaltura.playkit.mediaproviders.base.FormatsHelper;
 import com.kaltura.playkit.player.PKPlayerErrorType;
 import com.kaltura.playkit.utils.Consts;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -54,13 +55,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private static final PKLog log = PKLog.get(KavaAnalyticsPlugin.class.getSimpleName());
     private static final long ONE_SECOND_IN_MS = 1000;
     private static final int TEN_SECONDS_IN_MS = 10000;
-    private static final long DISTANCE_FROM_LIVE_THRESHOLD = 15000;
-
-    private static final String DELIVERY_TYPE_HLS = "hls";
-    private static final String DELIVERY_TYPE_DASH = "dash";
-    private static final String DELIVERY_TYPE_OTHER = "url";
-
-    private static final String DVR = "Dvr";
 
     private Player player;
     private Context context;
@@ -76,9 +70,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private boolean playReached75;
     private boolean playReached100;
 
+    private boolean isAutoPlay;
+    private boolean isImpressionSent;
     private boolean isPaused = true;
     private boolean isFirstPlay = true;
-    private boolean isImpressionSent;
 
     private int eventIndex;
     private int errorCode = -1;
@@ -94,6 +89,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private String deliveryType;
     private String sessionStartTime;
     private String currentCaptionLanguage;
+
 
     public static final Factory factory = new Factory() {
         @Override
@@ -194,13 +190,21 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             break;
                         case LOADED_METADATA:
                             if (!isImpressionSent) {
-                                isImpressionSent = true;
                                 startAnalyticsTimer();
                                 sendAnalyticsEvent(KavaEvents.IMPRESSION);
+                                if (isAutoPlay) {
+                                    sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
+                                    isAutoPlay = false;
+                                }
+                                isImpressionSent = true;
                             }
                             break;
                         case PLAY:
-                            sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
+                            if (isImpressionSent) {
+                                sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
+                            } else {
+                                isAutoPlay = true;
+                            }
                             break;
                         case PAUSE:
                             isPaused = true;
@@ -313,10 +317,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             pluginConfig = new KavaAnalyticsConfig();
         }
 
-        Map<String, String> params = new HashMap<>();
+        Map<String, String> params = new LinkedHashMap<>();
 
         String sessionId = player.getSessionId() != null ? player.getSessionId() : "";
-
+        params.put("service", "analytics");
+        params.put("action", "trackEvent");
         params.put("eventType", Integer.toString(event.getValue()));
         params.put("partnerId", Integer.toString(pluginConfig.getPartnerId()));
         params.put("entryId", mediaConfig.getMediaEntry().getId());
@@ -327,22 +332,24 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         params.put("playbackType", getPlaybackType());
         params.put("clientVer", PlayKitManager.CLIENT_TAG);
         params.put("clientTag", PlayKitManager.CLIENT_TAG);
-        params.put("position", Long.toString(player.getCurrentPosition()));
+        params.put("position", Float.toString(player.getCurrentPosition() / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
 
-        if (sessionStartTime != null) params.put("sessionStartTime", sessionStartTime);
+        if (sessionStartTime != null) {
+            params.put("sessionStartTime", sessionStartTime);
+        }
 
         switch (event) {
             case VIEW:
             case PLAY:
             case RESUME:
-                float curBufferTimeInSeconds = totalBufferTimePerViewEvent == 0 ? 0 : totalBufferTimePerViewEvent / 1000.0f;
-                float totalBufferTimeInSeconds = totalBufferTimePerEntry == 0 ? 0 : totalBufferTimePerEntry / 1000.0f;
+                float curBufferTimeInSeconds = totalBufferTimePerViewEvent == 0 ? 0 : totalBufferTimePerViewEvent / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
+                float totalBufferTimeInSeconds = totalBufferTimePerEntry == 0 ? 0 : totalBufferTimePerEntry / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
                 params.put("bufferTime", Float.toString(curBufferTimeInSeconds));
                 params.put("bufferTimeSum", Float.toString(totalBufferTimeInSeconds));
                 params.put("actualBitrate", Long.toString(actualBitrate));
                 break;
             case SEEK:
-                params.put("targetPosition", Long.toString(targetSeekPositionInSeconds));
+                params.put("targetPosition", Float.toString(targetSeekPositionInSeconds));
                 break;
             case CAPTIONS:
                 params.put("caption", currentCaptionLanguage);
@@ -381,7 +388,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             params.put("ks", pluginConfig.getKs());
         }
 
-        if(pluginConfig.hasUiConfId()) {
+        if (pluginConfig.hasUiConfId()) {
             params.put("uiConfId", Integer.toString(pluginConfig.getUiConfId()));
         }
     }
@@ -418,6 +425,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private void maybeSentPlayerReachedEvent() {
+
+        if (!getPlaybackType().equals(KavaMediaEntryType.Vod.name())) {
+            return;
+        }
+
         float progress = (float) player.getCurrentPosition() / player.getDuration();
 
         if (progress < 0.25) {
@@ -461,11 +473,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     private void updateDeliveryType(PKMediaFormat mediaFormat) {
         if (mediaFormat == PKMediaFormat.dash) {
-            deliveryType = DELIVERY_TYPE_DASH;
+            deliveryType = FormatsHelper.StreamFormat.MpegDash.formatName;
         } else if (mediaFormat == PKMediaFormat.hls) {
-            deliveryType = DELIVERY_TYPE_HLS;
+            deliveryType = FormatsHelper.StreamFormat.AppleHttp.formatName;
         } else {
-            deliveryType = DELIVERY_TYPE_OTHER;
+            deliveryType = FormatsHelper.StreamFormat.Url.formatName;
         }
     }
 
@@ -474,14 +486,45 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         return Utils.toBase64(referrer.getBytes());
     }
 
+    /**
+     * Use metadata playback type in order to decide which playback type is currently active.
+     */
     private String getPlaybackType() {
 
-        if (!player.isLiveStream()) {
-            return PKMediaEntry.MediaEntryType.Vod.name();
+        KavaMediaEntryType kavaPlaybackType;
+        String metadataPlaybackType = mediaConfig.getMediaEntry().getMediaType().name();
+
+        if (KavaMediaEntryType.Vod.name().equals(metadataPlaybackType)) {
+            kavaPlaybackType = KavaMediaEntryType.Vod;
+        } else if (PKMediaEntry.MediaEntryType.Live.name().equals(metadataPlaybackType)) {
+            kavaPlaybackType = hasDvr() ? KavaMediaEntryType.Dvr : KavaMediaEntryType.Live;
+        } else {
+            //If there is no playback type in metadata, obtain it from player as fallback.
+            if (player == null) {
+                //If player is null it is impossible to obtain the playbackType, so it will be unknown.
+                kavaPlaybackType = KavaMediaEntryType.Unknown;
+            } else {
+                if (!player.isLive()) {
+                    kavaPlaybackType = KavaMediaEntryType.Dvr;
+                } else {
+                    kavaPlaybackType = hasDvr() ? KavaMediaEntryType.Dvr : KavaMediaEntryType.Live;
+                }
+            }
         }
 
-        long distanceFromLive = player.getDuration() - player.getCurrentPosition();
-        return distanceFromLive > DISTANCE_FROM_LIVE_THRESHOLD ? DVR : PKMediaEntry.MediaEntryType.Live.name();
+        return kavaPlaybackType.name().toLowerCase();
+    }
+
+    private boolean hasDvr() {
+        if (player == null) {
+            return false;
+        }
+
+        if (player.isLive()) {
+            long distanceFromLive = player.getDuration() - player.getCurrentPosition();
+            return distanceFromLive >= pluginConfig.getDvrThreshold();
+        }
+        return false;
     }
 
     private void resetFlags() {
@@ -496,6 +539,13 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         errorCode = -1;
         totalBufferTimePerEntry = 0;
         totalBufferTimePerViewEvent = 0;
+    }
+
+    private enum KavaMediaEntryType {
+        Vod,
+        Live,
+        Dvr,
+        Unknown
     }
 
 }
