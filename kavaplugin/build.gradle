@@ -26,16 +26,13 @@ android {
 
 dependencies {
 
-    //compile 'com.kaltura:playkit-android:develop-SNAPSHOT'
-    implementation project(":playkit")
+    implementation 'com.kaltura:playkit-android:develop-SNAPSHOT'
+    //implementation project(":playkit")
     testCompile 'junit:junit:4.12'
     androidTestCompile 'com.android.support.test:runner:1.0.1'
 }
 
 repositories {
-    maven {
-        url 'https://maven.google.com/'
-        name 'Google'
-    }
+    google()
 }
 
