@@ -27,8 +27,8 @@ android {
 dependencies {
     implementation 'com.kaltura:playkit-android:develop-SNAPSHOT'
     //implementation project(":playkit")
-    testCompile 'junit:junit:4.12'
-    androidTestCompile 'com.android.support.test:runner:1.0.1'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
 }
 
 repositories {
