@@ -329,7 +329,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         params.put("eventIndex", Integer.toString(eventIndex));
         params.put("referrer", referrer);
         params.put("deliveryType", deliveryType);
-        params.put("playbackType", getPlaybackType());
+        params.put("playbackType", getPlaybackType(event));
         params.put("clientVer", PlayKitManager.CLIENT_TAG);
         params.put("clientTag", PlayKitManager.CLIENT_TAG);
         params.put("position", Float.toString(player.getCurrentPosition() / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
@@ -426,7 +426,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     private void maybeSentPlayerReachedEvent() {
 
-        if (!getPlaybackType().equals(KavaMediaEntryType.Vod.name())) {
+        if (player.isLive()) {
             return;
         }
 
@@ -488,8 +488,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     /**
      * Use metadata playback type in order to decide which playback type is currently active.
+     * @param event
      */
-    private String getPlaybackType() {
+    private String getPlaybackType(KavaEvents event) {
 
         KavaMediaEntryType kavaPlaybackType;
         String metadataPlaybackType = mediaConfig.getMediaEntry().getMediaType().name();
@@ -500,7 +501,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             kavaPlaybackType = hasDvr() ? KavaMediaEntryType.Dvr : KavaMediaEntryType.Live;
         } else {
             //If there is no playback type in metadata, obtain it from player as fallback.
-            if (player == null) {
+            if (player == null || event == KavaEvents.ERROR) {
                 //If player is null it is impossible to obtain the playbackType, so it will be unknown.
                 kavaPlaybackType = KavaMediaEntryType.Unknown;
             } else {
