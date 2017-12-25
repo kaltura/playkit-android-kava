@@ -505,7 +505,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                 kavaPlaybackType = KavaMediaEntryType.Unknown;
             } else {
                 if (!player.isLive()) {
-                    kavaPlaybackType = KavaMediaEntryType.Dvr;
+                    kavaPlaybackType = KavaMediaEntryType.Vod;
                 } else {
                     kavaPlaybackType = hasDvr() ? KavaMediaEntryType.Dvr : KavaMediaEntryType.Live;
                 }
