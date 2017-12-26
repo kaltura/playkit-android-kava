@@ -152,6 +152,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         sessionStartTime = null;
         eventIndex = 1;
         resetFlags();
+        resetPlayerReachedFlags();
     }
 
     @Override
@@ -531,15 +532,13 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private void resetFlags() {
         isPaused = true;
         isFirstPlay = true;
-
-        playReached25 = false;
-        playReached50 = false;
-        playReached75 = false;
-        playReached100 = false;
-
         errorCode = -1;
         totalBufferTimePerEntry = 0;
         totalBufferTimePerViewEvent = 0;
+    }
+
+    private void resetPlayerReachedFlags() {
+        playReached25 = playReached50 = playReached75 = playReached100 = false;
     }
 
     private enum KavaMediaEntryType {
