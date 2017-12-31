@@ -308,7 +308,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         });
         log.d("request sent " + requestBuilder.build().getUrl());
         requestExecutor.queue(requestBuilder.build());
-
         eventIndex++;
     }
 
@@ -418,7 +417,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private void maybeSendViewEvent() {
         viewEventTimeCounter += ONE_SECOND_IN_MS;
         if (viewEventTimeCounter >= TEN_SECONDS_IN_MS) {
-            totalBufferTimePerEntry += totalBufferTimePerViewEvent;
             sendAnalyticsEvent(KavaEvents.VIEW);
             viewEventTimeCounter = 0;
             totalBufferTimePerViewEvent = 0;
@@ -489,7 +487,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     /**
      * Use metadata playback type in order to decide which playback type is currently active.
-     * @param event
+     * @param event - KavaEvent type.
      */
     private String getPlaybackType(KavaEvents event) {
 
