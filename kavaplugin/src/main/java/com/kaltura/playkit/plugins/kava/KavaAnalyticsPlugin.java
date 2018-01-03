@@ -394,6 +394,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private void startAnalyticsTimer() {
+        if (viewEventTimer != null) {
+            viewEventTimeCounter = 0;
+            viewEventTimer.cancel();
+            viewEventTimer = null;
+        }
         viewEventTimer = new Timer();
         viewEventTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
