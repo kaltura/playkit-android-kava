@@ -292,6 +292,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             log.w("Can not send analytics event. Mandatory field partnerId is missing");
             return;
         }
+        if(mediaConfig == null || mediaConfig.getMediaEntry() == null || mediaConfig.getMediaEntry().getId() == null) {
+            log.w("Can not send analytics event. Mandatory field entryId is missing");
+            return;
+        }
 
         Map<String, String> params = gatherParams(event);
 
