@@ -72,6 +72,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     private boolean isAutoPlay;
     private boolean isImpressionSent;
+    private boolean isEnded = false;
     private boolean isPaused = true;
     private boolean isFirstPlay = true;
 
@@ -80,6 +81,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private int viewEventTimeCounter;
 
     private long actualBitrate;
+    private long joinTimeStartTimestamp;
     private long totalBufferTimePerEntry;
     private long lastKnownBufferingTimestamp;
     private long totalBufferTimePerViewEvent;
@@ -121,7 +123,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         REPLAY(34),
         SEEK(35),
         CAPTIONS(38),
-        SOURCE_SELECTED(39), // video track changed
+        SOURCE_SELECTED(39), // video track changed manually.
+        AUDIO_SELECTED(42), // audio track changed manually
+        FLAVOR_SWITCHED(43), // abr bitrate switch.
         ERROR(98),
         VIEW(99);
 
@@ -201,6 +205,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             }
                             break;
                         case PLAY:
+                            if(isFirstPlay) {
+                                joinTimeStartTimestamp = System.currentTimeMillis();
+                            }
                             if (isImpressionSent) {
                                 sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
                             } else {
@@ -216,10 +223,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                                 isFirstPlay = false;
                                 sendAnalyticsEvent(KavaEvents.PLAY);
                             } else {
-                                if (isPaused) {
+                                if (isPaused && !isEnded) {
                                     sendAnalyticsEvent(KavaEvents.RESUME);
                                 }
                             }
+                            isEnded = false;
                             isPaused = false;
                             break;
                         case SEEKING:
@@ -241,14 +249,20 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                                 sendAnalyticsEvent(KavaEvents.PLAY_REACHED_100_PERCENT);
                             }
 
-                            resetFlags();
+                            isEnded = true;
+                            isPaused = true;
                             break;
                         case PLAYBACK_INFO_UPDATED:
                             PlaybackInfo playbackInfo = ((PlayerEvent.PlaybackInfoUpdated) event).playbackInfo;
                             actualBitrate = playbackInfo.getVideoBitrate();
                             break;
                         case VIDEO_TRACK_CHANGED:
+                            PlayerEvent.VideoTrackChanged videoTrackChanged = ((PlayerEvent.VideoTrackChanged) event);
+                            actualBitrate = videoTrackChanged.newTrack.getBitrate();
                             sendAnalyticsEvent(KavaEvents.SOURCE_SELECTED);
+                            break;
+                        case AUDIO_TRACK_CHANGED:
+                            sendAnalyticsEvent(KavaEvents.AUDIO_SELECTED);
                             break;
                         case TEXT_TRACK_CHANGED:
                             PlayerEvent.TextTrackChanged textTrackChanged = ((PlayerEvent.TextTrackChanged) event);
@@ -320,7 +334,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             log.w("Plugin config was not set! Use default one.");
             pluginConfig = new KavaAnalyticsConfig();
         }
-
         Map<String, String> params = new LinkedHashMap<>();
 
         String sessionId = player.getSessionId() != null ? player.getSessionId() : "";
@@ -351,9 +364,17 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                 params.put("bufferTime", Float.toString(curBufferTimeInSeconds));
                 params.put("bufferTimeSum", Float.toString(totalBufferTimeInSeconds));
                 params.put("actualBitrate", Long.toString(actualBitrate));
+
+                if(event == KavaEvents.PLAY) {
+                    float joinTime = (System.currentTimeMillis() - joinTimeStartTimestamp) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
+                    params.put("joinTime", Float.toString(joinTime));
+                }
                 break;
             case SEEK:
                 params.put("targetPosition", Float.toString(targetSeekPositionInSeconds));
+                break;
+            case SOURCE_SELECTED:
+                params.put("actualBitrate", Long.toString(actualBitrate));
                 break;
             case CAPTIONS:
                 params.put("caption", currentCaptionLanguage);
@@ -538,6 +559,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     private void resetFlags() {
         isPaused = true;
+        isEnded = false;
         isFirstPlay = true;
         errorCode = -1;
         totalBufferTimePerEntry = 0;
