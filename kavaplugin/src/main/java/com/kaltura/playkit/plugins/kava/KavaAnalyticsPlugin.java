@@ -80,7 +80,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private int errorCode = -1;
     private int viewEventTimeCounter;
 
-    private long actualBitrate;
+    private long actualBitrate = -1;
     private long joinTimeStartTimestamp;
     private long totalBufferTimePerEntry;
     private long lastKnownBufferingTimestamp;
@@ -254,7 +254,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             break;
                         case PLAYBACK_INFO_UPDATED:
                             PlaybackInfo playbackInfo = ((PlayerEvent.PlaybackInfoUpdated) event).playbackInfo;
-                            actualBitrate = playbackInfo.getVideoBitrate();
+                            if(actualBitrate != playbackInfo.getVideoBitrate()) {
+                                actualBitrate = playbackInfo.getVideoBitrate();
+                                sendAnalyticsEvent(KavaEvents.FLAVOR_SWITCHED);
+                            }
                             break;
                         case VIDEO_TRACK_CHANGED:
                             PlayerEvent.VideoTrackChanged videoTrackChanged = ((PlayerEvent.VideoTrackChanged) event);
@@ -374,6 +377,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                 params.put("targetPosition", Float.toString(targetSeekPositionInSeconds));
                 break;
             case SOURCE_SELECTED:
+            case FLAVOR_SWITCHED:
                 params.put("actualBitrate", Long.toString(actualBitrate));
                 break;
             case CAPTIONS:
@@ -562,6 +566,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         isEnded = false;
         isFirstPlay = true;
         errorCode = -1;
+        actualBitrate = -1;
         totalBufferTimePerEntry = 0;
         totalBufferTimePerViewEvent = 0;
     }
