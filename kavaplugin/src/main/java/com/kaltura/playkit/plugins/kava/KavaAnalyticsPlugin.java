@@ -39,6 +39,7 @@ import com.kaltura.playkit.ads.PKAdErrorType;
 import com.kaltura.playkit.api.ovp.services.KavaService;
 import com.kaltura.playkit.mediaproviders.base.FormatsHelper;
 import com.kaltura.playkit.player.PKPlayerErrorType;
+import com.kaltura.playkit.plugin.kava.BuildConfig;
 import com.kaltura.playkit.utils.Consts;
 
 import java.util.LinkedHashMap;
@@ -97,6 +98,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         @Override
         public String getName() {
             return "KavaAnalytics";
+        }
+
+        @Override
+        public String getVersion() {
+            return BuildConfig.VERSION_NAME;
         }
 
         @Override
