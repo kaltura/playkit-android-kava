@@ -88,63 +88,65 @@ Here we will see some explanation about each event. When does it sent and what p
     - Server can notify Kava (via response field 'viewEventsEnabled' = false) to shut down VIEW events.
 When it happens, VIEW events will be blocked from sending until server decides to enable VIEW events again. 
     - Parameters to send:
-        - COMMON_PARAMS
-        - bufferTime
-        - totalBufferTime
-        - actualBitrate
-        - playTimeSum
-        - averageBitrate
+        - [COMMON_PARAMS](#common_params)
+        - [bufferTime](#bufferTime)
+        - [bufferTimeSum]($bufferTimeSum)
+        - [actualBitrate](#actualBitrate)
+        - [playTimeSum](#playTimeSum)
+        - [averageBitrate](#averageBitrate)
         
     ---
     
 * <a id="impressionEvent"></a>IMPRESSION - Sent when MediaEntry is loaded(Player event LOADED_METADATA). It will be triggered only once per entry. 
     - eventId = 1    
-    - Parameters to send: COMMON_PARAMS
+    - Parameters to send:
+        - [COMMON_PARAMS](#common_params)
     ---
     
 * <a id="playRequestEvent"></a>PLAY_REQUEST - Sent when play was requested by application(Player event PLAY received)
     - eventId = 2
-    - Parameters to send: COMMON_PARAMS
+    - Parameters to send:
+        - [COMMON_PARAMS](#common_params)
     ---
     
 * <a id="playEvent"></a>PLAY - Sent when actual playback has been started for the first time (Player PLAYING event received).
     - eventId = 3
     - Parameters to send: 
-        - COMMON_PARAMS
-        - bufferTime
-        - totalBufferTime
-        - actualBitrate
-        - joinTime
+        - [COMMON_PARAMS](#common_params)
+        - [bufferTime](#bufferTime)
+        - [bufferTimeSum](#bufferTimeSum)
+        - [actualBitrate](#actualBitrate)
+        - [joinTime](#joinTime)
     ---
     
 * <a id="resumeEvent"></a>RESUME - Sent when actual playback has been resumed (!NOT for the first time. Player PLAYING event received).
     - eventId = 4
     - Parameters to send:
-        - COMMON_PARAMS
-        - bufferTime
-        - totalBufferTime
-        - actualBitrate
+        - [COMMON_PARAMS](#common_params)
+        - [bufferTime](#bufferTime)
+        - [bufferTimeSum](#bufferTimeSum)
+        - [actualBitrate](#actualBitrate)
     ---
     
 * <a id="pauseEvent"></a>PAUSE - Sent when playback was paused (Player PAUSE event received).
     - eventId = 33
     - During pause Kava should prevent from counting VIEW event timer.
     - Parameters to send:
-        - COMMON_PARAMS
+        - [COMMON_PARAMS](#common_params)
     ---
     
 * <a id="replayEvent"></a>REPLAY - Sent when replay called by application (Player REPLAY event received).
     - eventId = 34
     - Replay should reset all the parameters related to playback except PLAYER_REACHED... events.
     - Parameters to send:
-        - COMMON_PARAMS
+        - [COMMON_PARAMS](#common_params)
     ---
     
 * <a id="seekEvent"></a>SEEK - Sent when seek requested. (Player SEEKING event received).
     - eventId = 35
     - Parameters to send:
-        - COMMON_PARAMS
-        - targetPosition
+        - [COMMON_PARAMS](#common_params)
+        - [targetPosition](#targetPosition)
     
     ---
     
@@ -152,7 +154,7 @@ When it happens, VIEW events will be blocked from sending until server decides t
     - eventId = 11
     - Sent only once per entry.
     - Parameters to send:
-        - COMMON_PARAMS
+        - [COMMON_PARAMS](#common_params)
     ---
     
 * <a id="play50Event"></a>PLAY_REACHED_50_PERCENT - Sent when player reached 50% of the playback. No matter if by seeking or regular playback.
@@ -161,7 +163,7 @@ When it happens, VIEW events will be blocked from sending until server decides t
     - If reached before 25% (by seeking or startFrom) first will fire:
         - PLAY_REACHED_25_PERCENT event.
     - Parameters to send:
-        - COMMON_PARAMS
+        - [COMMON_PARAMS](#common_params)
     
     ---
 
@@ -172,7 +174,7 @@ When it happens, VIEW events will be blocked from sending until server decides t
         - PLAY_REACHED_25_PERCENT
         - PLAY_REACHED_50_PERCENT
     - Parameters to send:
-        - COMMON_PARAMS
+        - [COMMON_PARAMS](#common_params)
     ---
     
 * <a id="play100Event"></a>PLAY_REACHED_100_PERCENT - Sent when player reached 100% of the playback(Player END event).
@@ -184,42 +186,42 @@ No matter if by seeking or regular playback.
         - PLAY_REACHED_50_PERCENT
         - PLAY_REACHED_75_PERCENT
     - Parameters to send:
-        - COMMON_PARAMS
+        - [COMMON_PARAMS](#common_params)
     ---
     
 * <a id="sourceSelectedEvent"></a>SOURCE_SELECTED - Sent when video track changed manually (Not ABR selection. Player VIDEO_TRACK_CHANGED event received).
     - eventId = 39
     - Parameters to send:
-        - COMMON_PARAMS
-        - actualBitrate
+        - [COMMON_PARAMS](#common_params)
+        - [actualBitrate](#actualBitrate)
     ---
     
 * <a id="flavourSwitchEvent"></a>FLAVOR_SWITCH - Sent when video flavour changed by ABR mode (Player PLAYBACK_INFO_UPDATED event received)     
     - eventId = 43
-    - Newly received bitrate != actualBitrate
+    - Newly received bitrate != [actualBitrate](#actualBitrate)
     - Parameters to send:
-        - COMMON_PARAMS
-        - actualBitrate
+        - [COMMON_PARAMS](#common_params)
+        - [actualBitrate](#actualBitrate)
     ---
     
 * <a id="audioSelectedEvent"></a>AUDIO_SELECTED - Sent when audio track changed (Player AUDIO_TRACK_CHANGED event received).
     - eventId = 42
     - Parameters to send:
-        - COMMON_PARAMS
-        - language
+        - [COMMON_PARAMS](#common_params)
+        - [language](#language)
     ---
     
 * <a id="captionsEvent"></a>CAPTIONS - Sent when text track changed. (Player TEXT_TRACK_CHANGED event received).
     - eventId = 38
     - Parameters to send:
-        - COMMON_PARAMS
-        - caption
+        - [COMMON_PARAMS](#common_params)
+        - [language](#language)
     ---
 * <a id="errorEvent"></a>ERROR - Sent when error occurs. (Player ERROR event received).
     - eventId = 98
     - Parameters to send:
-        - COMMON_PARAMS
-        - errorCode
+        - [COMMON_PARAMS](#common_params)
+        - [errorCode](#errorCode)
 
 
 ## KAVA Parameters:
@@ -227,39 +229,39 @@ No matter if by seeking or regular playback.
 Kava parameters are additional data that is sent with Kava event and represent relevant information about current playback, media information etc
 
 
-* eventType - id of the KavaEvent.
+* <a id="eventType"></a>eventType - id of the KavaEvent.
     - In Android obtained from KavaEvent enum. For example IMPRESSION(1), VIEW(99) etc.
     - **Mandatory field**. If not exist, sending of all events should be blocked and related warning should be printed to log.
     ---
     
-* partnerId - The partner account ID on Kaltura's platform.
+* <a id="partnerId"></a>partnerId - The partner account ID on Kaltura's platform.
     - Obtained from pluginConfig object.
     - **Mandatory field**. If not exist, sending of all events should be blocked and related warning should be printed to log.
 		
     ---
 
-* entryId - The delivered content ID on Kaltura's platform.
+* <a id="entryId"></a>entryId - The delivered content ID on Kaltura's platform.
     - Obtained from mediaConfig object.
     - **Mandatory field**. If not exist, sending of all events should be blocked and related warning should be printed to log.
     
     ---
     
-* flavourId - The ID of the flavour that is currently displayed (for future use, will not be used in aggregations) **!!!NOT_SUPPORTED on Mobile!!!**
+* <a id="flavourId"></a>flavourId - The ID of the flavour that is currently displayed (for future use, will not be used in aggregations) **!!!NOT_SUPPORTED on Mobile!!!**
 
     ---
     
-* ks - The Kaltura encoded session data.
+* <a id="ks"></a>ks - The Kaltura encoded session data.
     - Obtained from pluginConfig object.
     - If not exist do not send this parameter at all.
     
     ---
     
-* sessionId - A unique string which identifies a unique viewing session, a page refresh should use different identifier.
+* <a id="sessionId"></a>sessionId - A unique string which identifies a unique viewing session, a page refresh should use different identifier.
     - Obtained from player (player.getSessionId()). 
     
     ---
 
-* eventIndex - A sequence number which describe the order of events in a viewing session. In general it is just a counter of sent events.
+* <a id="eventIndex"></a>eventIndex - A sequence number which describe the order of events in a viewing session. In general it is just a counter of sent events.
     - Starts from 1.
     - Each event that is send must have unique id and increment after each event sent.
     - When Kava session expired/reset should be reset to the initial value (1). For example: 
@@ -268,7 +270,7 @@ Kava parameters are additional data that is sent with Kava event and represent r
    
     ---
   
-* bufferTime - The amount time spent on buffering from the last VIEW event.
+* <a id="bufferTime"></a>bufferTime - The amount time spent on buffering from the last VIEW event.
     - Should be 0 to 10 in VIEW events.
     - Can be 0 to ∞ for PLAY/RESUME events.
     - Should be in format of float (second.milliSecond).
@@ -278,7 +280,7 @@ Kava parameters are additional data that is sent with Kava event and represent r
 
     ---
   
-* bufferTimeSum - Sum of all the buffer time during all the playback.
+* <a id="bufferTimeSum"></a>bufferTimeSum - Sum of all the buffer time during all the playback.
     - Can be 0 to ∞.
     - Should be in format of float (second.milliSecond).
     - New media entry will reset this value.
@@ -286,14 +288,14 @@ Kava parameters are additional data that is sent with Kava event and represent r
     
     ---
 
-* actualBitrate - The bitrate of the displayed video track in kbps.
+* <a id="actualBitrate"></a>actualBitrate - The bitrate of the displayed video track in kbps.
     - When ABR mode selected manually - value should be 0.
     - In SOURCE_SELECTED event should be equal to the manually selected video bitrate.
     - In FLAVOUR_SWITCH event should be based on ABR selection and equal to the currently selected bitrate by ABR.
 
     ---
 
-* referrer - Application referrer id.
+* <a id="referrer"></a>referrer - Application referrer id.
     - Obtained from pluginConfig.
     - Valid referrer should start from one of the following prefixes:
       - "app://"
@@ -305,7 +307,7 @@ Kava parameters are additional data that is sent with Kava event and represent r
     
     ---
 
-* deliveryType - The player's streamer type.
+* <a id="deliveryType"></a>deliveryType - The player's streamer type.
     - Obtained from pkMediaSource.getMediaFormat(), when Player SOURCE_SELECTED event received.
     - Should be re-obtained for every new media entry.
     - Should be one of the following:
@@ -314,7 +316,7 @@ Kava parameters are additional data that is sent with Kava event and represent r
       - url (if format explicitly not mentioned or differs from previous two)
     ---
   
-* playbackType - The type of the current playback.
+* <a id="playbackType"></a>playbackType - The type of the current playback.
     - Initially obtained from mediaConfig.getMediaEntry().getMediaType(). If for some reason value could not be obtained, we will take it from player. 
     - Must be on of the following:
       - vod - for regular media.
@@ -323,44 +325,44 @@ Kava parameters are additional data that is sent with Kava event and represent r
  
     ---
 
-* sessionStartTime - The timestamp of the first event in the session.
+* <a id="sessionStartTime"></a>sessionStartTime - The timestamp of the first event in the session.
     - Obtained from response of the first event. "time" field on Json object that comes with response.
     - First event the fired will not have this value.
     - Should be in Unix time format.
     
     ---
 
-* uiConfId - The player ui configuration id.
+* <a id="uiConfId"></a>uiConfId - The player ui configuration id.
       - Obtained from pluginConfig object.
       - If not exist do not send this parameter at all.
 
     ---
   
-* clientVer - The player version (PlayKitManager.CLIENT_TAG)
+* <a id="clientVer"></a>clientVer - The player version (PlayKitManager.CLIENT_TAG)
 
     ---
     
-* clientTag - TODO
+* <a id="clientTag"></a>clientTag - TODO
 
     ---
   
-* position - The playback position of the media.
+* <a id="position"></a>position - The playback position of the media.
       - Should be in format of float (second.milliSecond).
-      - When playbackType is = live, this value should represent the offset of the playback position from the live edge.
+      - When [playbackType](#playbackType) is = live, this value should represent the offset of the playback position from the live edge.
           - 0 when media position is on the live edge
           - -2.5 when offset from the live edge is 2.5 seconds.
-      - Should be positive value for vod playbackType.
+      - Should be positive value for vod [playbackType](#playbackType).
 
     ---
   
-* playbackContext - The category id describing the current played context.
+* <a id="playbackContext"></a>playbackContext - The category id describing the current played context.
       - Optional parameter.
       - Obtained from pluginConfig.
       - If not exist do not send this parameter at all.
 
     ---
 
-* customVar1 - Optional parameter defined by the user.
+* <a id="customVar1"></a>customVar1 - Optional parameter defined by the user.
       - Can be any primitive value or String.
       - Optional parameter.
       - Obtained from pluginConfig.
@@ -368,7 +370,7 @@ Kava parameters are additional data that is sent with Kava event and represent r
   
     ---
 
-* customVar2 - Optional parameter defined by the user.
+* <a id="customVar2"></a>customVar2 - Optional parameter defined by the user.
       - Can be any primitive value or String.
       - Optional parameter.
       - Obtained from pluginConfig.
@@ -376,7 +378,7 @@ Kava parameters are additional data that is sent with Kava event and represent r
 
     ---
     
-* customVar3 - Optional parameter defined by the user.
+* <a id="customVar3"></a>customVar3 - Optional parameter defined by the user.
       - Can be any primitive value or String.
       - Optional parameter.
       - Obtained from pluginConfig.
@@ -384,13 +386,13 @@ Kava parameters are additional data that is sent with Kava event and represent r
 
     ---
   
-* targetPosition - The requested seek position of the media. 
+* <a id="targetPosition"></a>targetPosition - The requested seek position of the media. 
       - Should be in format of float (second.milliSecond).
       - Obtained from player SEEKING event.
 
     ---
   
-* errorCode - The code of the occurred error.
+* <a id="errorCode"></a>errorCode - The code of the occurred error.
     - Might be platform specific and deffer between Android/iOS/Web
       
       ---
@@ -399,47 +401,51 @@ Kava parameters are additional data that is sent with Kava event and represent r
 
     ---
     
-* joinTime - Time that took to player start active playback for the first time.
+* <a id="joinTime"></a>joinTime - Time that took to player start active playback for the first time.
       - Obtained by calculating time that passed from first PLAY_REQUEST to PLAY event.
 
     ---
   
-* kalsig - TODO
+* <a id="kalsig"></a>kalsig - TODO
 
     ---
     
-* playTimeSum - Sum of time played for the current Kava session.
+* <a id="playTimeSum"></a>playTimeSum - Sum of time played for the current Kava session.
     - Should be in format of float (second.milliSecond).
     - Can be 0 to ∞.
     - When Kava session expired/reset should be reset to the initial value (1). For example: 
 
     ---
     
-* averageBitrate - Sum of all actualBitrate for the current Kava session.
+* <a id="averageBitrate"></a>averageBitrate - Average of all [actualBitrate](#actualBitrate) for the current Kava session.
+
+    ---
+    
+* <a id="language"></a>language - Selected language.
 
 
-## Kava COMMON_PARAMS:
+## <a id="common_params"></a>Kava COMMON_PARAMS:
 
-  - eventType
-  - partnerId
-  - entryId
-  - flavourId
-  - sessionId
-  - eventIndex
-  - ks
-  - playbackContext
-  - referrer
-  - deliveryType
-  - playbackType
-  - kalsig
-  - sessionStartTime
-  - uiConfId
-  - clientVer
-  - clientTag
-  - position
-  - customVar1
-  - customVar2
-  - customVar3
+  - [eventType](#eventType)
+  - [partnerId](#partnerId)
+  - [entryId](#entryId)
+  - [flavourId](#flavourId)
+  - [sessionId](#sessionId)
+  - [eventIndex](#eventIndex)
+  - [ks](#ks)
+  - [playbackContext](#playbackContext)
+  - [referrer](#referrer)
+  - [deliveryType](#deliveryType)
+  - [playbackType](#playbackType)
+  - [kalsig](#kalsig)
+  - [sessionStartTime](#sessionStartTime)
+  - [uiConfId](#uiConfId)
+  - [clientVer](#clientVer)
+  - [clientTag](#clientTag)
+  - [position](#position)
+  - [customVar1](#customVar1)
+  - [customVar2](#customVar2)
+  - [customVar3](#customVar3)
 
 
     
