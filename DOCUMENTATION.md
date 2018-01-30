@@ -58,20 +58,20 @@ Here you can see the list of all available KAVA Events:
 
 * [VIEW](#viewEvent)
 * [IMPRESSION](#impressionEvent)
-* PLAY_REQUEST
-* PLAY
-* RESUME
-* PLAY_REACHED_25_PERCENT
-* PLAY_REACHED_50_PERCENT
-* PLAY_REACHED_75_PERCENT
-* PLAY_REACHED_100_PERCENT
-* PAUSE
-* REPLAY
-* SEEK
-* CAPTIONS
-* SOURCE_SELECTED
-* AUDIO_SELECTED
-* FLAVOR_SWITCH
+* [PLAY_REQUEST](#playRequestEvent)
+* [PLAY](#playEvent)
+* [RESUME](#resumeEvent)
+* [PAUSE](#pauseEvent)
+* [REPLAY](#replayEvent)
+* [SEEK](#seekEvent)
+* [PLAY_REACHED_25_PERCENT](#play25Event)
+* [PLAY_REACHED_50_PERCENT](#play50Event)
+* [PLAY_REACHED_75_PERCENT](#play75Event)
+* [PLAY_REACHED_100_PERCENT](#play100Event)
+* [SOURCE_SELECTED](#sourceSelectedEvent)
+* [FLAVOR_SWITCH](#flavourSwitchEvent)
+* [AUDIO_SELECTED](#audioSelectedEvent)
+* [CAPTIONS](#captionsEvent)
 * [ERROR](#errorEvent)
 
         
@@ -80,117 +80,9 @@ Here you can see the list of all available KAVA Events:
 
 Here we will see some explanation about each event. When does it sent and what parameters it have.
 
-* <a id="impressionEvent"></a>IMPRESSION - Sent when MediaEntry is loaded(Player event LOADED_METADATA). It will be triggered only once per entry. 
-    - Parameters to send: COMMON_PARAMS
-    ---
-    
-* PLAY_REQUEST - Sent when play was requested by application(Player event PLAY received)
-    - Parameters to send: COMMON_PARAMS
-    ---
-    
-* PLAY - Sent when actual playback has been started for the first time (Player PLAYING event received).
-    - Parameters to send: 
-        - COMMON_PARAMS
-        - bufferTime
-        - totalBufferTime
-        - actualBitrate
-        - joinTime
-    ---
-    
-* RESUME - Sent when actual playback has been resumed (!NOT for the first time. Player PLAYING event received).
-    - Parameters to send:
-        - COMMON_PARAMS
-        - bufferTime
-        - totalBufferTime
-        - actualBitrate
-    ---
-    
-* PLAY_REACHED_25_PERCENT - Sent when player reached 25% of the playback. No matter if by seeking or regular playback.
-    - Sent only once per entry.
-    - Parameters to send:
-        - COMMON_PARAMS
-    ---
-    
-* PLAY_REACHED_50_PERCENT - Sent when player reached 50% of the playback. No matter if by seeking or regular playback.
-    - Sent only once per entry. 
-    - If reached before 25% (by seeking or startFrom) first will fire:
-        - PLAY_REACHED_25_PERCENT event.
-    - Parameters to send:
-        - COMMON_PARAMS
-    
-    ---
 
-* PLAY_REACHED_75_PERCENT - Sent when player reached 75% of the playback. No matter if by seeking or regular playback.
-    - Sent only once per entry. 
-    - If reached before 50% (by seeking or startFrom) first will fire:
-        - PLAY_REACHED_25_PERCENT
-        - PLAY_REACHED_50_PERCENT
-    - Parameters to send:
-        - COMMON_PARAMS
-    ---
-    
-* PLAY_REACHED_100_PERCENT - Sent when player reached 100% of the playback(Player END event).
-No matter if by seeking or regular playback.
-    - Sent only once per entry.
-    - If reached before 75% (by seeking or startFrom) first will fire: 
-        - PLAY_REACHED_25_PERCENT
-        - PLAY_REACHED_50_PERCENT
-        - PLAY_REACHED_75_PERCENT
-    - Parameters to send:
-        - COMMON_PARAMS
-    ---
-    
-* PAUSE - Sent when playback was paused (Player PAUSE event received).
-    - During pause Kava should prevent from counting VIEW event timer.
-    - Parameters to send:
-        - COMMON_PARAMS
-    ---
-    
-* REPLAY - Sent when replay called by application (Player REPLAY event received).
-    - Replay should reset all the parameters related to playback except PLAYER_REACHED... events.
-    - Parameters to send:
-        - COMMON_PARAMS
-    ---
-    
-* SEEK - Sent when seek requested. (Player SEEKING event received).
-    - Parameters to send:
-        - COMMON_PARAMS
-        - targetPosition
-    ---
-    
-* SOURCE_SELECTED - Sent when video track changed manually (Not ABR selection. Player VIDEO_TRACK_CHANGED event received).
-    - Parameters to send:
-        - COMMON_PARAMS
-        - actualBitrate
-    ---
-    
-* FLAVOR_SWITCH - Sent when video flavour changed by ABR mode (Player PLAYBACK_INFO_UPDATED event received)     
-
-    - Newly received bitrate != actualBitrate
-    - Parameters to send:
-        - COMMON_PARAMS
-        - actualBitrate
-    ---
-    
-* AUDIO_SELECTED - Sent when audio track changed (Player AUDIO_TRACK_CHANGED event received).
-    - Parameters to send:
-        - COMMON_PARAMS
-        - language
-    ---
-    
-* CAPTIONS - Sent when text track changed. (Player TEXT_TRACK_CHANGED event received).
-  - Parameters to send:
-    - COMMON_PARAMS
-    - caption
-    ---
-* ERROR - Sent when error occurs. (Player ERROR event received).
-    - Parameters to send:
-        - COMMON_PARAMS
-        - errorCode
-<a id="errorEvent"></a>
-    ---
-    
 * <a id="viewEvent"></a>VIEW - Collective event that represent report for every 10 seconds of active playback.
+    - eventId = 99
     - Sent every 10 second of active playback(when player is paused, view timer should be paused/stopped).
     - 30 seconds without VIEW event will reset KAVA session, so all the VIEW specific parameters should be reset also.
     - Server can notify Kava (via response field 'viewEventsEnabled' = false) to shut down VIEW events.
@@ -202,6 +94,133 @@ When it happens, VIEW events will be blocked from sending until server decides t
         - actualBitrate
         - playTimeSum
         - averageBitrate
+        
+    ---
+    
+* <a id="impressionEvent"></a>IMPRESSION - Sent when MediaEntry is loaded(Player event LOADED_METADATA). It will be triggered only once per entry. 
+    - eventId = 1    
+    - Parameters to send: COMMON_PARAMS
+    ---
+    
+* <a id="playRequestEvent"></a>PLAY_REQUEST - Sent when play was requested by application(Player event PLAY received)
+    - eventId = 2
+    - Parameters to send: COMMON_PARAMS
+    ---
+    
+* <a id="playEvent"></a>PLAY - Sent when actual playback has been started for the first time (Player PLAYING event received).
+    - eventId = 3
+    - Parameters to send: 
+        - COMMON_PARAMS
+        - bufferTime
+        - totalBufferTime
+        - actualBitrate
+        - joinTime
+    ---
+    
+* <a id="resumeEvent"></a>RESUME - Sent when actual playback has been resumed (!NOT for the first time. Player PLAYING event received).
+    - eventId = 4
+    - Parameters to send:
+        - COMMON_PARAMS
+        - bufferTime
+        - totalBufferTime
+        - actualBitrate
+    ---
+    
+* <a id="pauseEvent"></a>PAUSE - Sent when playback was paused (Player PAUSE event received).
+    - eventId = 33
+    - During pause Kava should prevent from counting VIEW event timer.
+    - Parameters to send:
+        - COMMON_PARAMS
+    ---
+    
+* <a id="replayEvent"></a>REPLAY - Sent when replay called by application (Player REPLAY event received).
+    - eventId = 34
+    - Replay should reset all the parameters related to playback except PLAYER_REACHED... events.
+    - Parameters to send:
+        - COMMON_PARAMS
+    ---
+    
+* <a id="seekEvent"></a>SEEK - Sent when seek requested. (Player SEEKING event received).
+    - eventId = 35
+    - Parameters to send:
+        - COMMON_PARAMS
+        - targetPosition
+    
+    ---
+    
+* <a id="play25Event"></a>PLAY_REACHED_25_PERCENT - Sent when player reached 25% of the playback. No matter if by seeking or regular playback.
+    - eventId = 11
+    - Sent only once per entry.
+    - Parameters to send:
+        - COMMON_PARAMS
+    ---
+    
+* <a id="play50Event"></a>PLAY_REACHED_50_PERCENT - Sent when player reached 50% of the playback. No matter if by seeking or regular playback.
+    - eventId = 12
+    - Sent only once per entry. 
+    - If reached before 25% (by seeking or startFrom) first will fire:
+        - PLAY_REACHED_25_PERCENT event.
+    - Parameters to send:
+        - COMMON_PARAMS
+    
+    ---
+
+* <a id="play75Event"></a>PLAY_REACHED_75_PERCENT - Sent when player reached 75% of the playback. No matter if by seeking or regular playback.
+    - eventId = 13
+    - Sent only once per entry. 
+    - If reached before 50% (by seeking or startFrom) first will fire:
+        - PLAY_REACHED_25_PERCENT
+        - PLAY_REACHED_50_PERCENT
+    - Parameters to send:
+        - COMMON_PARAMS
+    ---
+    
+* <a id="play100Event"></a>PLAY_REACHED_100_PERCENT - Sent when player reached 100% of the playback(Player END event).
+No matter if by seeking or regular playback.
+    - eventId = 14
+    - Sent only once per entry.
+    - If reached before 75% (by seeking or startFrom) first will fire: 
+        - PLAY_REACHED_25_PERCENT
+        - PLAY_REACHED_50_PERCENT
+        - PLAY_REACHED_75_PERCENT
+    - Parameters to send:
+        - COMMON_PARAMS
+    ---
+    
+* <a id="sourceSelectedEvent"></a>SOURCE_SELECTED - Sent when video track changed manually (Not ABR selection. Player VIDEO_TRACK_CHANGED event received).
+    - eventId = 39
+    - Parameters to send:
+        - COMMON_PARAMS
+        - actualBitrate
+    ---
+    
+* <a id="flavourSwitchEvent"></a>FLAVOR_SWITCH - Sent when video flavour changed by ABR mode (Player PLAYBACK_INFO_UPDATED event received)     
+    - eventId = 43
+    - Newly received bitrate != actualBitrate
+    - Parameters to send:
+        - COMMON_PARAMS
+        - actualBitrate
+    ---
+    
+* <a id="audioSelectedEvent"></a>AUDIO_SELECTED - Sent when audio track changed (Player AUDIO_TRACK_CHANGED event received).
+    - eventId = 42
+    - Parameters to send:
+        - COMMON_PARAMS
+        - language
+    ---
+    
+* <a id="captionsEvent"></a>CAPTIONS - Sent when text track changed. (Player TEXT_TRACK_CHANGED event received).
+    - eventId = 38
+    - Parameters to send:
+        - COMMON_PARAMS
+        - caption
+    ---
+* <a id="errorEvent"></a>ERROR - Sent when error occurs. (Player ERROR event received).
+    - eventId = 98
+    - Parameters to send:
+        - COMMON_PARAMS
+        - errorCode
+
 
 ## KAVA Parameters:
 
