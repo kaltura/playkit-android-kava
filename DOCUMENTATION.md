@@ -88,8 +88,8 @@ Here we will see some explanation about each event. When does it sent and what p
 * <a id="viewEvent"></a>VIEW - Collective event that represent report for every 10 seconds of active playback.
     - eventId = 99
     - Sent every 10 second of active playback(when player is paused, view timer should be paused/stopped).
-    - 30 seconds without VIEW event will reset KAVA session, so all the VIEW specific parameters should be reset also.
-    - Server can notify Kava (via response field 'viewEventsEnabled' = false) to shut down VIEW events.
+    - 30 seconds without VIEW event will reset KAVA session, so all the VIEW [specific parameters](#endSessionResetParams) should be reset also.
+    - Server can notify Kava (via response field ["viewEventsEnabled" = false](#serverResponse)) to shut down VIEW events.
 When it happens, VIEW events will be blocked from sending until server decides to enable VIEW events again. 
     - Parameters to send:
         - [COMMON_PARAMS](#common_params)
@@ -400,13 +400,10 @@ Kava parameters are additional data that is sent with Kava event and represent r
     - Might be platform specific and deffer between Android/iOS/Web
       
       ---
-  
-* hasKanalony - TODO
-
-    ---
     
 * <a id="joinTime"></a>joinTime - Time that took to player start active playback for the first time.
-      - Obtained by calculating time that passed from first PLAY_REQUEST to PLAY event.
+    
+    - Obtained by calculating time that passed from first PLAY_REQUEST to PLAY event.
 
     ---
   
@@ -417,18 +414,20 @@ Kava parameters are additional data that is sent with Kava event and represent r
 * <a id="playTimeSum"></a>playTimeSum - Sum of time played for the current Kava session.
     - Should be in format of float (second.milliSecond).
     - Can be 0 to ∞.
-    - When Kava session expired/reset should be reset to the initial value (1). For example: 
+    - Only active playback should be counted.
+    - When Kava session expired/reset should be reset to the initial value = 0. 
 
     ---
     
 * <a id="averageBitrate"></a>averageBitrate - Average of all [actualBitrate](#actualBitrate) for the current Kava session.
+    - When Kava session expired/reset should be reset to the initial value = 0.
 
     ---
     
 * <a id="language"></a>language - Selected language.
 
 
-## <a id="common_params"></a>Kava COMMON_PARAMS:
+## <a id="common_params"></a>COMMON_PARAMS:
 
   - [eventType](#eventType)
   - [partnerId](#partnerId)
@@ -450,6 +449,24 @@ Kava parameters are additional data that is sent with Kava event and represent r
   - [customVar1](#customVar1)
   - [customVar2](#customVar2)
   - [customVar3](#customVar3)
+  
+  
+## <a id="endSessionResetParams"></a>Kava end session params to reset:
+  - [eventIndex](#eventIndex) - Reset value = 1
+  - [playTimeSum](#playTimeSum) - Reset value = 0
+  - [averageBitrate](#averageBitrate) - Reset value = 0
+  - [bufferTimeSum](#bufferTimeSum) - Reset value = 0
+  
+## <a id="serverResponse"></a>Server response Json structure:
+
+Following is the structure of server response:
+
+```json
+{
+"time": 12345,
+"viewEventsEnabled": true
+}
+```
 
 
     
