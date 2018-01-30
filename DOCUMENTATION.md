@@ -57,7 +57,7 @@ You can see that start using KAVA is simple and require only few lines of code.
 Here you can see the list of all available KAVA Events:
 
 * VIEW
-* IMPRESSION
+* [IMPRESSION](#impression)
 * PLAY_REQUEST
 * PLAY
 * RESUME
@@ -80,7 +80,7 @@ Here you can see the list of all available KAVA Events:
 
 Here we will see some explanation about each event. When does it sent and what parameters it have.
 
-* IMPRESSION - Sent when MediaEntry is loaded(Player event LOADED_METADATA). It will be triggered only once per entry. 
+* <a id="impression"></a>IMPRESSION - Sent when MediaEntry is loaded(Player event LOADED_METADATA). It will be triggered only once per entry. 
     - Parameters to send: COMMON_PARAMS
     ---
     
