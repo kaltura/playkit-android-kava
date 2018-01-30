@@ -91,8 +91,8 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private String referrer;
     private String deliveryType;
     private String sessionStartTime;
+    private String currentAudioLanguage;
     private String currentCaptionLanguage;
-
 
     public static final Factory factory = new Factory() {
         @Override
@@ -271,10 +271,12 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             sendAnalyticsEvent(KavaEvents.SOURCE_SELECTED);
                             break;
                         case AUDIO_TRACK_CHANGED:
+                            PlayerEvent.AudioTrackChanged audioTrackChangeda = (PlayerEvent.AudioTrackChanged) event;
+                            currentAudioLanguage = audioTrackChangeda.newTrack.getLanguage();
                             sendAnalyticsEvent(KavaEvents.AUDIO_SELECTED);
                             break;
                         case TEXT_TRACK_CHANGED:
-                            PlayerEvent.TextTrackChanged textTrackChanged = ((PlayerEvent.TextTrackChanged) event);
+                            PlayerEvent.TextTrackChanged textTrackChanged = (PlayerEvent.TextTrackChanged) event;
                             currentCaptionLanguage = textTrackChanged.newTrack.getLanguage();
                             sendAnalyticsEvent(KavaEvents.CAPTIONS);
                             break;
@@ -388,6 +390,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                 break;
             case CAPTIONS:
                 params.put("caption", currentCaptionLanguage);
+                break;
+            case AUDIO_SELECTED:
+                params.put("language", currentAudioLanguage);
                 break;
             case ERROR:
                 if (errorCode != -1) {
