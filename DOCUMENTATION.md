@@ -9,7 +9,7 @@ various events and data about Playkit video player. Integration is pretty simple
 Kava build on top of Kaltura Playkit SDK so to get started you should add dependencies in your application build.gradle file.
 Note, Playkit is already included in KAVAPlugin. 
 
-```groovy
+```
 dependencies {
 
     implementation 'com.kaltura:playkit-android-kava:XXX' //instead of XXX use latest version. 
@@ -219,7 +219,7 @@ No matter if by seeking or regular playback.
     - eventId = 38
     - Parameters to send:
         - [COMMON_PARAMS](#common_params)
-        - [language](#language)
+        - [caption](#caption)
     ---
 * <a id="errorEvent"></a>ERROR - Sent when error occurs. (Player ERROR event received).
     - eventId = 98
@@ -424,7 +424,11 @@ Kava parameters are additional data that is sent with Kava event and represent r
 
     ---
     
-* <a id="language"></a>language - Selected language.
+* <a id="language"></a>language - Selected audio language.
+
+    ---
+* <a id="caption"></a>caption - Selected caption language.    
+
 
 
 ## <a id="common_params"></a>COMMON_PARAMS:
