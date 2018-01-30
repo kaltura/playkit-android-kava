@@ -9,7 +9,7 @@ various events and data about Playkit video player. Integration is pretty simple
 Kava build on top of Kaltura Playkit SDK so to get started you should add dependencies in your application build.gradle file.
 Note, Playkit is already included in KAVAPlugin. 
 
-```
+```groovy
 dependencies {
 
     implementation 'com.kaltura:playkit-android-kava:XXX' //instead of XXX use latest version. 
@@ -23,8 +23,10 @@ repositories {
 
 Now lets see how to use KAVAPlugin in your application
 
-```
- @Override
+```java
+public class MainActivity extends AppCompatActivity {
+    
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -47,6 +49,8 @@ Now lets see how to use KAVAPlugin in your application
         //Create instance of the player with specified pluginConfigs.
         player = PlayKitManager.loadPlayer(this, pluginConfigs);
     }
+    
+}
 ```
 
 You can see that start using KAVA is simple and require only few lines of code.
