@@ -56,8 +56,8 @@ You can see that start using KAVA is simple and require only few lines of code.
 
 Here you can see the list of all available KAVA Events:
 
-* VIEW
-* [IMPRESSION](#impression)
+* [VIEW](#viewEvent)
+* [IMPRESSION](#impressionEvent)
 * PLAY_REQUEST
 * PLAY
 * RESUME
@@ -72,7 +72,7 @@ Here you can see the list of all available KAVA Events:
 * SOURCE_SELECTED
 * AUDIO_SELECTED
 * FLAVOR_SWITCH
-* ERROR
+* [ERROR](#errorEvent)
 
         
 ## KAVA events explanation:
@@ -80,7 +80,7 @@ Here you can see the list of all available KAVA Events:
 
 Here we will see some explanation about each event. When does it sent and what parameters it have.
 
-* <a id="impression"></a>IMPRESSION - Sent when MediaEntry is loaded(Player event LOADED_METADATA). It will be triggered only once per entry. 
+* <a id="impressionEvent"></a>IMPRESSION - Sent when MediaEntry is loaded(Player event LOADED_METADATA). It will be triggered only once per entry. 
     - Parameters to send: COMMON_PARAMS
     ---
     
@@ -187,9 +187,10 @@ No matter if by seeking or regular playback.
     - Parameters to send:
         - COMMON_PARAMS
         - errorCode
+<a id="errorEvent"></a>
     ---
     
-* VIEW - Collective event that represent report for every 10 seconds of active playback.
+* <a id="viewEvent"></a>VIEW - Collective event that represent report for every 10 seconds of active playback.
     - Sent every 10 second of active playback(when player is paused, view timer should be paused/stopped).
     - 30 seconds without VIEW event will reset KAVA session, so all the VIEW specific parameters should be reset also.
     - Server can notify Kava (via response field 'viewEventsEnabled' = false) to shut down VIEW events.
