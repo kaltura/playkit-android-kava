@@ -271,8 +271,8 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             sendAnalyticsEvent(KavaEvents.SOURCE_SELECTED);
                             break;
                         case AUDIO_TRACK_CHANGED:
-                            PlayerEvent.AudioTrackChanged audioTrackChangeda = (PlayerEvent.AudioTrackChanged) event;
-                            currentAudioLanguage = audioTrackChangeda.newTrack.getLanguage();
+                            PlayerEvent.AudioTrackChanged audioTrackChanged = (PlayerEvent.AudioTrackChanged) event;
+                            currentAudioLanguage = audioTrackChanged.newTrack.getLanguage();
                             sendAnalyticsEvent(KavaEvents.AUDIO_SELECTED);
                             break;
                         case TEXT_TRACK_CHANGED:
