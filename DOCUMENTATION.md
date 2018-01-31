@@ -44,6 +44,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
+        //First register your plugin.
+        PlayKitManager.registerPlugins(this, KavaAnalyticsPlugin.factory);
+        
         //Initialize PKPluginConfigs object.
         PKPluginConfigs pluginConfigs = new PKPluginConfigs();
         
@@ -80,9 +83,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        
-        //First register your plugin.
-        PlayKitManager.registerPlugins(this, KavaAnalyticsPlugin.factory);
         
         //Create PKPluginConfigs and populate it with Kava plugin configurations.
         PKPluginConfigs pluginConfigs = createPluginConfigurations();
