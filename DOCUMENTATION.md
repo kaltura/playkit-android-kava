@@ -2,16 +2,16 @@
 
 ## Table of Contents:
 
-* [About Kava](about-kava:)
-* [Kava Integration](kava-integration:)
-* [Plugin configurations](plugin-configurations:)
-* [Plugin configuration fields](plugin-configuration-fields:)
-* [List of KAVA Events](list-of-kava-events:)
-* [KAVA events explanation](kava-events-explanation:)
-* [KAVA Parameters](kava-parameters:)
-* [COMMON_PARAMS](common_params)
-* [Kava end session params to reset](kava-end-session-params-to-reset:)
-* [Server response Json structure](server-response-json-structure:)
+* [About Kava](#about-kava:)
+* [Kava Integration](#kava-integration:)
+* [Plugin configurations](#plugin-configurations:)
+* [Plugin configuration fields](#plugin-configuration-fields:)
+* [List of KAVA Events](#list-of-kava-events:)
+* [KAVA events explanation](#kava-events-explanation:)
+* [KAVA Parameters](#kava-parameters:)
+* [COMMON_PARAMS](#common_params:)
+* [Kava end session params to reset](#kava-end-session-params-to-reset:)
+* [Server response Json structure](#server-response-json-structure:)
 
 ## About Kava:
 
