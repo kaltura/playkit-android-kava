@@ -1,5 +1,18 @@
 # Kava Documentation.
 
+## Table of Contents:
+
+* [About Kava](about-kava:)
+* [Kava Integration](kava-integration:)
+* [Plugin configurations](plugin-configurations:)
+* [Plugin configuration fields](plugin-configuration-fields:)
+* [List of KAVA Events](list-of-kava-events:)
+* [KAVA events explanation](kava-events-explanation:)
+* [KAVA Parameters](kava-parameters:)
+* [COMMON_PARAMS](common_params)
+* [Kava end session params to reset](kava-end-session-params-to-reset:)
+* [Server response Json structure](server-response-json-structure:)
+
 ## About Kava:
 
 Kava is abbreviation for Kaltura Advanced Video Analytics. The main purpose of this plugin is to track and collect
@@ -111,7 +124,7 @@ public class MainActivity extends AppCompatActivity {
 
 ```
 
-## Plugin configuration fields
+## Plugin configuration fields:
 
 * [partnerId](#partnerId) - your Kaltura partnerId
     * Mandatory field. Without it KavaAnalyticsPlugin will not be able to perform.
