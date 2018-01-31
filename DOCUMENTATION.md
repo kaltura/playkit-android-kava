@@ -466,28 +466,12 @@ Kava parameters are additional data that is sent with Kava event and represent r
 
     ---
 
-* <a id="customVar1"></a>customVar1 - Optional parameter defined by the user.
+* <a id="customVar1"></a>customVar1, <a id="customVar2"></a>customVar2, <a id="customVar3"></a>customVar3 - Optional parameter defined by the user.
     - Can be any primitive value or String.
     - Optional parameter.
     - Obtained from pluginConfig.
     - If not exist do not send this parameter at all.
   
-    ---
-
-* <a id="customVar2"></a>customVar2 - Optional parameter defined by the user.
-    - Can be any primitive value or String.
-    - Optional parameter.
-    - Obtained from pluginConfig.
-    - If not exist do not send this parameter at all.
-
-    ---
-    
-* <a id="customVar3"></a>customVar3 - Optional parameter defined by the user.
-    - Can be any primitive value or String.
-    - Optional parameter.
-    - Obtained from pluginConfig.
-    - If not exist do not send this parameter at all.
-
     ---
   
 * <a id="targetPosition"></a>targetPosition - The requested seek position of the media. 
