@@ -2,7 +2,7 @@
 
 ## Table of Contents:
 
-* [About Kava](#about-kava:)
+* [About Kava](#about-kava)
 * [Kava Integration](#kava-integration:)
 * [Plugin configurations](#plugin-configurations:)
 * [Plugin configuration fields](#plugin-configuration-fields:)
