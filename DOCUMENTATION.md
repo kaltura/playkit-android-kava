@@ -44,9 +44,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
-        //First register your plugin.
-        PlayKitManager.registerPlugins(this, KavaAnalyticsPlugin.factory);
-        
         //Initialize PKPluginConfigs object.
         PKPluginConfigs pluginConfigs = new PKPluginConfigs();
         
@@ -102,8 +99,9 @@ public class MainActivity extends AppCompatActivity {
             //Initialize PKPluginConfigs object.
             PKPluginConfigs pluginConfigs = new PKPluginConfigs();
     
+            //Set your configurations.
             KavaAnalyticsConfig kavaConfig = new KavaAnalyticsConfig()
-                    .setPartnerId(123456) //Your partnerId. Mandatory field. Without it KavaAnalyticsPlugin will not be able to perform.
+                    .setPartnerId(123456) //Your partnerId. Mandatory field!
                     .setBaseUrl("yourBaseUrl")
                     .setUiConfId(123456)
                     .setKs("your_ks")
@@ -111,8 +109,8 @@ public class MainActivity extends AppCompatActivity {
                     .setReferrer("your_referrer")
                     .setDvrThreshold(1000) //Threshold from the live edge.
                     .setCustomVar1("customVar1")
-                    .setCustomVar1("customVar2")
-                    .setCustomVar1("customVar3");
+                    .setCustomVar2("customVar2")
+                    .setCustomVar3("customVar3");
     
             //Set Kava configurations to the PKPluginConfig.
             pluginConfigs.setPluginConfig(KavaAnalyticsPlugin.factory.getName(), kavaConfig);
@@ -191,14 +189,14 @@ Here we will see some explanation about each event. When does it sent and what p
     - eventId = 99
     - Sent every 10 second of active playback(when player is paused, view timer should be paused/stopped).
     - 30 seconds without VIEW event will reset KAVA session, so all the VIEW [specific parameters](#endSessionResetParams) should be reset also.
-    - Server can notify Kava (via response field ["viewEventsEnabled" = false](#serverResponse)) to shut down VIEW events.
-When it happens, VIEW events will be blocked from sending until server decides to enable VIEW events again. 
+    - Server may notify Kava (via response field ["viewEventsEnabled" = false](#serverResponse)) to shut down VIEW events.
+When it happens, VIEW events should be blocked from sending until server decides to enable VIEW events again. 
     - Parameters to send:
         - [COMMON_PARAMS](#common_params)
+        - [playTimeSum](#playTimeSum)
         - [bufferTime](#bufferTime)
         - [bufferTimeSum]($bufferTimeSum)
         - [actualBitrate](#actualBitrate)
-        - [playTimeSum](#playTimeSum)
         - [averageBitrate](#averageBitrate)
         
     ---
@@ -432,15 +430,15 @@ Kava parameters are additional data that is sent with Kava event and represent r
     ---
 
 * <a id="sessionStartTime"></a>sessionStartTime - The timestamp of the first event in the session.
-    - Obtained from response of the first event. "time" field on Json object that comes with response.
+    - Obtained from response of the first event. ["time"](#server-response-json-structure) field on Json object that comes with response.
     - First event the fired will not have this value.
     - Should be in Unix time format.
     
     ---
 
 * <a id="uiConfId"></a>uiConfId - The player ui configuration id.
-      - Obtained from pluginConfig object.
-      - If not exist do not send this parameter at all.
+    - Obtained from pluginConfig object.
+    - If not exist do not send this parameter at all.
 
     ---
   
@@ -453,48 +451,48 @@ Kava parameters are additional data that is sent with Kava event and represent r
     ---
   
 * <a id="position"></a>position - The playback position of the media.
-      - Should be in format of float (second.milliSecond).
-      - When [playbackType](#playbackType) is = live, this value should represent the offset of the playback position from the live edge.
-          - 0 when media position is on the live edge
-          - -2.5 when offset from the live edge is 2.5 seconds.
-      - Should be positive value for vod [playbackType](#playbackType).
+    - Should be in format of float (second.milliSecond).
+    - When [playbackType](#playbackType) is = live, this value should represent the offset of the playback position from the live edge.
+        - 0 when media position is on the live edge
+        - -2.5 when offset from the live edge is 2.5 seconds.
+    - Should be positive value for vod [playbackType](#playbackType).
 
     ---
   
 * <a id="playbackContext"></a>playbackContext - The category id describing the current played context.
-      - Optional parameter.
-      - Obtained from pluginConfig.
-      - If not exist do not send this parameter at all.
+    - Optional parameter.
+    - Obtained from pluginConfig.
+    - If not exist do not send this parameter at all.
 
     ---
 
 * <a id="customVar1"></a>customVar1 - Optional parameter defined by the user.
-      - Can be any primitive value or String.
-      - Optional parameter.
-      - Obtained from pluginConfig.
-      - If not exist do not send this parameter at all.
+    - Can be any primitive value or String.
+    - Optional parameter.
+    - Obtained from pluginConfig.
+    - If not exist do not send this parameter at all.
   
     ---
 
 * <a id="customVar2"></a>customVar2 - Optional parameter defined by the user.
-      - Can be any primitive value or String.
-      - Optional parameter.
-      - Obtained from pluginConfig.
-      - If not exist do not send this parameter at all.
+    - Can be any primitive value or String.
+    - Optional parameter.
+    - Obtained from pluginConfig.
+    - If not exist do not send this parameter at all.
 
     ---
     
 * <a id="customVar3"></a>customVar3 - Optional parameter defined by the user.
-      - Can be any primitive value or String.
-      - Optional parameter.
-      - Obtained from pluginConfig.
-      - If not exist do not send this parameter at all.
+    - Can be any primitive value or String.
+    - Optional parameter.
+    - Obtained from pluginConfig.
+    - If not exist do not send this parameter at all.
 
     ---
   
 * <a id="targetPosition"></a>targetPosition - The requested seek position of the media. 
-      - Should be in format of float (second.milliSecond).
-      - Obtained from player SEEKING event.
+    - Should be in format of float (second.milliSecond).
+    - Obtained from player SEEKING event.
 
     ---
   
