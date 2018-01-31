@@ -7,7 +7,7 @@ various events and data about Playkit video player. Integration is pretty simple
 
 ## Kava Integration:
 Kava build on top of Kaltura Playkit SDK so to get started you should add dependencies in your application build.gradle file.
-Note, Playkit is already included in KAVAPlugin. 
+Note, Playkit is already included in KAVAPlugin.
 
 ```
 dependencies {
@@ -59,6 +59,7 @@ You can see that start using KAVA is simple and require only few lines of code.
 
 Like other Kaltura`s Playkit plugins, Kava have a configurations that can be used by application. 
 In following code snippet we will see how to configure Kava with custom parameters. Below you will have detailed explanation of each field and it default values.
+Note, you can use KavaAnalyticsConfig object or build Json with your configurations. 
 
 ```java
 public class MainActivity extends AppCompatActivity {
