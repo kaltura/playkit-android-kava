@@ -48,14 +48,102 @@ public class MainActivity extends AppCompatActivity {
 
         //Create instance of the player with specified pluginConfigs.
         player = PlayKitManager.loadPlayer(this, pluginConfigs);
-    }
-    
+    }    
 }
 ```
 
 You can see that start using KAVA is simple and require only few lines of code.
 
 
+## Plugin configurations:
+
+Like other Kaltura`s Playkit plugins, Kava have a configurations that can be used by application. 
+In following code snippet we will see how to configure Kava with custom parameters. Below you will have detailed explanation of each field and it default values.
+
+```java
+public class MainActivity extends AppCompatActivity {
+    
+    private Player player;
+    
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        
+        //First register your plugin.
+        PlayKitManager.registerPlugins(this, KavaAnalyticsPlugin.factory);
+        
+        //Create PKPluginConfigs and populate it with Kava plugin configurations.
+        PKPluginConfigs pluginConfigs = createPluginConfigurations();
+        
+        //Create instance of the player with specified pluginConfigs.
+        player = PlayKitManager.loadPlayer(this, pluginConfigs);
+    }
+    
+    private PKPluginConfigs createPluginConfigurations() {
+    
+            //First register your plugin.
+            PlayKitManager.registerPlugins(this, KavaAnalyticsPlugin.factory);
+    
+            //Initialize PKPluginConfigs object.
+            PKPluginConfigs pluginConfigs = new PKPluginConfigs();
+    
+            KavaAnalyticsConfig kavaConfig = new KavaAnalyticsConfig()
+                    .setPartnerId(123456) //Your partnerId. Mandatory field. Without it KavaAnalyticsPlugin will not be able to perform.
+                    .setBaseUrl("yourBaseUrl")
+                    .setUiConfId(123456)
+                    .setKs("your_ks")
+                    .setPlaybackContext("yourPlaybackContext")
+                    .setReferrer("your_referrer")
+                    .setDvrThreshold(1000) //Threshold from the live edge.
+                    .setCustomVar1("customVar1")
+                    .setCustomVar1("customVar2")
+                    .setCustomVar1("customVar3");
+    
+            //Set Kava configurations to the PKPluginConfig.
+            pluginConfigs.setPluginConfig(KavaAnalyticsPlugin.factory.getName(), kavaConfig);
+    
+            
+            return pluginConfigs;
+        }
+}
+
+```
+
+## Plugin configuration fields
+
+* [partnerId](#partnerId) - your Kaltura partnerId
+    * Mandatory field. Without it KavaAnalyticsPlugin will not be able to perform.
+    
+* baseUrl - base Url where KavaAnalytics events will be sent.
+    * Default value - http://analytics.kaltura.com/api_v3/index.php
+    * Optional field
+    
+* [uiconfId](#uiconfId) - id of the Kaltura UI configurations.
+    * Optional field
+
+* [ks](#ks) - your Kaltura ks.
+    * Optional field
+
+* [playbackContext](#playbackContext) - you can provide your own custom context for the media playback.
+This is used to send the id of the category from which the user is playing the entry.
+    * Optional field
+        
+* [referrer](#referrer) - your referrer.
+    * Default value - "app://" + your application package name.
+    * Optional field
+    
+* dvrThreshold - threshold from the live edge. 
+When player`s playback position from the live edge <= then dvrThreshold, Kava will set [playbackType](#playbackType) to dvr. Otherwise it will be live.
+    * Use milliseconds for this field.
+    * Default value - 120000 (2 minutes)
+    * Optional field
+    
+* [customVar1](#customVar1), [customVar2](#customVar2), [customVar3](#customVar3) - you can use this fields for your own custom needs. 
+
+    * Optional field
+    
+    
 ## List of KAVA Events:
 
 Here you can see the list of all available KAVA Events:
