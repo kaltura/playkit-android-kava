@@ -495,10 +495,6 @@ Kava parameters are additional data that is sent with Kava event and represent r
 
     ---
   
-* <a id="kalsig"></a>kalsig - TODO
-
-    ---
-    
 * <a id="playTimeSum"></a>playTimeSum - Sum of time played for the current Kava session.
     - Should be in format of float (second.milliSecond).
     - Can be 0 to ∞.
@@ -532,7 +528,6 @@ Kava parameters are additional data that is sent with Kava event and represent r
   - [referrer](#referrer)
   - [deliveryType](#deliveryType)
   - [playbackType](#playbackType)
-  - [kalsig](#kalsig)
   - [sessionStartTime](#sessionStartTime)
   - [uiConfId](#uiConfId)
   - [clientVer](#clientVer)
