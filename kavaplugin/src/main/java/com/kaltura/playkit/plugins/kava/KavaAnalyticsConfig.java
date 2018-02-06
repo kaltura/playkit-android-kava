@@ -12,8 +12,8 @@
 
 package com.kaltura.playkit.plugins.kava;
 
+import com.google.gson.JsonObject;
 import com.kaltura.playkit.PKLog;
-import com.kaltura.playkit.Utils;
 import com.kaltura.playkit.utils.Consts;
 
 /**
@@ -24,6 +24,17 @@ public class KavaAnalyticsConfig {
 
     private static final PKLog log = PKLog.get(KavaAnalyticsConfig.class.getSimpleName());
 
+    private static final String KS = "ks";
+    private static final String BASE_URL = "baseUrl";
+    private static final String UICONF_ID = "uiconfId";
+    private static final String PARTNER_ID = "partnerId";
+    private static final String CUSTOM_VAR_1 = "customVar1";
+    private static final String CUSTOM_VAR_2 = "customVar2";
+    private static final String CUSTOM_VAR_3 = "customVar3";
+    private static final String REFERRER = "referrerAsBase64";
+    private static final String DVR_THRESHOLD = "dvrThreshold";
+    private static final String PLAYBACK_CONTEXT = "playbackContext";
+
     private static final String DEFAULT_BASE_URL = "http://analytics.kaltura.com/api_v3/index.php";
 
     private int uiconfId;
@@ -31,9 +42,9 @@ public class KavaAnalyticsConfig {
 
     private String ks;
     private String playbackContext;
-    private String referrerAsBase64;
+    private String referrer;
     private String baseUrl = DEFAULT_BASE_URL;
-    private long  dvrThreshold = Consts.DISTANCE_FROM_LIVE_THRESHOLD;
+    private long dvrThreshold = Consts.DISTANCE_FROM_LIVE_THRESHOLD;
     private String customVar1, customVar2, customVar3;
 
     public KavaAnalyticsConfig setUiConfId(int uiConfId) {
@@ -77,13 +88,7 @@ public class KavaAnalyticsConfig {
     }
 
     public KavaAnalyticsConfig setReferrer(String referrer) {
-        if (isValidReferrer(referrer)) {
-            this.referrerAsBase64 = Utils.toBase64(referrer.getBytes());
-        } else {
-            log.w("Invalid referrer argument. Should start with app:// or http:// or https://");
-            referrerAsBase64 = null;
-        }
-
+        this.referrer = referrer;
         return this;
     }
 
@@ -128,8 +133,11 @@ public class KavaAnalyticsConfig {
         return playbackContext;
     }
 
-    String getReferrerAsBase64() {
-        return referrerAsBase64;
+    String getReferrer() {
+        if (isValidReferrer(referrer)) {
+            return this.referrer;
+        }
+        return null;
     }
 
     boolean hasPlaybackContext() {
@@ -162,5 +170,22 @@ public class KavaAnalyticsConfig {
 
     boolean isPartnerIdValid() {
         return partnerId != 0;
+    }
+
+    public JsonObject toJson() {
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty(PARTNER_ID, partnerId);
+        jsonObject.addProperty(UICONF_ID, uiconfId);
+        jsonObject.addProperty(BASE_URL, baseUrl);
+        jsonObject.addProperty(DVR_THRESHOLD, dvrThreshold);
+
+        jsonObject.addProperty(KS, ks);
+        jsonObject.addProperty(PLAYBACK_CONTEXT, playbackContext);
+        jsonObject.addProperty(REFERRER, referrer);
+        jsonObject.addProperty(CUSTOM_VAR_1, customVar1);
+        jsonObject.addProperty(CUSTOM_VAR_2, customVar2);
+        jsonObject.addProperty(CUSTOM_VAR_3, customVar3);
+
+        return jsonObject;
     }
 }
