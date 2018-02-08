@@ -165,7 +165,7 @@ public class KavaAnalyticsConfig {
     }
 
     private boolean isValidReferrer(String referrer) {
-        return (referrer.startsWith("app://") || referrer.startsWith("http://") || referrer.startsWith("https://"));
+        return referrer != null && (referrer.startsWith("app://") || referrer.startsWith("http://") || referrer.startsWith("https://"));
     }
 
     boolean isPartnerIdValid() {

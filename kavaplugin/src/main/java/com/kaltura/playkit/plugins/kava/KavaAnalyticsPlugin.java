@@ -71,6 +71,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private boolean isEnded = false;
     private boolean isPaused = true;
     private boolean isFirstPlay = true;
+    private boolean viewEventsEnabled = true;
 
     private int viewEventTimeCounter;
 
@@ -278,6 +279,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             @Override
             public void onComplete(ResponseElement response) {
                 log.d("onComplete: " + event.name());
+                //TODO obtain from server flag that tells if view events should be enabled or not(when server be able to send that)
                 kavaParams.setSessionStartTime(response);
                 messageBus.post(new KavaAnalyticsEvent.KavaAnalyticsReport(event.name()));
             }
@@ -313,10 +315,12 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private void maybeSendViewEvent() {
-        viewEventTimeCounter += ONE_SECOND_IN_MS;
-        if (viewEventTimeCounter >= TEN_SECONDS_IN_MS) {
-            sendAnalyticsEvent(KavaEvents.VIEW);
-            viewEventTimeCounter = 0;
+        if(viewEventsEnabled) {
+            viewEventTimeCounter += ONE_SECOND_IN_MS;
+            if (viewEventTimeCounter >= TEN_SECONDS_IN_MS) {
+                sendAnalyticsEvent(KavaEvents.VIEW);
+                viewEventTimeCounter = 0;
+            }
         }
     }
 
