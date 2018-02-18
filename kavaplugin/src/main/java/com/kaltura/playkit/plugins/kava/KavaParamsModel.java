@@ -1,6 +1,7 @@
 package com.kaltura.playkit.plugins.kava;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.kaltura.netkit.connect.response.ResponseElement;
 import com.kaltura.playkit.PKMediaConfig;
@@ -25,13 +26,12 @@ public class KavaParamsModel {
     private int eventIndex;
     private int totalBufferTimePerViewEvent;
 
+    private long playTimeSum;
     private long actualBitrate;
     private long joinTimeStartTimestamp;
     private long totalBufferTimePerEntry;
     private long lastKnownBufferingTimestamp;
     private long targetSeekPositionInSeconds;
-
-    private float playTimeSum;
 
     private String entryId;
     private String referrer;
@@ -44,6 +44,7 @@ public class KavaParamsModel {
     private String currentAudioLanguage;
     private String currentCaptionLanguage;
 
+    private AverageBitrateCounter averageBitrateCounter;
     private LinkedHashMap<String, String> optionalParams;
 
 
@@ -70,24 +71,30 @@ public class KavaParamsModel {
         if (sessionStartTime != null) {
             params.put("sessionStartTime", sessionStartTime);
         }
+
         switch (event) {
+
             case VIEW:
+
+                params.put("actualBitrate", Long.toString(actualBitrate));
+
+                long averageBitrate = averageBitrateCounter.getAverageBitrate(playTimeSum + totalBufferTimePerEntry);
+                params.put("averageBitrate", Long.toString(averageBitrate));
+
+                playTimeSum += KavaAnalyticsPlugin.TEN_SECONDS_IN_MS - totalBufferTimePerViewEvent;
+                params.put("playTimeSum", Float.toString(playTimeSum / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
+
+                addBufferParams(params);
+
+                break;
             case PLAY:
             case RESUME:
-                float curBufferTimeInSeconds = totalBufferTimePerViewEvent == 0 ? 0 : totalBufferTimePerViewEvent / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
-                float totalBufferTimeInSeconds = totalBufferTimePerEntry == 0 ? 0 : totalBufferTimePerEntry / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
-                params.put("bufferTime", Float.toString(curBufferTimeInSeconds));
-                params.put("bufferTimeSum", Float.toString(totalBufferTimeInSeconds));
-                params.put("actualBitrate", Long.toString(actualBitrate));
-                if (event == KavaEvents.VIEW) {
-                    playTimeSum += (KavaAnalyticsPlugin.TEN_SECONDS_IN_MS - totalBufferTimePerViewEvent) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
-                    params.put("playTimeSum", Float.toString(playTimeSum));
-                    //View event is sent, so reset totalBufferTimePerViewEvent to 0.
-                    totalBufferTimePerViewEvent = 0;
-                } else if (event == KavaEvents.PLAY) {
+                if (event == KavaEvents.PLAY) {
                     float joinTime = (System.currentTimeMillis() - joinTimeStartTimestamp) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
                     params.put("joinTime", Float.toString(joinTime));
                 }
+                averageBitrateCounter.resumeCounting();
+                addBufferParams(params);
                 break;
             case SEEK:
                 params.put("targetPosition", Float.toString(targetSeekPositionInSeconds));
@@ -108,11 +115,29 @@ public class KavaParamsModel {
                     errorCode = -1;
                 }
                 break;
+            case PAUSE:
+                //When player was paused we should update average bitrate value,
+                //because we are interested in average bitrate only during active playback.
+                averageBitrateCounter.pauseCounting();
+                break;
         }
 
         params.putAll(optionalParams);
         eventIndex++;
         return params;
+    }
+
+    private void addBufferParams(Map<String, String> params) {
+
+        float curBufferTimeInSeconds = totalBufferTimePerViewEvent == 0 ? 0 : totalBufferTimePerViewEvent / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
+        float totalBufferTimeInSeconds = totalBufferTimePerEntry == 0 ? 0 : totalBufferTimePerEntry / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
+
+        params.put("bufferTime", Float.toString(curBufferTimeInSeconds));
+        params.put("bufferTimeSum", Float.toString(totalBufferTimeInSeconds));
+
+
+        //View event is sent, so reset totalBufferTimePerViewEvent to 0.
+        totalBufferTimePerViewEvent = 0;
     }
 
     void onUpdateConfig(KavaAnalyticsConfig pluginConfig) {
@@ -127,6 +152,7 @@ public class KavaParamsModel {
     }
 
     void onUpdateMedia(PKMediaConfig mediaConfig, String sessionId) {
+        averageBitrateCounter = new AverageBitrateCounter();
         this.sessionId = sessionId;
         this.entryId = mediaConfig.getMediaEntry().getId();
         eventIndex = 1;
@@ -134,6 +160,11 @@ public class KavaParamsModel {
         errorCode = -1;
         playTimeSum = 0;
         actualBitrate = -1;
+        lastKnownBufferingTimestamp = 0;
+        totalBufferTimePerEntry = 0;
+        totalBufferTimePerViewEvent = 0;
+        actualBitrate = 0;
+
     }
 
     private String buildDefaultReferrer() {
@@ -200,6 +231,7 @@ public class KavaParamsModel {
 
     void setActualBitrate(long videoBitrate) {
         this.actualBitrate = videoBitrate;
+        averageBitrateCounter.setBitrate(videoBitrate);
     }
 
     long getActualBitrate() {
@@ -225,6 +257,7 @@ public class KavaParamsModel {
         totalBufferTimePerViewEvent += bufferTime;
         totalBufferTimePerEntry += bufferTime;
         lastKnownBufferingTimestamp = currentTime;
+        Log.e("TAG1", "updateBufferTime " + lastKnownBufferingTimestamp);
     }
 
     void updateJoinTimestamp() {
@@ -234,4 +267,5 @@ public class KavaParamsModel {
     void updateLastKnownBufferingTimestamp() {
         lastKnownBufferingTimestamp = System.currentTimeMillis();
     }
+
 }

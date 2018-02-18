@@ -32,6 +32,7 @@ import com.kaltura.playkit.PKPlugin;
 import com.kaltura.playkit.PlaybackInfo;
 import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
+import com.kaltura.playkit.PlayerState;
 import com.kaltura.playkit.ads.PKAdErrorType;
 import com.kaltura.playkit.api.ovp.services.KavaService;
 import com.kaltura.playkit.player.PKPlayerErrorType;
@@ -60,6 +61,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private RequestQueue requestExecutor;
     private KavaAnalyticsConfig pluginConfig;
     private PKEvent.Listener eventListener = initEventListener();
+    private PlayerState playerState;
 
     private boolean playReached25;
     private boolean playReached50;
@@ -214,7 +216,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             }
                             break;
                         case VIDEO_TRACK_CHANGED:
-                            PlayerEvent.VideoTrackChanged videoTrackChanged = ((PlayerEvent.VideoTrackChanged) event);
+                            PlayerEvent.VideoTrackChanged videoTrackChanged = (PlayerEvent.VideoTrackChanged) event;
                             kavaParams.setActualBitrate(videoTrackChanged.newTrack.getBitrate());
                             sendAnalyticsEvent(KavaEvents.SOURCE_SELECTED);
                             break;
@@ -249,11 +251,13 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private void handleStateChanged(PlayerEvent.StateChanged event) {
         switch (event.newState) {
             case BUFFERING:
+                playerState = PlayerState.BUFFERING;
                 if (isImpressionSent) {
                     kavaParams.updateLastKnownBufferingTimestamp();
                 }
                 break;
             case READY:
+                playerState = PlayerState.READY;
                 kavaParams.updateBufferTime();
                 break;
         }
@@ -315,9 +319,14 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private void maybeSendViewEvent() {
-        if(viewEventsEnabled) {
+        if (viewEventsEnabled) {
             viewEventTimeCounter += ONE_SECOND_IN_MS;
             if (viewEventTimeCounter >= TEN_SECONDS_IN_MS) {
+                //When we sending VIEW event, while player is buffering we should
+                //manually update buffer time.
+                if (playerState == PlayerState.BUFFERING) {
+                    kavaParams.updateBufferTime();
+                }
                 sendAnalyticsEvent(KavaEvents.VIEW);
                 viewEventTimeCounter = 0;
             }
