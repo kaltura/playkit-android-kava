@@ -18,7 +18,7 @@ import java.util.Map;
  * Created by anton.afanasiev on 31/01/2018.
  */
 
-public class KavaParamsModel {
+class KavaParamsModel {
 
     private Context context;
 
@@ -257,7 +257,6 @@ public class KavaParamsModel {
         totalBufferTimePerViewEvent += bufferTime;
         totalBufferTimePerEntry += bufferTime;
         lastKnownBufferingTimestamp = currentTime;
-        Log.e("TAG1", "updateBufferTime " + lastKnownBufferingTimestamp);
     }
 
     void updateJoinTimestamp() {
