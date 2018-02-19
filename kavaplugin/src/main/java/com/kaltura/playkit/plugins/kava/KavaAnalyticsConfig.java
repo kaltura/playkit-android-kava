@@ -41,11 +41,12 @@ public class KavaAnalyticsConfig {
     private int partnerId;
 
     private String ks;
-    private String playbackContext;
     private String referrer;
+    private String playbackContext;
     private String baseUrl = DEFAULT_BASE_URL;
-    private long dvrThreshold = Consts.DISTANCE_FROM_LIVE_THRESHOLD;
     private String customVar1, customVar2, customVar3;
+
+    private long dvrThreshold = Consts.DISTANCE_FROM_LIVE_THRESHOLD;
 
     public KavaAnalyticsConfig setUiConfId(int uiConfId) {
         this.uiconfId = uiConfId;

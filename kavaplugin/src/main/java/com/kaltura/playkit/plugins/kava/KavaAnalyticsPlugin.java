@@ -22,26 +22,18 @@ import com.kaltura.netkit.connect.request.RequestBuilder;
 import com.kaltura.netkit.connect.response.ResponseElement;
 import com.kaltura.netkit.utils.OnRequestCompletion;
 import com.kaltura.playkit.MessageBus;
-import com.kaltura.playkit.PKError;
 import com.kaltura.playkit.PKEvent;
 import com.kaltura.playkit.PKLog;
 import com.kaltura.playkit.PKMediaConfig;
-import com.kaltura.playkit.PKMediaEntry;
-import com.kaltura.playkit.PKMediaSource;
 import com.kaltura.playkit.PKPlugin;
-import com.kaltura.playkit.PlaybackInfo;
 import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.PlayerState;
-import com.kaltura.playkit.ads.PKAdErrorType;
 import com.kaltura.playkit.api.ovp.services.KavaService;
-import com.kaltura.playkit.player.PKPlayerErrorType;
 import com.kaltura.playkit.plugin.kava.BuildConfig;
 import com.kaltura.playkit.utils.Consts;
 
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Created by anton.afanasiev on 27/09/2017.
@@ -50,18 +42,15 @@ import java.util.TimerTask;
 public class KavaAnalyticsPlugin extends PKPlugin {
 
     private static final PKLog log = PKLog.get(KavaAnalyticsPlugin.class.getSimpleName());
-    private static final long ONE_SECOND_IN_MS = 1000;
-    static final int TEN_SECONDS_IN_MS = 10000;
 
     private Player player;
-    private Timer viewEventTimer;
     private MessageBus messageBus;
+    private PlayerState playerState;
     private PKMediaConfig mediaConfig;
-    private KavaParamsModel kavaParams;
+    private DataHandler dataHandler;
     private RequestQueue requestExecutor;
     private KavaAnalyticsConfig pluginConfig;
     private PKEvent.Listener eventListener = initEventListener();
-    private PlayerState playerState;
 
     private boolean playReached25;
     private boolean playReached50;
@@ -73,9 +62,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private boolean isEnded = false;
     private boolean isPaused = true;
     private boolean isFirstPlay = true;
-    private boolean viewEventsEnabled = true;
 
-    private int viewEventTimeCounter;
+    private ViewTimer viewTimer;
+    private ViewTimer.ViewEventTrigger viewEventTrigger = initViewTrigger();
+
 
     public static final Factory factory = new Factory() {
         @Override
@@ -105,39 +95,42 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         this.messageBus = messageBus;
         this.requestExecutor = APIOkRequestsExecutor.getSingleton();
         this.messageBus.listen(eventListener, (Enum[]) PlayerEvent.Type.values());
-        kavaParams = new KavaParamsModel(context);
+        dataHandler = new DataHandler(context, player);
         onUpdateConfig(config);
     }
 
     @Override
     protected void onUpdateMedia(PKMediaConfig mediaConfig) {
         this.mediaConfig = mediaConfig;
-        String sessionId = player.getSessionId() != null ? player.getSessionId() : "";
-        kavaParams.onUpdateMedia(mediaConfig, sessionId);
+        viewTimer = new ViewTimer();
+        viewTimer.setViewEventTrigger(viewEventTrigger);
+        dataHandler.onUpdateMedia(mediaConfig);
         resetFlags();
-        resetPlayerReachedFlags();
     }
 
     @Override
     protected void onUpdateConfig(Object config) {
         this.pluginConfig = parsePluginConfig(config);
-        kavaParams.onUpdateConfig(pluginConfig);
+        dataHandler.onUpdateConfig(pluginConfig);
     }
 
     @Override
     protected void onApplicationPaused() {
-        isPaused = true;
-        stopAnalyticsTimer();
+        viewTimer.setViewEventTrigger(null);
+        viewTimer.stop();
     }
 
     @Override
     protected void onApplicationResumed() {
-        startAnalyticsTimer();
+        viewTimer.setViewEventTrigger(viewEventTrigger);
+        viewTimer.start();
     }
 
     @Override
     protected void onDestroy() {
-        stopAnalyticsTimer();
+        viewTimer.setViewEventTrigger(null);
+        viewTimer.stop();
+        viewTimer = null;
     }
 
     private PKEvent.Listener initEventListener() {
@@ -161,7 +154,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             break;
                         case PLAY:
                             if (isFirstPlay) {
-                                kavaParams.updateJoinTimestamp();
+                                dataHandler.handleFirstPlay();
                             }
                             if (isImpressionSent) {
                                 sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
@@ -170,13 +163,13 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             }
                             break;
                         case PAUSE:
-                            isPaused = true;
+                            setIsPaused(true);
                             sendAnalyticsEvent(KavaEvents.PAUSE);
                             break;
                         case PLAYING:
                             if (isFirstPlay) {
                                 isFirstPlay = false;
-                                startAnalyticsTimer();
+                                viewTimer.start();
                                 sendAnalyticsEvent(KavaEvents.PLAY);
                             } else {
                                 if (isPaused && !isEnded) {
@@ -184,19 +177,17 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                                 }
                             }
                             isEnded = false; // needed in order to prevent sending of RESUME event after REPLAY.
-                            isPaused = false;
+                            setIsPaused(false);
                             break;
                         case SEEKING:
-                            PlayerEvent.Seeking seekingEvent = (PlayerEvent.Seeking) event;
-                            kavaParams.setSeekTarget(seekingEvent.targetPosition);
+                            dataHandler.handleSeek(event);
                             sendAnalyticsEvent(KavaEvents.SEEK);
                             break;
                         case REPLAY:
                             sendAnalyticsEvent(KavaEvents.REPLAY);
                             break;
                         case SOURCE_SELECTED:
-                            PKMediaSource selectedSource = ((PlayerEvent.SourceSelected) event).source;
-                            kavaParams.updateDeliveryType(selectedSource.getMediaFormat());
+                            dataHandler.handleSourceSelected(event);
                             break;
                         case ENDED:
                             maybeSentPlayerReachedEvent();
@@ -206,40 +197,27 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             }
 
                             isEnded = true;
-                            isPaused = true;
+                            setIsPaused(true);
                             break;
                         case PLAYBACK_INFO_UPDATED:
-                            PlaybackInfo playbackInfo = ((PlayerEvent.PlaybackInfoUpdated) event).playbackInfo;
-                            if (kavaParams.getActualBitrate() != playbackInfo.getVideoBitrate()) {
-                                kavaParams.setActualBitrate(playbackInfo.getVideoBitrate());
+                            if (dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_VIDEO)) {
                                 sendAnalyticsEvent(KavaEvents.FLAVOR_SWITCHED);
                             }
                             break;
                         case VIDEO_TRACK_CHANGED:
-                            PlayerEvent.VideoTrackChanged videoTrackChanged = (PlayerEvent.VideoTrackChanged) event;
-                            kavaParams.setActualBitrate(videoTrackChanged.newTrack.getBitrate());
+                            dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_VIDEO);
                             sendAnalyticsEvent(KavaEvents.SOURCE_SELECTED);
                             break;
                         case AUDIO_TRACK_CHANGED:
-                            PlayerEvent.AudioTrackChanged audioTrackChanged = (PlayerEvent.AudioTrackChanged) event;
-                            kavaParams.setCurrentAudioLanguage(audioTrackChanged.newTrack.getLanguage());
+                            dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_AUDIO);
                             sendAnalyticsEvent(KavaEvents.AUDIO_SELECTED);
                             break;
                         case TEXT_TRACK_CHANGED:
-                            PlayerEvent.TextTrackChanged textTrackChanged = (PlayerEvent.TextTrackChanged) event;
-                            kavaParams.setCurrentCaptionsLanguage(textTrackChanged.newTrack.getLanguage());
+                            dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_TEXT);
                             sendAnalyticsEvent(KavaEvents.CAPTIONS);
                             break;
                         case ERROR:
-                            PKError error = ((PlayerEvent.Error) event).error;
-                            int errorCode = -1;
-                            if (error.errorType instanceof PKPlayerErrorType) {
-                                errorCode = ((PKPlayerErrorType) error.errorType).errorCode;
-                            } else if (error.errorType instanceof PKAdErrorType) {
-                                errorCode = ((PKAdErrorType) error.errorType).errorCode;
-                            }
-                            log.e("Playback ERROR. errorCode : " + errorCode);
-                            kavaParams.setErrorCode(errorCode);
+                            dataHandler.handleError(event);
                             sendAnalyticsEvent(KavaEvents.ERROR);
                             break;
                     }
@@ -252,13 +230,14 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         switch (event.newState) {
             case BUFFERING:
                 playerState = PlayerState.BUFFERING;
+                //We should start count buffering time only after IMPRESSION was sent.
                 if (isImpressionSent) {
-                    kavaParams.updateLastKnownBufferingTimestamp();
+                    dataHandler.handleBufferingStart();
                 }
                 break;
             case READY:
                 playerState = PlayerState.READY;
-                kavaParams.updateBufferTime();
+                dataHandler.handleBufferingEnd();
                 break;
         }
     }
@@ -273,10 +252,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             return;
         }
 
-        kavaParams.updatePlaybackType(decideOnPlaybackType(event));
-        kavaParams.updatePlayerPosition(Float.toString(player.getCurrentPosition() / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
-
-        Map<String, String> params = kavaParams.getParams(event);
+        Map<String, String> params = dataHandler.collectData(event);
 
         RequestBuilder requestBuilder = KavaService.sendAnalyticsEvent(pluginConfig.getBaseUrl(), params);
         requestBuilder.completion(new OnRequestCompletion() {
@@ -284,7 +260,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             public void onComplete(ResponseElement response) {
                 log.d("onComplete: " + event.name());
                 //TODO obtain from server flag that tells if view events should be enabled or not(when server be able to send that)
-                kavaParams.setSessionStartTime(response);
+                dataHandler.setSessionStartTime(response);
                 messageBus.post(new KavaAnalyticsEvent.KavaAnalyticsReport(event.name()));
             }
         });
@@ -292,49 +268,17 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         requestExecutor.queue(requestBuilder.build());
     }
 
-    private void startAnalyticsTimer() {
-        if (viewEventTimer != null) {
-            viewEventTimeCounter = 0;
-            viewEventTimer.cancel();
-            viewEventTimer = null;
+    private KavaAnalyticsConfig parsePluginConfig(Object config) {
+        if (config instanceof KavaAnalyticsConfig) {
+            return (KavaAnalyticsConfig) config;
+        } else if (config instanceof JsonObject) {
+            return new Gson().fromJson((JsonObject) config, KavaAnalyticsConfig.class);
         }
-        viewEventTimer = new Timer();
-        viewEventTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                if (!isPaused) {
-                    maybeSendViewEvent();
-                    maybeSentPlayerReachedEvent();
-                }
-            }
-        }, 0, ONE_SECOND_IN_MS);
-    }
-
-    private void stopAnalyticsTimer() {
-        if (viewEventTimer == null) {
-            return;
-        }
-        viewEventTimer.cancel();
-        viewEventTimer = null;
-    }
-
-    private void maybeSendViewEvent() {
-        if (viewEventsEnabled) {
-            viewEventTimeCounter += ONE_SECOND_IN_MS;
-            if (viewEventTimeCounter >= TEN_SECONDS_IN_MS) {
-                //When we sending VIEW event, while player is buffering we should
-                //manually update buffer time.
-                if (playerState == PlayerState.BUFFERING) {
-                    kavaParams.updateBufferTime();
-                }
-                sendAnalyticsEvent(KavaEvents.VIEW);
-                viewEventTimeCounter = 0;
-            }
-        }
+        // If no config passed, create default one.
+        return new KavaAnalyticsConfig();
     }
 
     private void maybeSentPlayerReachedEvent() {
-
         if (player.isLive()) {
             return;
         }
@@ -359,76 +303,41 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             playReached75 = true;
             sendAnalyticsEvent(KavaEvents.PLAY_REACHED_75_PERCENT);
         }
+
     }
 
-    private KavaAnalyticsConfig parsePluginConfig(Object config) {
-        if (config instanceof KavaAnalyticsConfig) {
-            return (KavaAnalyticsConfig) config;
-        } else if (config instanceof JsonObject) {
-            return new Gson().fromJson((JsonObject) config, KavaAnalyticsConfig.class);
-        }
-        // If no config passed, create default one.
-        return new KavaAnalyticsConfig();
-    }
-
-    /**
-     * Use metadata playback type in order to decide which playback type is currently active.
-     *
-     * @param event - KavaEvent type.
-     */
-    private String decideOnPlaybackType(KavaEvents event) {
-
-        KavaMediaEntryType kavaPlaybackType;
-        String metadataPlaybackType = mediaConfig.getMediaEntry().getMediaType().name();
-
-        if (KavaMediaEntryType.Vod.name().equals(metadataPlaybackType)) {
-            kavaPlaybackType = KavaMediaEntryType.Vod;
-        } else if (PKMediaEntry.MediaEntryType.Live.name().equals(metadataPlaybackType)) {
-            kavaPlaybackType = hasDvr() ? KavaMediaEntryType.Dvr : KavaMediaEntryType.Live;
+    private void setIsPaused(boolean isPaused) {
+        this.isPaused = isPaused;
+        if (isPaused) {
+            viewTimer.pause();
         } else {
-            //If there is no playback type in metadata, obtain it from player as fallback.
-            if (player == null || event == KavaEvents.ERROR) {
-                //If player is null it is impossible to obtain the playbackType, so it will be unknown.
-                kavaPlaybackType = KavaMediaEntryType.Unknown;
-            } else {
-                if (!player.isLive()) {
-                    kavaPlaybackType = KavaMediaEntryType.Vod;
-                } else {
-                    kavaPlaybackType = hasDvr() ? KavaMediaEntryType.Dvr : KavaMediaEntryType.Live;
-                }
-            }
+            viewTimer.resume();
         }
-
-        return kavaPlaybackType.name().toLowerCase();
-    }
-
-    private boolean hasDvr() {
-        if (player == null) {
-            return false;
-        }
-
-        if (player.isLive()) {
-            long distanceFromLive = player.getDuration() - player.getCurrentPosition();
-            return distanceFromLive >= pluginConfig.getDvrThreshold();
-        }
-        return false;
     }
 
     private void resetFlags() {
-        isPaused = true;
+        setIsPaused(true);
         isEnded = false;
         isFirstPlay = true;
-    }
-
-    private void resetPlayerReachedFlags() {
         playReached25 = playReached50 = playReached75 = playReached100 = false;
     }
 
-    private enum KavaMediaEntryType {
-        Vod,
-        Live,
-        Dvr,
-        Unknown
-    }
+    private ViewTimer.ViewEventTrigger initViewTrigger() {
+        return new ViewTimer.ViewEventTrigger() {
+            @Override
+            public void triggerViewEvent() {
+                //When we send VIEW event, while player is buffering we should
+                //manually update buffer time. So we will simulate handleBufferEnd()
+                if (playerState == PlayerState.BUFFERING) {
+                    dataHandler.handleBufferingEnd();
+                }
+                sendAnalyticsEvent(KavaEvents.VIEW);
+            }
 
+            @Override
+            public void onTick() {
+                maybeSentPlayerReachedEvent();
+            }
+        };
+    }
 }
