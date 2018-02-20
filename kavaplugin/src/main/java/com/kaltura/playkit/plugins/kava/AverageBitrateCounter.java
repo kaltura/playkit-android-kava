@@ -2,6 +2,7 @@ package com.kaltura.playkit.plugins.kava;
 
 
 import com.kaltura.playkit.PKLog;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -22,23 +23,20 @@ public class AverageBitrateCounter {
 
     /**
      * Calculate average bitrate for the entire media session.
+     *
      * @param totalPlaytimeSum - total amount of the player being in active playback mode.
      * @return - average bitrate.
      */
     long getAverageBitrate(long totalPlaytimeSum) {
-        if (!shouldCount) {
-            log.w("Should not try to get average bitrate while player is paused");
-        }
 
         updateBitratePlayTime();
-        Iterator iterator = averageTrackPlaybackDuration.entrySet().iterator();
+        Iterator<Map.Entry<Long, Long>> iterator = averageTrackPlaybackDuration.entrySet().iterator();
         long averageBitrate = 0;
         while (iterator.hasNext()) {
-            Map.Entry pair = (Map.Entry)iterator.next();
-            long bitrate = (long) pair.getKey();
-            long playTime = (long) pair.getValue();
+            Map.Entry<Long, Long> pair = iterator.next();
+            long bitrate = pair.getKey();
+            long playTime = pair.getValue();
             averageBitrate += (bitrate * playTime) / totalPlaytimeSum;
-
         }
 
         return averageBitrate;
