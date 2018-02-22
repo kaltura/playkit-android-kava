@@ -304,6 +304,18 @@ class DataHandler {
     }
 
     /**
+     * When VIEW event was not delivered for more then 30 seconds, Kava server will reset
+     * VIEW session. So we also have to the same.
+     */
+    void handleViewEventSessionClosed() {
+        eventIndex = 1;
+        playTimeSum = 0;
+        totalBufferTimePerEntry = 0;
+        totalBufferTimePerViewEvent = 0;
+        averageBitrateCounter.reset();
+    }
+
+    /**
      * Updates player position based on playbackType. If current playbackType is LIVE or DVR
      * player position will be calculated based on distance from the live edge. Therefore should be 0 or negative value.
      * Otherwise it should be just a real current position.

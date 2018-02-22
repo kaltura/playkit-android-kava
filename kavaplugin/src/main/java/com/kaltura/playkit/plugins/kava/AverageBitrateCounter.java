@@ -84,4 +84,8 @@ public class AverageBitrateCounter {
         }
         this.currentTrackBitrate = bitrate;
     }
+
+    void reset() {
+        averageTrackPlaybackDuration.clear();
+    }
 }

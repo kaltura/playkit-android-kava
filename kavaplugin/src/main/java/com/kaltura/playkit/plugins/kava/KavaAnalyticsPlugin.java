@@ -325,13 +325,18 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private ViewTimer.ViewEventTrigger initViewTrigger() {
         return new ViewTimer.ViewEventTrigger() {
             @Override
-            public void triggerViewEvent() {
+            public void onTriggerViewEvent() {
                 //When we send VIEW event, while player is buffering we should
                 //manually update buffer time. So we will simulate handleBufferEnd()
                 if (playerState == PlayerState.BUFFERING) {
                     dataHandler.handleBufferingEnd();
                 }
                 sendAnalyticsEvent(KavaEvents.VIEW);
+            }
+
+            @Override
+            public void onResetViewEvent() {
+                dataHandler.handleViewEventSessionClosed();
             }
 
             @Override

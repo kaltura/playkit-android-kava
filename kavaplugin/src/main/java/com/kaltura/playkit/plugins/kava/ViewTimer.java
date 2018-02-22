@@ -11,8 +11,10 @@ class ViewTimer {
 
     static final int TEN_SECONDS_IN_MS = 10000;
     private static final long ONE_SECOND_IN_MS = 1000;
+    private static final long MAX_ALLOWED_VIEW_IDLE_TIME = 30000;
 
     private int viewEventTimeCounter;
+    private int viewEventIdleCounter;
 
     private boolean isPaused;
     private boolean viewEventsEnabled = true;
@@ -25,7 +27,12 @@ class ViewTimer {
         /**
          * Called when VIEW event should be sent.
          */
-        void triggerViewEvent();
+        void onTriggerViewEvent();
+
+        /**
+         * Called when VIEW event was not sent for 30 seconds.
+         */
+        void onResetViewEvent();
 
         /**
          * Triggered every 1000ms
@@ -39,13 +46,22 @@ class ViewTimer {
         viewEventTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                if (!isPaused && viewEventsEnabled) {
-                    viewEventTimeCounter += ONE_SECOND_IN_MS;
-                    if (viewEventTimeCounter >= TEN_SECONDS_IN_MS && viewEventTrigger != null) {
-                        viewEventTrigger.triggerViewEvent();
-                        viewEventTimeCounter = 0;
+                if (viewEventsEnabled) {
+                    if (isPaused) {
+                        viewEventIdleCounter += ONE_SECOND_IN_MS;
+                        if (viewEventIdleCounter >= MAX_ALLOWED_VIEW_IDLE_TIME) {
+                            resetCounters();
+                            viewEventTrigger.onResetViewEvent();
+                        }
+                    } else {
+                        viewEventTimeCounter += ONE_SECOND_IN_MS;
+                        if (viewEventTimeCounter >= TEN_SECONDS_IN_MS && viewEventTrigger != null) {
+                            resetCounters();
+                            viewEventTrigger.onTriggerViewEvent();
+                        }
                     }
                 }
+
                 if (viewEventTrigger != null) {
                     viewEventTrigger.onTick();
                 }
@@ -71,5 +87,10 @@ class ViewTimer {
 
     void setViewEventTrigger(ViewEventTrigger viewEventTrigger) {
         this.viewEventTrigger = viewEventTrigger;
+    }
+
+    private void resetCounters() {
+        viewEventIdleCounter = 0;
+        viewEventTimeCounter = 0;
     }
 }
