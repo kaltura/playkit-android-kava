@@ -51,6 +51,7 @@ class DataHandler {
     private String entryId;
     private String sessionId;
     private String partnerId;
+    private String userAgent;
     private String deliveryType;
     private String sessionStartTime;
     private String referrerAsBase64;
@@ -64,6 +65,7 @@ class DataHandler {
     DataHandler(Context context, Player player) {
         this.context = context;
         this.player = player;
+        this.userAgent = context.getPackageName() + " " + PlayKitManager.CLIENT_TAG + " " + System.getProperty("http.agent");
     }
 
     /**
@@ -119,8 +121,8 @@ class DataHandler {
         params.put("deliveryType", deliveryType);
         params.put("playbackType", playbackType.name().toLowerCase());
         params.put("clientVer", PlayKitManager.CLIENT_TAG);
-        params.put("clientTag", PlayKitManager.CLIENT_TAG);
         params.put("position", getPlayerPosition(playbackType));
+        params.put("application", context.getPackageName());
 
         if (sessionStartTime != null) {
             params.put("sessionStartTime", sessionStartTime);
@@ -155,7 +157,9 @@ class DataHandler {
                 break;
             case SOURCE_SELECTED:
             case FLAVOR_SWITCHED:
-                params.put("actualBitrate", Long.toString(actualBitrate));
+                if (actualBitrate != -1) {
+                    params.put("actualBitrate", Long.toString(actualBitrate));
+                }
                 break;
             case AUDIO_SELECTED:
                 params.put("language", currentAudioLanguage);
@@ -437,5 +441,13 @@ class DataHandler {
         totalBufferTimePerEntry = 0;
         totalBufferTimePerViewEvent = 0;
         lastKnownBufferingTimestamp = 0;
+    }
+
+    /**
+     *
+     * @return - user agent value build from application id + playkit version + systems userAgent
+     */
+    String getUserAgent() {
+        return userAgent;
     }
 }
