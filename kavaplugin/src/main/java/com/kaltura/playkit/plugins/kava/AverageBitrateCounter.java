@@ -86,6 +86,6 @@ public class AverageBitrateCounter {
     }
 
     void reset() {
-        averageTrackPlaybackDuration = new HashMap<>();
+        averageTrackPlaybackDuration.clear();
     }
 }
