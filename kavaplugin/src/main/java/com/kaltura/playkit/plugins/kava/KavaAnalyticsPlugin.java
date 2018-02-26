@@ -254,7 +254,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
         Map<String, String> params = dataHandler.collectData(event);
 
-        RequestBuilder requestBuilder = KavaService.sendAnalyticsEvent(pluginConfig.getBaseUrl(), params);
+        RequestBuilder requestBuilder = KavaService.sendAnalyticsEvent(pluginConfig.getBaseUrl(), dataHandler.getUserAgent(), params);
         requestBuilder.completion(new OnRequestCompletion() {
             @Override
             public void onComplete(ResponseElement response) {
