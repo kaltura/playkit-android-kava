@@ -153,7 +153,7 @@ class DataHandler {
                 addBufferParams(params);
                 break;
             case SEEK:
-                params.put("targetPosition", Float.toString(targetSeekPositionInSeconds));
+                params.put("targetPosition", Float.toString(targetSeekPositionInSeconds / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
                 break;
             case SOURCE_SELECTED:
             case FLAVOR_SWITCHED:
@@ -191,8 +191,8 @@ class DataHandler {
     /**
      * Player track change handler.
      *
-     * @param event
-     * @param trackType
+     * @param event - current event.
+     * @param trackType - type of the requested track.
      * @return - return true if analytics managed to set newly received track data. Otherwise false.
      */
     boolean handleTrackChange(PKEvent event, int trackType) {
@@ -228,7 +228,7 @@ class DataHandler {
     /**
      * Handle error event.
      *
-     * @param event
+     * @param event - current event.
      */
     void handleError(PKEvent event) {
         PKError error = ((PlayerEvent.Error) event).error;
@@ -246,7 +246,7 @@ class DataHandler {
      * Handle SourceSelected event. Obtain and update current media format
      * accepted by KAVA.
      *
-     * @param event
+     * @param event - current event.
      */
     void handleSourceSelected(PKEvent event) {
         PKMediaSource selectedSource = ((PlayerEvent.SourceSelected) event).source;
@@ -262,7 +262,7 @@ class DataHandler {
     /**
      * Handle seek event. Update and cache target position.
      *
-     * @param event
+     * @param event - current event.
      */
     void handleSeek(PKEvent event) {
         PlayerEvent.Seeking seekingEvent = (PlayerEvent.Seeking) event;
@@ -299,7 +299,7 @@ class DataHandler {
     /**
      * Set view session start time.
      *
-     * @param response
+     * @param response - server response
      */
     void setSessionStartTime(ResponseElement response) {
         if (sessionStartTime == null && response.getResponse() != null) {
@@ -340,7 +340,7 @@ class DataHandler {
     /**
      * Add buffer information to the report.
      *
-     * @param params
+     * @param params - map of current params.
      */
     private void addBufferParams(Map<String, String> params) {
 
