@@ -1,11 +1,10 @@
 package com.kaltura.playkit.plugins.kava;
 
 
+import android.util.LongSparseArray;
+
 import com.kaltura.playkit.PKLog;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Created by anton.afanasiev on 08/02/2018.
@@ -19,7 +18,7 @@ public class AverageBitrateCounter {
     private long currentTrackBitrate = -1;
     private long currentTrackStartTimestamp = 0;
 
-    private Map<Long, Long> averageTrackPlaybackDuration = new HashMap<>();
+    private LongSparseArray<Long> averageTrackPlaybackDuration = new LongSparseArray<>();
 
     /**
      * Calculate average bitrate for the entire media session.
@@ -30,15 +29,15 @@ public class AverageBitrateCounter {
     long getAverageBitrate(long totalPlaytimeSum) {
 
         updateBitratePlayTime();
-        Iterator<Map.Entry<Long, Long>> iterator = averageTrackPlaybackDuration.entrySet().iterator();
+
+        long bitrate;
+        long playTime;
         long averageBitrate = 0;
-        while (iterator.hasNext()) {
-            Map.Entry<Long, Long> pair = iterator.next();
-            long bitrate = pair.getKey();
-            long playTime = pair.getValue();
+        for (int i = 0; i < averageTrackPlaybackDuration.size(); i++) {
+            bitrate = averageTrackPlaybackDuration.keyAt(i);
+            playTime = averageTrackPlaybackDuration.get(bitrate);
             averageBitrate += (bitrate * playTime) / totalPlaytimeSum;
         }
-
         return averageBitrate;
     }
 
