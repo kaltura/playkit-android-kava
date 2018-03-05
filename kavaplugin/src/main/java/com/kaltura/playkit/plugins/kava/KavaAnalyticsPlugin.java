@@ -116,12 +116,14 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     @Override
     protected void onApplicationPaused() {
+        dataHandler.onApplicationPaused();
         viewTimer.setViewEventTrigger(null);
         viewTimer.stop();
     }
 
     @Override
     protected void onApplicationResumed() {
+        dataHandler.setOnApplicationResumed();
         viewTimer.setViewEventTrigger(viewEventTrigger);
         viewTimer.start();
     }

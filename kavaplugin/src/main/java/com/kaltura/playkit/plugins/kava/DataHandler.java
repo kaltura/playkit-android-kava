@@ -47,6 +47,7 @@ class DataHandler {
     private long totalBufferTimePerEntry;
     private long lastKnownBufferingTimestamp;
     private long targetSeekPositionInSeconds;
+    private long currentPosition;
 
     private String entryId;
     private String sessionId;
@@ -61,6 +62,7 @@ class DataHandler {
 
     private AverageBitrateCounter averageBitrateCounter;
     private OptionalParams optionalParams;
+    private boolean onApplicationPaused = false;
 
     DataHandler(Context context, Player player) {
         this.context = context;
@@ -106,7 +108,9 @@ class DataHandler {
      * @return - Map with all the event relevant information
      */
     Map<String, String> collectData(KavaEvents event) {
-
+        if (!onApplicationPaused) {
+            currentPosition = player.getCurrentPosition();
+        }
         KavaMediaEntryType playbackType = decideOnPlaybackType(event);
         Map<String, String> params = new LinkedHashMap<>();
 
@@ -191,7 +195,7 @@ class DataHandler {
     /**
      * Player track change handler.
      *
-     * @param event - current event.
+     * @param event     - current event.
      * @param trackType - type of the requested track.
      * @return - return true if analytics managed to set newly received track data. Otherwise false.
      */
@@ -327,7 +331,7 @@ class DataHandler {
      * @param mediaEntryType - {@link KavaMediaEntryType} of the media for the moment of sending event.
      */
     private String getPlayerPosition(KavaMediaEntryType mediaEntryType) {
-        long playerPosition = player.getCurrentPosition();
+        long playerPosition = currentPosition;//player.getCurrentPosition();
         if (mediaEntryType == KavaMediaEntryType.Dvr
                 || mediaEntryType == KavaMediaEntryType.Live) {
             playerPosition = player.getCurrentPosition() - player.getDuration();
@@ -444,10 +448,18 @@ class DataHandler {
     }
 
     /**
-     *
      * @return - user agent value build from application id + playkit version + systems userAgent
      */
     String getUserAgent() {
         return userAgent;
+    }
+
+    void onApplicationPaused() {
+        currentPosition = player.getCurrentPosition();
+        onApplicationPaused = true;
+    }
+
+    void setOnApplicationResumed() {
+        onApplicationPaused = false;
     }
 }
