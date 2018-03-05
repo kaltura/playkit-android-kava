@@ -43,11 +43,12 @@ class DataHandler {
     private long playTimeSum;
     private long dvrThreshold;
     private long actualBitrate;
+    private long currentPosition;
+    private long currentDuration;
     private long joinTimeStartTimestamp;
     private long totalBufferTimePerEntry;
     private long lastKnownBufferingTimestamp;
     private long targetSeekPositionInSeconds;
-    private long currentPosition;
 
     private String entryId;
     private String sessionId;
@@ -60,8 +61,10 @@ class DataHandler {
     private String currentAudioLanguage;
     private String currentCaptionLanguage;
 
-    private AverageBitrateCounter averageBitrateCounter;
     private OptionalParams optionalParams;
+    private KavaMediaEntryType playbackType;
+    private AverageBitrateCounter averageBitrateCounter;
+
     private boolean onApplicationPaused = false;
 
     DataHandler(Context context, Player player) {
@@ -109,9 +112,9 @@ class DataHandler {
      */
     Map<String, String> collectData(KavaEvents event) {
         if (!onApplicationPaused) {
-            currentPosition = player.getCurrentPosition();
+            playbackType = decideOnPlaybackType(event);
         }
-        KavaMediaEntryType playbackType = decideOnPlaybackType(event);
+
         Map<String, String> params = new LinkedHashMap<>();
 
         params.put("service", "analytics");
@@ -161,9 +164,7 @@ class DataHandler {
                 break;
             case SOURCE_SELECTED:
             case FLAVOR_SWITCHED:
-                if (actualBitrate != -1) {
-                    params.put("actualBitrate", Long.toString(actualBitrate));
-                }
+                params.put("actualBitrate", Long.toString(actualBitrate));
                 break;
             case AUDIO_SELECTED:
                 params.put("language", currentAudioLanguage);
@@ -200,13 +201,13 @@ class DataHandler {
      * @return - return true if analytics managed to set newly received track data. Otherwise false.
      */
     boolean handleTrackChange(PKEvent event, int trackType) {
-
+        boolean shouldSendEvent = true;
         switch (trackType) {
             case Consts.TRACK_TYPE_VIDEO:
                 if (event instanceof PlayerEvent.PlaybackInfoUpdated) {
                     PlaybackInfo playbackInfo = ((PlayerEvent.PlaybackInfoUpdated) event).playbackInfo;
                     if (actualBitrate == playbackInfo.getVideoBitrate()) {
-                        return false;
+                        shouldSendEvent = false;
                     } else {
                         this.actualBitrate = playbackInfo.getVideoBitrate();
                     }
@@ -226,7 +227,7 @@ class DataHandler {
                 break;
         }
 
-        return true;
+        return shouldSendEvent;
     }
 
     /**
@@ -331,10 +332,16 @@ class DataHandler {
      * @param mediaEntryType - {@link KavaMediaEntryType} of the media for the moment of sending event.
      */
     private String getPlayerPosition(KavaMediaEntryType mediaEntryType) {
-        long playerPosition = currentPosition;//player.getCurrentPosition();
+        //When position obtained not from onApplicationPaused state update position/duration.
+        if (!onApplicationPaused) {
+            currentPosition = player.getCurrentPosition();
+            currentDuration = player.getDuration();
+        }
+
+        long playerPosition = currentPosition;
         if (mediaEntryType == KavaMediaEntryType.Dvr
                 || mediaEntryType == KavaMediaEntryType.Live) {
-            playerPosition = player.getCurrentPosition() - player.getDuration();
+            playerPosition = currentPosition - currentDuration;
         }
 
         return playerPosition == 0 ? "0" : Float.toString(playerPosition / Consts.MILLISECONDS_MULTIPLIER_FLOAT);
@@ -438,13 +445,12 @@ class DataHandler {
      * Should happen only once per media entry.
      */
     private void resetValues() {
-        eventIndex = 1;
         errorCode = -1;
-        playTimeSum = 0;
+        actualBitrate = -1;
         sessionStartTime = null;
-        totalBufferTimePerEntry = 0;
-        totalBufferTimePerViewEvent = 0;
+        onApplicationPaused = false;
         lastKnownBufferingTimestamp = 0;
+        handleViewEventSessionClosed();
     }
 
     /**
@@ -455,7 +461,11 @@ class DataHandler {
     }
 
     void onApplicationPaused() {
+        //Player is destroyed during onApplicationPaused call.
+        //So we should update this values before PAUSE event sent.
+        currentDuration = player.getDuration();
         currentPosition = player.getCurrentPosition();
+        playbackType = decideOnPlaybackType(null);
         onApplicationPaused = true;
     }
 

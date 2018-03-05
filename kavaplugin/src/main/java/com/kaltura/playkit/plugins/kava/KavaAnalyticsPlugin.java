@@ -41,6 +41,7 @@ import java.util.Map;
 
 public class KavaAnalyticsPlugin extends PKPlugin {
 
+    private static final String TAG = "KavaAnalyticsPlugin";
     private static final PKLog log = PKLog.get(KavaAnalyticsPlugin.class.getSimpleName());
 
     private Player player;
