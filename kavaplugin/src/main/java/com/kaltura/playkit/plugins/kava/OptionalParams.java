@@ -36,6 +36,14 @@ class OptionalParams {
         if (config.hasUiConfId()) {
             optionalParams.put("uiConfId", Integer.toString(config.getUiConfId()));
         }
+
+        if(config.hasApplicationVersion()) {
+            optionalParams.put("applicationVer", config.getApplicationVersion());
+        }
+
+        if(config.hasPlaylistId()) {
+            optionalParams.put("playlistId", config.getPlaylistId());
+        }
     }
 
     LinkedHashMap<String, String> getParams() {
