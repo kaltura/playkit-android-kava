@@ -117,23 +117,33 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     @Override
     protected void onApplicationPaused() {
-        dataHandler.onApplicationPaused();
-        viewTimer.setViewEventTrigger(null);
-        viewTimer.stop();
+        if (dataHandler != null) {
+            dataHandler.onApplicationPaused();
+        }
+        if (viewTimer != null) {
+            viewTimer.setViewEventTrigger(null);
+            viewTimer.stop();
+        }
     }
 
     @Override
     protected void onApplicationResumed() {
-        dataHandler.setOnApplicationResumed();
-        viewTimer.setViewEventTrigger(viewEventTrigger);
-        viewTimer.start();
+        if (dataHandler != null) {
+            dataHandler.setOnApplicationResumed();
+        }
+        if (viewTimer != null) {
+            viewTimer.setViewEventTrigger(viewEventTrigger);
+            viewTimer.start();
+        }
     }
 
     @Override
     protected void onDestroy() {
-        viewTimer.setViewEventTrigger(null);
-        viewTimer.stop();
-        viewTimer = null;
+        if (viewTimer != null) {
+            viewTimer.setViewEventTrigger(null);
+            viewTimer.stop();
+            viewTimer = null;
+        }
     }
 
     private PKEvent.Listener initEventListener() {
