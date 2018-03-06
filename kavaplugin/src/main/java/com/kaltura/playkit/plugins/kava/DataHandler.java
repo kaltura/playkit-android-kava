@@ -319,6 +319,7 @@ class DataHandler {
     void handleViewEventSessionClosed() {
         eventIndex = 1;
         playTimeSum = 0;
+        sessionStartTime = null;
         totalBufferTimePerEntry = 0;
         totalBufferTimePerViewEvent = 0;
         averageBitrateCounter.reset();
