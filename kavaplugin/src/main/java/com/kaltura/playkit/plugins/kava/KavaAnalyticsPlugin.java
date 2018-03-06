@@ -292,7 +292,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private void maybeSentPlayerReachedEvent() {
-        if (player.isLive()) {
+        if (player.isLiveStream()) {
             return;
         }
 
