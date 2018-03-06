@@ -42,7 +42,9 @@ public class KavaAnalyticsConfig {
 
     private String ks;
     private String referrer;
+    private String playlistId;
     private String playbackContext;
+    private String applicationVersion;
     private String baseUrl = DEFAULT_BASE_URL;
     private String customVar1, customVar2, customVar3;
 
@@ -98,6 +100,18 @@ public class KavaAnalyticsConfig {
         return this;
     }
 
+    public KavaAnalyticsConfig setPlaylistId(String playlistId) {
+        this.playlistId = playlistId;
+        return this;
+
+    }
+
+    public KavaAnalyticsConfig setApplicationVersion(String applicationVersion) {
+        this.applicationVersion = applicationVersion;
+        return this;
+
+    }
+
     int getUiConfId() {
         return uiconfId;
     }
@@ -134,6 +148,14 @@ public class KavaAnalyticsConfig {
         return playbackContext;
     }
 
+    public String getPlaylistId() {
+        return playlistId;
+    }
+
+    public String getApplicationVersion() {
+        return applicationVersion;
+    }
+
     String getReferrer() {
         if (isValidReferrer(referrer)) {
             return this.referrer;
@@ -155,6 +177,14 @@ public class KavaAnalyticsConfig {
 
     boolean hasCustomVar3() {
         return customVar3 != null;
+    }
+
+    boolean hasPlaylistId() {
+        return playlistId != null;
+    }
+
+    boolean hasApplicationVersion() {
+        return applicationVersion != null;
     }
 
     boolean hasKs() {

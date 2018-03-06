@@ -110,7 +110,10 @@ public class MainActivity extends AppCompatActivity {
                     .setDvrThreshold(1000) //Threshold from the live edge.
                     .setCustomVar1("customVar1")
                     .setCustomVar2("customVar2")
-                    .setCustomVar3("customVar3");
+                    .setCustomVar3("customVar3")
+                    .setApplicationVersion("applicationVersion")
+                    .setPlaylistId("playlistId");
+            
     
             //Set Kava configurations to the PKPluginConfig.
             pluginConfigs.setPluginConfig(KavaAnalyticsPlugin.factory.getName(), kavaConfig);
@@ -138,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
     * Optional field
 
 * [playbackContext](#playbackContext) - you can provide your own custom context for the media playback.
-This is used to send the id of the category from which the user is playing the entry.
+    * This is used to send the id of the category from which the user is playing the entry.
     * Optional field
         
 * [referrer](#referrer) - your referrer.
@@ -146,10 +149,18 @@ This is used to send the id of the category from which the user is playing the e
     * Optional field
     
 * dvrThreshold - threshold from the live edge. 
-When player`s playback position from the live edge <= then dvrThreshold, Kava will set [playbackType](#playbackType) to dvr. Otherwise it will be live.
+    * When player`s playback position from the live edge <= then dvrThreshold, Kava will set [playbackType](#playbackType) to dvr. Otherwise it will be live.
     * Use milliseconds for this field.
     * Default value - 120000 (2 minutes)
     * Optional field
+    
+* [applicationVersion](#applicationVersion) - you can provide your application version.
+    * This is used to send the application version from which the user is playing the entry.
+    * Optional field
+        
+* [playlistId](#playlistId) - you can provide playlistID
+    * This is used to send the playlistId to which entry belongs.
+    * Optional field        
     
 * [customVar1](#customVar1), [customVar2](#customVar2), [customVar3](#customVar3) - you can use this fields for your own custom needs. 
 
@@ -473,6 +484,20 @@ Kava parameters are additional data that is sent with Kava event and represent r
     - If not exist do not send this parameter at all.
   
     ---
+    
+* <a id="applicationVer"></a>applicationVer - The application name as derived from configuration. 
+    - Optional parameter.
+    - Obtained from pluginConfig.
+    - If not exist do not send this parameter at all.
+    
+    ---
+    
+* <a id="playlistId"></a>playlistId - The Kaltura playlist id.
+    - Optional parameter.
+    - Obtained from pluginConfig.
+    - If not exist do not send this parameter at all.
+    
+    ---    
   
 * <a id="targetPosition"></a>targetPosition - The requested seek position of the media. 
     - Should be in format of float (second.milliSecond).
@@ -532,6 +557,8 @@ Kava parameters are additional data that is sent with Kava event and represent r
   - [customVar1](#customVar1)
   - [customVar2](#customVar2)
   - [customVar3](#customVar3)
+  - [applicationVer](#applicationVer)
+  - [playlistId](#playlistId)
   
   
 ## <a id="endSessionResetParams"></a>Kava end session params to reset:
