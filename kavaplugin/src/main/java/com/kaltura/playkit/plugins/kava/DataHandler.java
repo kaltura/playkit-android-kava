@@ -304,17 +304,17 @@ class DataHandler {
     /**
      * Set view session start time.
      *
-     * @param response - server response
+     * @param sessionStartTime - sessionStartTime from server.
      */
-    void setSessionStartTime(ResponseElement response) {
-        if (sessionStartTime == null && response.getResponse() != null) {
-            sessionStartTime = response.getResponse();
+    void setSessionStartTime(String sessionStartTime) {
+        if (sessionStartTime == null && !sessionStartTime.isEmpty()) {
+            this.sessionStartTime = sessionStartTime;
         }
     }
 
     /**
      * When VIEW event was not delivered for more then 30 seconds, Kava server will reset
-     * VIEW session. So we also have to the same.
+     * VIEW session. So we also have to do the same.
      */
     void handleViewEventSessionClosed() {
         eventIndex = 1;

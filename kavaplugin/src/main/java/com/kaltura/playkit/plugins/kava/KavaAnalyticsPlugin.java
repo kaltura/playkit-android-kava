@@ -30,8 +30,10 @@ import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.PlayerState;
 import com.kaltura.playkit.api.ovp.services.KavaService;
-import com.kaltura.playkit.plugin.kava.BuildConfig;
 import com.kaltura.playkit.utils.Consts;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.Map;
 
@@ -72,11 +74,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         @Override
         public String getName() {
             return "KavaAnalytics";
-        }
-
-        @Override
-        public String getVersion() {
-            return BuildConfig.VERSION_NAME;
         }
 
         @Override
@@ -272,8 +269,18 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             @Override
             public void onComplete(ResponseElement response) {
                 log.d("onComplete: " + event.name());
-                //TODO obtain from server flag that tells if view events should be enabled or not(when server be able to send that)
-                dataHandler.setSessionStartTime(response);
+                try {
+                    //If response is in Json format, handle it and update required values.
+                    JSONObject jsonObject = new JSONObject(response.getResponse());
+                    dataHandler.setSessionStartTime(jsonObject.optString("time"));
+                    viewTimer.setViewEventsEnabled(jsonObject.optBoolean("viewEventsEnabled", true));
+                } catch (JSONException e) {
+                    //If no, exception thrown, we will treat response as String format.
+                    if (response.getResponse() != null) {
+                        dataHandler.setSessionStartTime(response.getResponse());
+                    }
+                }
+
                 messageBus.post(new KavaAnalyticsEvent.KavaAnalyticsReport(event.name()));
             }
         });
