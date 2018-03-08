@@ -34,6 +34,10 @@ repositories {
 }
 ```
 
+## Example:
+com.kaltura:playkit-android-kava:v1.0.0
+
+
 Now lets see how to use KAVAPlugin in your application
 
 ```java
