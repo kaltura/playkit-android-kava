@@ -25,7 +25,7 @@ Note, Playkit is already included in KAVAPlugin.
 ```
 dependencies {
 
-    implementation 'com.kaltura.playkit:playkit:x.x.x' //instead of XXX use latest version. 
+    implementation 'com.kaltura.playkit:playkit:x.x.x' //instead of XXX use latest version i.e. implementation 'com.kaltura.playkit:playkit:3.4.1' 
    
 }
 
@@ -34,11 +34,8 @@ repositories {
 }
 ```
 
-## Example:
-implementation 'com.kaltura.playkit:playkit:3.4.1'
 
-
-Now lets see how to use KAVAPlugin in your application
+## How to integrate KAVAPlugin into your application
 
 ```java
 public class MainActivity extends AppCompatActivity {
