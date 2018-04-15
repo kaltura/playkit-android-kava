@@ -339,6 +339,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         setIsPaused(true);
         isEnded = false;
         isFirstPlay = true;
+        isImpressionSent = false;
         playReached25 = playReached50 = playReached75 = playReached100 = false;
     }
 
