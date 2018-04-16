@@ -304,17 +304,17 @@ class DataHandler {
     /**
      * Set view session start time.
      *
-     * @param response - server response
+     * @param sessionStartTime - sessionStartTime from server.
      */
-    void setSessionStartTime(ResponseElement response) {
-        if (sessionStartTime == null && response.getResponse() != null) {
-            sessionStartTime = response.getResponse();
+    void setSessionStartTime(String sessionStartTime) {
+        if (sessionStartTime == null && !sessionStartTime.isEmpty()) {
+            this.sessionStartTime = sessionStartTime;
         }
     }
 
     /**
      * When VIEW event was not delivered for more then 30 seconds, Kava server will reset
-     * VIEW session. So we also have to the same.
+     * VIEW session. So we also have to do the same.
      */
     void handleViewEventSessionClosed() {
         eventIndex = 1;
@@ -389,7 +389,7 @@ class DataHandler {
                 //If player is null it is impossible to obtain the playbackType, so it will be unknown.
                 kavaPlaybackType = KavaMediaEntryType.Unknown;
             } else {
-                if (!player.isLive()) {
+                if (!player.isLiveStream()) {
                     kavaPlaybackType = KavaMediaEntryType.Vod;
                 } else {
                     kavaPlaybackType = hasDvr() ? KavaMediaEntryType.Dvr : KavaMediaEntryType.Live;
@@ -410,7 +410,7 @@ class DataHandler {
             return false;
         }
 
-        if (player.isLive()) {
+        if (player.isLiveStream()) {
             long distanceFromLive = player.getDuration() - player.getCurrentPosition();
             return distanceFromLive >= dvrThreshold;
         }
