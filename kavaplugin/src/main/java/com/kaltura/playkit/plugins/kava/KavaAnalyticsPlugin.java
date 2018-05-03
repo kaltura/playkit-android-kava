@@ -89,6 +89,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     @Override
     protected void onLoad(Player player, Object config, MessageBus messageBus, Context context) {
+        log.d("onLoad");
         this.player = player;
         this.messageBus = messageBus;
         this.requestExecutor = APIOkRequestsExecutor.getSingleton();
@@ -99,6 +100,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     @Override
     protected void onUpdateMedia(PKMediaConfig mediaConfig) {
+        log.d("onUpdateMedia");
         this.mediaConfig = mediaConfig;
         viewTimer = new ViewTimer();
         viewTimer.setViewEventTrigger(viewEventTrigger);
