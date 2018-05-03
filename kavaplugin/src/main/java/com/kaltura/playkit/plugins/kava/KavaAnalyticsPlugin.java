@@ -1,10 +1,10 @@
 /*
  * ============================================================================
  * Copyright (C) 2017 Kaltura Inc.
- * 
+ *
  * Licensed under the AGPLv3 license, unless a different license for a
  * particular library is specified in the applicable library path.
- * 
+ *
  * You may obtain a copy of the License at
  * https://www.gnu.org/licenses/agpl-3.0.html
  * ============================================================================
@@ -89,6 +89,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     @Override
     protected void onLoad(Player player, Object config, MessageBus messageBus, Context context) {
+        log.d("onLoad");
         this.player = player;
         this.messageBus = messageBus;
         this.requestExecutor = APIOkRequestsExecutor.getSingleton();
@@ -99,6 +100,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     @Override
     protected void onUpdateMedia(PKMediaConfig mediaConfig) {
+        log.d("onUpdateMedia");
         this.mediaConfig = mediaConfig;
         viewTimer = new ViewTimer();
         viewTimer.setViewEventTrigger(viewEventTrigger);
@@ -179,7 +181,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                         case PLAYING:
                             if (isFirstPlay) {
                                 isFirstPlay = false;
-                                viewTimer.start();
+                                if (viewTimer != null) {
+                                    viewTimer.start();
+                                }
                                 sendAnalyticsEvent(KavaEvents.PLAY);
                             } else {
                                 if (isPaused && !isEnded) {
@@ -273,7 +277,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                     //If response is in Json format, handle it and update required values.
                     JSONObject jsonObject = new JSONObject(response.getResponse());
                     dataHandler.setSessionStartTime(jsonObject.optString("time"));
-                    viewTimer.setViewEventsEnabled(jsonObject.optBoolean("viewEventsEnabled", true));
+                    if (viewTimer != null) {
+                        viewTimer.setViewEventsEnabled(jsonObject.optBoolean("viewEventsEnabled", true));
+                    }
                 } catch (JSONException e) {
                     //If no, exception thrown, we will treat response as String format.
                     if (response.getResponse() != null) {
@@ -328,10 +334,12 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     private void setIsPaused(boolean isPaused) {
         this.isPaused = isPaused;
-        if (isPaused) {
-            viewTimer.pause();
-        } else {
-            viewTimer.resume();
+        if (viewTimer != null) {
+            if (isPaused) {
+                viewTimer.pause();
+            } else {
+                viewTimer.resume();
+            }
         }
     }
 
