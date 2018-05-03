@@ -179,7 +179,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                         case PLAYING:
                             if (isFirstPlay) {
                                 isFirstPlay = false;
-                                viewTimer.start();
+                                if (viewTimer != null) {
+                                    viewTimer.start();
+                                }
                                 sendAnalyticsEvent(KavaEvents.PLAY);
                             } else {
                                 if (isPaused && !isEnded) {
