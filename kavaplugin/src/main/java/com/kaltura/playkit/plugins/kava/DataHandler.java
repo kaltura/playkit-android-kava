@@ -3,7 +3,6 @@ package com.kaltura.playkit.plugins.kava;
 import android.content.Context;
 import android.support.annotation.Nullable;
 
-import com.kaltura.netkit.connect.response.ResponseElement;
 import com.kaltura.playkit.PKError;
 import com.kaltura.playkit.PKEvent;
 import com.kaltura.playkit.PKLog;
@@ -56,7 +55,7 @@ class DataHandler {
     private String userAgent;
     private String deliveryType;
     private String sessionStartTime;
-    private String referrerAsBase64;
+    private String referrer;
     private String metadataPlaybackType;
     private String currentAudioLanguage;
     private String currentCaptionLanguage;
@@ -82,20 +81,21 @@ class DataHandler {
 
         partnerId = Integer.toString(pluginConfig.getPartnerId());
         dvrThreshold = pluginConfig.getDvrThreshold();
-        generateReferrerAsBase64(pluginConfig.getReferrer());
+        generateReferrer(pluginConfig.getReferrer());
         optionalParams = new OptionalParams(pluginConfig);
     }
 
     /**
      * Apply media related values.
      *
-     * @param mediaConfig - media configurations.
+     * @param mediaConfig  - media configurations.
+     * @param pluginConfig - plugin configurations
      */
-    void onUpdateMedia(PKMediaConfig mediaConfig) {
+    void onUpdateMedia(PKMediaConfig mediaConfig, KavaAnalyticsConfig pluginConfig) {
 
         averageBitrateCounter = new AverageBitrateCounter();
 
-        this.entryId = mediaConfig.getMediaEntry().getId();
+        this.entryId = (pluginConfig != null && pluginConfig.getEntryId() != null) ? pluginConfig.getEntryId() : mediaConfig.getMediaEntry().getId();
         this.sessionId = player.getSessionId() != null ? player.getSessionId() : "";
         this.metadataPlaybackType = (mediaConfig.getMediaEntry().getMediaType() != null) ?
                 mediaConfig.getMediaEntry().getMediaType().name() : PKMediaEntry.MediaEntryType.Unknown.name();
@@ -125,7 +125,7 @@ class DataHandler {
         params.put("entryId", entryId);
         params.put("sessionId", sessionId);
         params.put("eventIndex", Integer.toString(eventIndex));
-        params.put("referrer", referrerAsBase64);
+        params.put("referrer", referrer);
         params.put("deliveryType", deliveryType);
         params.put("playbackType", playbackType.name().toLowerCase());
         params.put("clientVer", PlayKitManager.CLIENT_TAG);
@@ -419,18 +419,18 @@ class DataHandler {
     }
 
     /**
-     * Convert referrer to BASE64. If provided referrer is null, first will
+     * If provided referrer is null, it will
      * build default one.
      *
      * @param referrer - Custom referrer to set, or null if should use default one.
      */
-    private void generateReferrerAsBase64(@Nullable String referrer) {
+    private void generateReferrer(@Nullable String referrer) {
         //If not exist generate default one.
         if (referrer == null) {
             referrer = buildDefaultReferrer();
         }
-        //Encode referrer to BASE64.
-        this.referrerAsBase64 = Utils.toBase64(referrer.getBytes());
+
+        this.referrer = referrer;
     }
 
     /**
