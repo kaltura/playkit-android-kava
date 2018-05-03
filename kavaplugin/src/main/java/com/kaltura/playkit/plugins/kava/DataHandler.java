@@ -97,7 +97,8 @@ class DataHandler {
 
         this.entryId = mediaConfig.getMediaEntry().getId();
         this.sessionId = player.getSessionId() != null ? player.getSessionId() : "";
-        this.metadataPlaybackType = mediaConfig.getMediaEntry().getMediaType().name();
+        this.metadataPlaybackType = (mediaConfig.getMediaEntry().getMediaType() != null) ?
+                mediaConfig.getMediaEntry().getMediaType().name() : PKMediaEntry.MediaEntryType.Unknown.name();
 
         resetValues();
     }
