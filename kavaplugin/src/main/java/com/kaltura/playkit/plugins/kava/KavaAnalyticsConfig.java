@@ -31,9 +31,10 @@ public class KavaAnalyticsConfig {
     private static final String CUSTOM_VAR_1 = "customVar1";
     private static final String CUSTOM_VAR_2 = "customVar2";
     private static final String CUSTOM_VAR_3 = "customVar3";
-    private static final String REFERRER = "referrerAsBase64";
+    private static final String REFERRER = "referrer";
     private static final String DVR_THRESHOLD = "dvrThreshold";
     private static final String PLAYBACK_CONTEXT = "playbackContext";
+    private static final String ENTRY_ID   = "entryId";
 
     private static final String DEFAULT_BASE_URL = "http://analytics.kaltura.com/api_v3/index.php";
 
@@ -43,6 +44,7 @@ public class KavaAnalyticsConfig {
     private String ks;
     private String referrer;
     private String playlistId;
+    private String entryId;
     private String playbackContext;
     private String applicationVersion;
     private String baseUrl = DEFAULT_BASE_URL;
@@ -67,6 +69,11 @@ public class KavaAnalyticsConfig {
 
     public KavaAnalyticsConfig setKs(String ks) {
         this.ks = ks;
+        return this;
+    }
+
+    public KavaAnalyticsConfig setEntryId(String entryId) {
+        this.entryId = entryId;
         return this;
     }
 
@@ -122,6 +129,10 @@ public class KavaAnalyticsConfig {
 
     String getKs() {
         return ks;
+    }
+
+    String getEntryId() {
+        return entryId;
     }
 
     String getBaseUrl() {
@@ -213,6 +224,7 @@ public class KavaAnalyticsConfig {
         jsonObject.addProperty(KS, ks);
         jsonObject.addProperty(PLAYBACK_CONTEXT, playbackContext);
         jsonObject.addProperty(REFERRER, referrer);
+        jsonObject.addProperty(ENTRY_ID, entryId);
         jsonObject.addProperty(CUSTOM_VAR_1, customVar1);
         jsonObject.addProperty(CUSTOM_VAR_2, customVar2);
         jsonObject.addProperty(CUSTOM_VAR_3, customVar3);

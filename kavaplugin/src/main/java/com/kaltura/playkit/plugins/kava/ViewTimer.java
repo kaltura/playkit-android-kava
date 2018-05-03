@@ -1,5 +1,7 @@
 package com.kaltura.playkit.plugins.kava;
 
+import com.kaltura.playkit.PKLog;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -8,6 +10,7 @@ import java.util.TimerTask;
  */
 
 class ViewTimer {
+    private static final PKLog log = PKLog.get("ViewTimer");
 
     static final int TEN_SECONDS_IN_MS = 10000;
     private static final long ONE_SECOND_IN_MS = 1000;
@@ -41,6 +44,7 @@ class ViewTimer {
     }
 
     void start() {
+        log.d("Kava - StartTimer");
         stop();
         viewEventTimer = new Timer();
         viewEventTimer.scheduleAtFixedRate(new TimerTask() {
@@ -54,6 +58,7 @@ class ViewTimer {
                             viewEventTrigger.onResetViewEvent();
                         }
                     } else {
+                        //log.d("viewEventTimeCounter = " + viewEventTimeCounter);
                         viewEventTimeCounter += ONE_SECOND_IN_MS;
                         if (viewEventTimeCounter >= TEN_SECONDS_IN_MS && viewEventTrigger != null) {
                             resetCounters();
@@ -73,6 +78,8 @@ class ViewTimer {
         if (viewEventTimer == null) {
             return;
         }
+
+        resetCounters();
         viewEventTimer.cancel();
         viewEventTimer = null;
     }

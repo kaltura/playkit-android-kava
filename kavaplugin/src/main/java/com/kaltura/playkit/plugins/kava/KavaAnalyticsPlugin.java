@@ -43,7 +43,6 @@ import java.util.Map;
 
 public class KavaAnalyticsPlugin extends PKPlugin {
 
-    private static final String TAG = "KavaAnalyticsPlugin";
     private static final PKLog log = PKLog.get(KavaAnalyticsPlugin.class.getSimpleName());
 
     private Player player;
@@ -102,9 +101,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     protected void onUpdateMedia(PKMediaConfig mediaConfig) {
         log.d("onUpdateMedia");
         this.mediaConfig = mediaConfig;
+        clearViewTimer();
         viewTimer = new ViewTimer();
         viewTimer.setViewEventTrigger(viewEventTrigger);
-        dataHandler.onUpdateMedia(mediaConfig);
+        dataHandler.onUpdateMedia(mediaConfig, pluginConfig);
         resetFlags();
     }
 
@@ -116,6 +116,8 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     @Override
     protected void onApplicationPaused() {
+        log.d("onApplicationPaused");
+
         if (dataHandler != null) {
             dataHandler.onApplicationPaused();
         }
@@ -127,9 +129,15 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     @Override
     protected void onApplicationResumed() {
+        log.d("onApplicationResumed");
+
         if (dataHandler != null) {
             dataHandler.setOnApplicationResumed();
         }
+        startViewTimer();
+    }
+
+    private void startViewTimer() {
         if (viewTimer != null) {
             viewTimer.setViewEventTrigger(viewEventTrigger);
             viewTimer.start();
@@ -138,6 +146,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     @Override
     protected void onDestroy() {
+        clearViewTimer();
+    }
+
+    private void clearViewTimer() {
         if (viewTimer != null) {
             viewTimer.setViewEventTrigger(null);
             viewTimer.stop();
@@ -181,9 +193,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                         case PLAYING:
                             if (isFirstPlay) {
                                 isFirstPlay = false;
-                                if (viewTimer != null) {
-                                    viewTimer.start();
-                                }
+                                startViewTimer();
                                 sendAnalyticsEvent(KavaEvents.PLAY);
                             } else {
                                 if (isPaused && !isEnded) {
