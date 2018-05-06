@@ -79,7 +79,6 @@ class ViewTimer {
             return;
         }
 
-        resetCounters();
         viewEventTimer.cancel();
         viewEventTimer = null;
     }
