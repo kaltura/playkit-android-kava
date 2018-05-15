@@ -153,6 +153,7 @@ class DataHandler {
                 break;
             case PLAY:
             case RESUME:
+                params.put("actualBitrate", Long.toString(actualBitrate));
                 if (event == KavaEvents.PLAY) {
                     float joinTime = (System.currentTimeMillis() - joinTimeStartTimestamp) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
                     params.put("joinTime", Float.toString(joinTime));
@@ -308,7 +309,7 @@ class DataHandler {
      * @param sessionStartTime - sessionStartTime from server.
      */
     void setSessionStartTime(String sessionStartTime) {
-        if (sessionStartTime == null && !sessionStartTime.isEmpty()) {
+        if (this.sessionStartTime == null && !sessionStartTime.isEmpty()) {
             this.sessionStartTime = sessionStartTime;
         }
     }
