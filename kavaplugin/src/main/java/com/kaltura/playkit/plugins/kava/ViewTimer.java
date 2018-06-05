@@ -53,14 +53,14 @@ class ViewTimer {
                 if (viewEventsEnabled) {
                     if (isPaused) {
                         viewEventIdleCounter += ONE_SECOND_IN_MS;
-                        if (viewEventIdleCounter >= MAX_ALLOWED_VIEW_IDLE_TIME) {
+                        if (viewEventTrigger != null && viewEventIdleCounter >= MAX_ALLOWED_VIEW_IDLE_TIME) {
                             resetCounters();
                             viewEventTrigger.onResetViewEvent();
                         }
                     } else {
                         //log.d("viewEventTimeCounter = " + viewEventTimeCounter);
                         viewEventTimeCounter += ONE_SECOND_IN_MS;
-                        if (viewEventTimeCounter >= TEN_SECONDS_IN_MS && viewEventTrigger != null) {
+                        if (viewEventTrigger != null && viewEventTimeCounter >= TEN_SECONDS_IN_MS) {
                             resetCounters();
                             viewEventTrigger.onTriggerViewEvent();
                         }
@@ -105,7 +105,7 @@ class ViewTimer {
             resetCounters();
         }
         this.viewEventsEnabled = viewEventsEnabled;
-        if (!viewEventsEnabled) {
+        if (viewEventTrigger != null && !viewEventsEnabled) {
             viewEventTrigger.onResetViewEvent();
         }
     }
