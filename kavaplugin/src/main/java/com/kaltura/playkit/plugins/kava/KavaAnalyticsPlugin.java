@@ -343,7 +343,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             playReached75 = true;
             sendAnalyticsEvent(KavaEvents.PLAY_REACHED_75_PERCENT);
         }
-
     }
 
     private void setIsPaused(boolean isPaused) {
