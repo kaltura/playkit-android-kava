@@ -284,6 +284,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             public void onComplete(ResponseElement response) {
                 log.d("onComplete: " + event.name());
                 try {
+                    if(response == null || response.getResponse() == null) {
+                        log.w("Kava event response is null");
+                        return;
+                    }
                     //If response is in Json format, handle it and update required values.
                     JSONObject jsonObject = new JSONObject(response.getResponse());
                     dataHandler.setSessionStartTime(jsonObject.optString("time"));
