@@ -58,7 +58,6 @@ class ViewTimer {
                             viewEventTrigger.onResetViewEvent();
                         }
                     } else {
-                        //log.d("viewEventTimeCounter = " + viewEventTimeCounter);
                         viewEventTimeCounter += ONE_SECOND_IN_MS;
                         if (viewEventTrigger != null && viewEventTimeCounter >= TEN_SECONDS_IN_MS) {
                             resetCounters();
@@ -104,9 +103,6 @@ class ViewTimer {
         if(this.viewEventsEnabled != viewEventsEnabled) {
             resetCounters();
             this.viewEventsEnabled = viewEventsEnabled;
-            if (viewEventTrigger != null && !viewEventsEnabled) {
-                viewEventTrigger.onResetViewEvent();
-            }
         }
     }
 }
