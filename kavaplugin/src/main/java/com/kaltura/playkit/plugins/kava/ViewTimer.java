@@ -101,9 +101,7 @@ class ViewTimer {
     }
 
     void setViewEventsEnabled(boolean viewEventsEnabled) {
-        log.e("Kava setViewEventsEnabled");
         if(this.viewEventsEnabled != viewEventsEnabled) {
-            log.e("Kava actual setViewEventsEnabled");
             resetCounters();
             this.viewEventsEnabled = viewEventsEnabled;
             if (viewEventTrigger != null && !viewEventsEnabled) {
