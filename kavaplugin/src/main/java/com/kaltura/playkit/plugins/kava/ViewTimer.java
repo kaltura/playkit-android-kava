@@ -103,10 +103,10 @@ class ViewTimer {
     void setViewEventsEnabled(boolean viewEventsEnabled) {
         if(this.viewEventsEnabled != viewEventsEnabled) {
             resetCounters();
-        }
-        this.viewEventsEnabled = viewEventsEnabled;
-        if (viewEventTrigger != null && !viewEventsEnabled) {
-            viewEventTrigger.onResetViewEvent();
+            this.viewEventsEnabled = viewEventsEnabled;
+            if (viewEventTrigger != null && !viewEventsEnabled) {
+                viewEventTrigger.onResetViewEvent();
+            }
         }
     }
 }
