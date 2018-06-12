@@ -547,4 +547,4 @@ There are some conditions that should be mentioned:
 
   - [View](#viewEvent) event that was not reported for 30 seconds considered by server as dead session. So client should reset all session related values (look [here](#viewEvent))
   - If server decides to disable [View](#viewEvent) event it will do it by changing flag of viewEventsEnabled field (in json response), Client MUST NOT reset any values, but just prevent [View](#viewEvent) event from sending.
-  - When [Pause](#pauseEvent) event triggered it should reset[sessionStartTime](#sessionStartTime) in way that next event coming after pause will hold newly received [sessionStartTime](#sessionStartTime) value from server reposnse.
+  - When [Pause](#pauseEvent) event triggered it should reset [sessionStartTime](#sessionStartTime) in way that next event coming after pause will hold newly received [sessionStartTime](#sessionStartTime) value from server reposnse.
