@@ -232,7 +232,7 @@ When this happens, VIEW events should be blocked from sending until the server d
 * <a id="pauseEvent"></a>PAUSE - Sent when playback was paused (Player PAUSE event received).
     - eventId = 33
     - During pause, KAVA should prevent from counting the VIEW event timer
-    - This event should reset[sessionStartTime](#sessionStartTime) in way that next event coming after pause will hold newly received [sessionStartTime](#sessionStartTime) value.
+    - This event should reset [sessionStartTime](#sessionStartTime) in way that next event coming after pause will hold newly received [sessionStartTime](#sessionStartTime) value.
     - Parameters to send:
         - [COMMON_PARAMS](#common_params)
     ---
