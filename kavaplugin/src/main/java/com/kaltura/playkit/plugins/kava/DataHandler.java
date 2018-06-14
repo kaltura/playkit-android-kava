@@ -413,6 +413,7 @@ class DataHandler {
             return false;
         }
         if(event == KavaEvents.IMPRESSION) {
+            //For Impression event assume that playbackType is live.
             return false;
         }
 
