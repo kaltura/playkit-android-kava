@@ -405,7 +405,6 @@ Kava parameters are additional data that is sent with Kava event and represent r
     ---
 
 * <a id="actualBitrate"></a>actualBitrate - The bitrate of the displayed video track in kbps.
-    - When ABR mode selected manually - value should be 0.
     - In SOURCE_SELECTED event should be equal to the manually selected video bitrate.
     - In FLAVOUR_SWITCH event should be based on ABR selection and equal to the currently selected bitrate by ABR.
 
