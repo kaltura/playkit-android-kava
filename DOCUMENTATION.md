@@ -389,7 +389,6 @@ KAVA parameters are sent with each KAVA event and represent relevant information
     ---
 
 * <a id="actualBitrate"></a>actualBitrate - The bitrate of the displayed video track in kbps.
-    - When ABR mode selected manually - value should be 0
     - In SOURCE_SELECTED the event should be equal to the video bitrate that was selected manually
     - In FLAVOUR_SWITCH the event should be based on the ABR selection and equal to the current bitrate by ABR
 
