@@ -14,7 +14,6 @@ import com.kaltura.playkit.PlayKitManager;
 import com.kaltura.playkit.PlaybackInfo;
 import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
-import com.kaltura.playkit.Utils;
 import com.kaltura.playkit.ads.PKAdErrorType;
 import com.kaltura.playkit.mediaproviders.base.FormatsHelper;
 import com.kaltura.playkit.player.PKPlayerErrorType;
@@ -113,7 +112,7 @@ class DataHandler {
      */
     Map<String, String> collectData(KavaEvents event) {
         if (!onApplicationPaused) {
-            playbackType = decideOnPlaybackType(event);
+            playbackType = getPlaybackType(event);
         }
 
         Map<String, String> params = new LinkedHashMap<>();
@@ -377,7 +376,7 @@ class DataHandler {
      * @param event - KavaEvent type.
      * @return - {@link KavaMediaEntryType} of the media for the moment of sending event.
      */
-    private KavaMediaEntryType decideOnPlaybackType(KavaEvents event) {
+    KavaMediaEntryType getPlaybackType(KavaEvents event) {
 
         KavaMediaEntryType kavaPlaybackType;
 
@@ -473,7 +472,7 @@ class DataHandler {
         //So we should update this values before PAUSE event sent.
         currentDuration = player.getDuration();
         currentPosition = player.getCurrentPosition();
-        playbackType = decideOnPlaybackType(null);
+        playbackType = getPlaybackType(null);
         onApplicationPaused = true;
     }
 
