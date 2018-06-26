@@ -256,12 +256,13 @@ class DataHandler {
      */
     void handleSourceSelected(PKEvent event) {
         PKMediaSource selectedSource = ((PlayerEvent.SourceSelected) event).source;
-        if (selectedSource.getMediaFormat() == PKMediaFormat.dash) {
-            deliveryType = FormatsHelper.StreamFormat.MpegDash.formatName;
-        } else if (selectedSource.getMediaFormat() == PKMediaFormat.hls) {
-            deliveryType = FormatsHelper.StreamFormat.AppleHttp.formatName;
-        } else {
-            deliveryType = FormatsHelper.StreamFormat.Url.formatName;
+        switch (selectedSource.getMediaFormat()) {
+            case dash:
+            case hls:
+                deliveryType = selectedSource.getMediaFormat().name();
+                break;
+            default:
+                deliveryType = FormatsHelper.StreamFormat.Url.formatName;
         }
     }
 
@@ -403,15 +404,16 @@ class DataHandler {
 
     /**
      * Chceck if current playback state is in LIVE or DVR mode.
+     *
      * @param - Event type. When IMPRESSION event sent player still does not know its current position.
-     * So in this case we can assume that playbackType is live.
+     *          So in this case we can assume that playbackType is live.
      * @return - true if distance from live edge grater the requested dvr threshold.
      */
     private boolean hasDvr(KavaEvents event) {
         if (player == null) {
             return false;
         }
-        if(event == KavaEvents.IMPRESSION) {
+        if (event == KavaEvents.IMPRESSION) {
             //For Impression event assume that playbackType is live.
             return false;
         }
