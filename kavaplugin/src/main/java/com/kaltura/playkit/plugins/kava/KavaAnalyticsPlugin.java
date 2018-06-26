@@ -204,6 +204,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             setIsPaused(false);
                             break;
                         case SEEKING:
+                            if(isFirstPlay && dataHandler.getPlaybackType(KavaEvents.SEEK) == KavaMediaEntryType.Live) {
+                                return;
+                            }
                             dataHandler.handleSeek(event);
                             sendAnalyticsEvent(KavaEvents.SEEK);
                             break;
