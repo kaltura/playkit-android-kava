@@ -14,7 +14,6 @@ import com.kaltura.playkit.PlayKitManager;
 import com.kaltura.playkit.PlaybackInfo;
 import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
-import com.kaltura.playkit.Utils;
 import com.kaltura.playkit.ads.PKAdErrorType;
 import com.kaltura.playkit.mediaproviders.base.FormatsHelper;
 import com.kaltura.playkit.player.PKPlayerErrorType;
@@ -113,7 +112,7 @@ class DataHandler {
      */
     Map<String, String> collectData(KavaEvents event) {
         if (!onApplicationPaused) {
-            playbackType = decideOnPlaybackType(event);
+            playbackType = getPlaybackType(event);
         }
 
         Map<String, String> params = new LinkedHashMap<>();
@@ -257,12 +256,13 @@ class DataHandler {
      */
     void handleSourceSelected(PKEvent event) {
         PKMediaSource selectedSource = ((PlayerEvent.SourceSelected) event).source;
-        if (selectedSource.getMediaFormat() == PKMediaFormat.dash) {
-            deliveryType = FormatsHelper.StreamFormat.MpegDash.formatName;
-        } else if (selectedSource.getMediaFormat() == PKMediaFormat.hls) {
-            deliveryType = FormatsHelper.StreamFormat.AppleHttp.formatName;
-        } else {
-            deliveryType = FormatsHelper.StreamFormat.Url.formatName;
+        switch (selectedSource.getMediaFormat()) {
+            case dash:
+            case hls:
+                deliveryType = selectedSource.getMediaFormat().name();
+                break;
+            default:
+                deliveryType = FormatsHelper.StreamFormat.Url.formatName;
         }
     }
 
@@ -377,7 +377,7 @@ class DataHandler {
      * @param event - KavaEvent type.
      * @return - {@link KavaMediaEntryType} of the media for the moment of sending event.
      */
-    private KavaMediaEntryType decideOnPlaybackType(KavaEvents event) {
+    KavaMediaEntryType getPlaybackType(KavaEvents event) {
 
         KavaMediaEntryType kavaPlaybackType;
 
@@ -404,15 +404,16 @@ class DataHandler {
 
     /**
      * Chceck if current playback state is in LIVE or DVR mode.
+     *
      * @param - Event type. When IMPRESSION event sent player still does not know its current position.
-     * So in this case we can assume that playbackType is live.
+     *          So in this case we can assume that playbackType is live.
      * @return - true if distance from live edge grater the requested dvr threshold.
      */
     private boolean hasDvr(KavaEvents event) {
         if (player == null) {
             return false;
         }
-        if(event == KavaEvents.IMPRESSION) {
+        if (event == KavaEvents.IMPRESSION) {
             //For Impression event assume that playbackType is live.
             return false;
         }
@@ -473,7 +474,7 @@ class DataHandler {
         //So we should update this values before PAUSE event sent.
         currentDuration = player.getDuration();
         currentPosition = player.getCurrentPosition();
-        playbackType = decideOnPlaybackType(null);
+        playbackType = getPlaybackType(null);
         onApplicationPaused = true;
     }
 
