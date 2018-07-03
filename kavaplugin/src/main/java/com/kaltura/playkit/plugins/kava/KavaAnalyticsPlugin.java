@@ -30,6 +30,7 @@ import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.PlayerState;
 import com.kaltura.playkit.api.ovp.services.KavaService;
+import com.kaltura.playkit.plugin.kava.BuildConfig;
 import com.kaltura.playkit.utils.Consts;
 
 import org.json.JSONException;
@@ -78,6 +79,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         @Override
         public PKPlugin newInstance() {
             return new KavaAnalyticsPlugin();
+        }
+
+        @Override
+        public String getVersion() {
+            return BuildConfig.VERSION_NAME;
         }
 
         @Override
