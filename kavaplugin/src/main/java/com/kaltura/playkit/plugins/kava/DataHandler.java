@@ -391,7 +391,7 @@ class DataHandler {
                 //If player is null it is impossible to obtain the playbackType, so it will be unknown.
                 kavaPlaybackType = KavaMediaEntryType.Unknown;
             } else {
-                if (!player.isLiveStream()) {
+                if (!player.isLive()) {
                     kavaPlaybackType = KavaMediaEntryType.Vod;
                 } else {
                     kavaPlaybackType = hasDvr(event) ? KavaMediaEntryType.Dvr : KavaMediaEntryType.Live;
@@ -418,7 +418,7 @@ class DataHandler {
             return false;
         }
 
-        if (player.isLiveStream()) {
+        if (player.isLive()) {
             long distanceFromLive = player.getDuration() - player.getCurrentPosition();
             return distanceFromLive >= dvrThreshold;
         }
