@@ -29,7 +29,7 @@ import com.kaltura.playkit.PKPlugin;
 import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.PlayerState;
-import com.kaltura.playkit.api.ovp.services.KavaService;
+
 import com.kaltura.playkit.plugin.kava.BuildConfig;
 import com.kaltura.playkit.utils.Consts;
 
