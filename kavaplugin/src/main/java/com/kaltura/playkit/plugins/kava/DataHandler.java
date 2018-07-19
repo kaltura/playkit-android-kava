@@ -15,7 +15,6 @@ import com.kaltura.playkit.PlaybackInfo;
 import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.ads.PKAdErrorType;
-import com.kaltura.playkit.mediaproviders.base.FormatsHelper;
 import com.kaltura.playkit.player.PKPlayerErrorType;
 import com.kaltura.playkit.utils.Consts;
 
@@ -262,10 +261,34 @@ class DataHandler {
                 deliveryType = selectedSource.getMediaFormat().name();
                 break;
             default:
-                deliveryType = FormatsHelper.StreamFormat.Url.formatName;
+                deliveryType = StreamFormat.Url.formatName;
         }
     }
 
+    public enum StreamFormat {
+        MpegDash("mpegdash"),
+        AppleHttp("applehttp"),
+        Url("url"),
+        UrlDrm("url+drm"),
+        Unknown;
+
+        public String formatName = "";
+
+        StreamFormat(){}
+
+        StreamFormat(String name){
+            this.formatName = name;
+        }
+
+        public static StreamFormat byValue(String value) {
+            for(StreamFormat streamFormat : values()){
+                if(streamFormat.formatName.equals(value)){
+                    return streamFormat;
+                }
+            }
+            return Unknown;
+        }
+    }
     /**
      * Handle seek event. Update and cache target position.
      *
