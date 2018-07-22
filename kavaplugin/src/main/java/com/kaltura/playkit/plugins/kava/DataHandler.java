@@ -64,6 +64,7 @@ class DataHandler {
     private AverageBitrateCounter averageBitrateCounter;
 
     private boolean onApplicationPaused = false;
+    private boolean isFirstPlay;
 
     DataHandler(Context context, Player player) {
         this.context = context;
@@ -301,6 +302,7 @@ class DataHandler {
      */
     void handleFirstPlay() {
         joinTimeStartTimestamp = System.currentTimeMillis();
+        isFirstPlay = true;
     }
 
     /**
@@ -415,6 +417,11 @@ class DataHandler {
         }
         if (event == KavaEvents.IMPRESSION) {
             //For Impression event assume that playbackType is live.
+            return false;
+        }
+
+        if(isFirstPlay) {
+            isFirstPlay = false;
             return false;
         }
 
