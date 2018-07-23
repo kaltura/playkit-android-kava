@@ -5,8 +5,8 @@ jdk:
   - oraclejdk8
 android:
   components:
-  - tools
-  - platform-tools
+  - tools-26
+  - platform-tools-26
   - extra-android-m2repository
   - extra-google-m2repository
 cache:
