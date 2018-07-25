@@ -14,7 +14,7 @@ class ViewTimer {
 
     static final int TEN_SECONDS_IN_MS = 10000;
     private static final long ONE_SECOND_IN_MS = 1000;
-    private static final long MAX_ALLOWED_VIEW_IDLE_TIME = 30000;
+    static final long MAX_ALLOWED_VIEW_IDLE_TIME = 30000;
 
     private int viewEventTimeCounter;
     private int viewEventIdleCounter;
