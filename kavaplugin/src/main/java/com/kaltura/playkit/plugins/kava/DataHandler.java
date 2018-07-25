@@ -31,6 +31,8 @@ class DataHandler {
 
     private static final PKLog log = PKLog.get(DataHandler.class.getSimpleName());
 
+    private static final long KB_MULTIPLIER = 1000L;
+    
     private Context context;
     private final Player player;
 
