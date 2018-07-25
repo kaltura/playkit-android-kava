@@ -22,8 +22,8 @@ android {
 
 dependencies {
 
-    implementation 'com.kaltura:playkit-android:release~v3.5.0-SNAPSHOT'
-//    implementation 'com.kaltura.playkit:playkit:3.5.+'
+    //implementation 'com.kaltura:playkit-android:release~v3.5.0-SNAPSHOT'
+    implementation 'com.kaltura.playkit:playkit:3.5.+'
     //implementation project(":playkit")
     //implementation 'com.kaltura:playkit-android:dev-SNAPSHOT'
 
