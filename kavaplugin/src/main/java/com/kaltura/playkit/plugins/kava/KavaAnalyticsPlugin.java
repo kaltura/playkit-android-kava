@@ -68,6 +68,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     private ViewTimer viewTimer;
     private ViewTimer.ViewEventTrigger viewEventTrigger = initViewTrigger();
+    private long applicationBackgroundTimeStamp;
 
 
     public static final Factory factory = new Factory() {
@@ -124,6 +125,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     protected void onApplicationPaused() {
         log.d("onApplicationPaused");
 
+        applicationBackgroundTimeStamp = System.currentTimeMillis();
         if (dataHandler != null) {
             dataHandler.onApplicationPaused();
         }
@@ -137,6 +139,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     protected void onApplicationResumed() {
         log.d("onApplicationResumed");
 
+        long currentTimeInSeconds = System.currentTimeMillis() - applicationBackgroundTimeStamp;
+        if (currentTimeInSeconds >= ViewTimer.MAX_ALLOWED_VIEW_IDLE_TIME) {
+            dataHandler.handleViewEventSessionClosed();
+        }
         if (dataHandler != null) {
             dataHandler.setOnApplicationResumed();
         }
