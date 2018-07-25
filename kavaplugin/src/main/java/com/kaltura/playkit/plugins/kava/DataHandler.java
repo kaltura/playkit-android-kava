@@ -31,6 +31,8 @@ class DataHandler {
 
     private static final PKLog log = PKLog.get(DataHandler.class.getSimpleName());
 
+    private static final long KB_MULTIPLIER = 1000L;
+
     private Context context;
     private final Player player;
 
@@ -64,6 +66,7 @@ class DataHandler {
     private AverageBitrateCounter averageBitrateCounter;
 
     private boolean onApplicationPaused = false;
+    private boolean isFirstPlay;
 
     DataHandler(Context context, Player player) {
         this.context = context;
@@ -143,16 +146,16 @@ class DataHandler {
                 playTimeSum += ViewTimer.TEN_SECONDS_IN_MS - totalBufferTimePerViewEvent;
                 params.put("playTimeSum", Float.toString(playTimeSum / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
 
-                params.put("actualBitrate", Long.toString(actualBitrate));
+                params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
                 long averageBitrate = averageBitrateCounter.getAverageBitrate(playTimeSum + totalBufferTimePerEntry);
-                params.put("averageBitrate", Long.toString(averageBitrate));
+                params.put("averageBitrate", Long.toString(averageBitrate / KB_MULTIPLIER));
 
                 addBufferParams(params);
 
                 break;
             case PLAY:
             case RESUME:
-                params.put("actualBitrate", Long.toString(actualBitrate));
+                params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
                 if (event == KavaEvents.PLAY) {
                     float joinTime = (System.currentTimeMillis() - joinTimeStartTimestamp) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
                     params.put("joinTime", Float.toString(joinTime));
@@ -165,7 +168,7 @@ class DataHandler {
                 break;
             case SOURCE_SELECTED:
             case FLAVOR_SWITCHED:
-                params.put("actualBitrate", Long.toString(actualBitrate));
+                params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
                 break;
             case AUDIO_SELECTED:
                 params.put("language", currentAudioLanguage);
@@ -301,6 +304,7 @@ class DataHandler {
      */
     void handleFirstPlay() {
         joinTimeStartTimestamp = System.currentTimeMillis();
+        isFirstPlay = true;
     }
 
     /**
@@ -415,6 +419,11 @@ class DataHandler {
         }
         if (event == KavaEvents.IMPRESSION) {
             //For Impression event assume that playbackType is live.
+            return false;
+        }
+
+        if(isFirstPlay) {
+            isFirstPlay = false;
             return false;
         }
 
