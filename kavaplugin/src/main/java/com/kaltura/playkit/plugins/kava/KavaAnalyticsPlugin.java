@@ -131,8 +131,8 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     @Override
     protected void onApplicationResumed() {
         log.d("onApplicationResumed");
-        long currentTimeInSeconds = System.currentTimeMillis() - applicationBackgroundTimeStamp / Consts.MILLISECONDS_MULTIPLIER;
-        if (currentTimeInSeconds >= 30) {
+        long currentTimeInSeconds = System.currentTimeMillis() - applicationBackgroundTimeStamp;
+        if (currentTimeInSeconds >= ViewTimer.MAX_ALLOWED_VIEW_IDLE_TIME) {
             dataHandler.handleViewEventSessionClosed();
         }
         if (dataHandler != null) {
