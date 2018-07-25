@@ -144,16 +144,16 @@ class DataHandler {
                 playTimeSum += ViewTimer.TEN_SECONDS_IN_MS - totalBufferTimePerViewEvent;
                 params.put("playTimeSum", Float.toString(playTimeSum / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
 
-                params.put("actualBitrate", Long.toString(actualBitrate));
+                params.put("actualBitrate", Long.toString(actualBitrate / Consts.KB_MULTIPLIER));
                 long averageBitrate = averageBitrateCounter.getAverageBitrate(playTimeSum + totalBufferTimePerEntry);
-                params.put("averageBitrate", Long.toString(averageBitrate));
+                params.put("averageBitrate", Long.toString(averageBitrate / Consts.KB_MULTIPLIER));
 
                 addBufferParams(params);
 
                 break;
             case PLAY:
             case RESUME:
-                params.put("actualBitrate", Long.toString(actualBitrate));
+                params.put("actualBitrate", Long.toString(actualBitrate / Consts.KB_MULTIPLIER));
                 if (event == KavaEvents.PLAY) {
                     float joinTime = (System.currentTimeMillis() - joinTimeStartTimestamp) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
                     params.put("joinTime", Float.toString(joinTime));
@@ -166,7 +166,7 @@ class DataHandler {
                 break;
             case SOURCE_SELECTED:
             case FLAVOR_SWITCHED:
-                params.put("actualBitrate", Long.toString(actualBitrate));
+                params.put("actualBitrate", Long.toString(actualBitrate / Consts.KB_MULTIPLIER));
                 break;
             case AUDIO_SELECTED:
                 params.put("language", currentAudioLanguage);
