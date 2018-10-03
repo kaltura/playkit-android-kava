@@ -15,7 +15,6 @@ import com.kaltura.playkit.PlaybackInfo;
 import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.ads.PKAdErrorType;
-import com.kaltura.playkit.mediaproviders.base.FormatsHelper;
 import com.kaltura.playkit.player.PKPlayerErrorType;
 import com.kaltura.playkit.utils.Consts;
 
@@ -30,6 +29,8 @@ import java.util.Map;
 class DataHandler {
 
     private static final PKLog log = PKLog.get(DataHandler.class.getSimpleName());
+
+    private static final long KB_MULTIPLIER = 1024L;
 
     private Context context;
     private final Player player;
@@ -64,6 +65,7 @@ class DataHandler {
     private AverageBitrateCounter averageBitrateCounter;
 
     private boolean onApplicationPaused = false;
+    private boolean isFirstPlay;
 
     DataHandler(Context context, Player player) {
         this.context = context;
@@ -143,16 +145,16 @@ class DataHandler {
                 playTimeSum += ViewTimer.TEN_SECONDS_IN_MS - totalBufferTimePerViewEvent;
                 params.put("playTimeSum", Float.toString(playTimeSum / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
 
-                params.put("actualBitrate", Long.toString(actualBitrate));
+                params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
                 long averageBitrate = averageBitrateCounter.getAverageBitrate(playTimeSum + totalBufferTimePerEntry);
-                params.put("averageBitrate", Long.toString(averageBitrate));
+                params.put("averageBitrate", Long.toString(averageBitrate / KB_MULTIPLIER));
 
                 addBufferParams(params);
 
                 break;
             case PLAY:
             case RESUME:
-                params.put("actualBitrate", Long.toString(actualBitrate));
+                params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
                 if (event == KavaEvents.PLAY) {
                     float joinTime = (System.currentTimeMillis() - joinTimeStartTimestamp) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
                     params.put("joinTime", Float.toString(joinTime));
@@ -165,7 +167,7 @@ class DataHandler {
                 break;
             case SOURCE_SELECTED:
             case FLAVOR_SWITCHED:
-                params.put("actualBitrate", Long.toString(actualBitrate));
+                params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
                 break;
             case AUDIO_SELECTED:
                 params.put("language", currentAudioLanguage);
@@ -262,10 +264,34 @@ class DataHandler {
                 deliveryType = selectedSource.getMediaFormat().name();
                 break;
             default:
-                deliveryType = FormatsHelper.StreamFormat.Url.formatName;
+                deliveryType = StreamFormat.Url.formatName;
         }
     }
 
+    public enum StreamFormat {
+        MpegDash("mpegdash"),
+        AppleHttp("applehttp"),
+        Url("url"),
+        UrlDrm("url+drm"),
+        Unknown;
+
+        public String formatName = "";
+
+        StreamFormat(){}
+
+        StreamFormat(String name){
+            this.formatName = name;
+        }
+
+        public static StreamFormat byValue(String value) {
+            for(StreamFormat streamFormat : values()){
+                if(streamFormat.formatName.equals(value)){
+                    return streamFormat;
+                }
+            }
+            return Unknown;
+        }
+    }
     /**
      * Handle seek event. Update and cache target position.
      *
@@ -301,6 +327,7 @@ class DataHandler {
      */
     void handleFirstPlay() {
         joinTimeStartTimestamp = System.currentTimeMillis();
+        isFirstPlay = true;
     }
 
     /**
@@ -391,7 +418,7 @@ class DataHandler {
                 //If player is null it is impossible to obtain the playbackType, so it will be unknown.
                 kavaPlaybackType = KavaMediaEntryType.Unknown;
             } else {
-                if (!player.isLiveStream()) {
+                if (!player.isLive()) {
                     kavaPlaybackType = KavaMediaEntryType.Vod;
                 } else {
                     kavaPlaybackType = hasDvr(event) ? KavaMediaEntryType.Dvr : KavaMediaEntryType.Live;
@@ -418,7 +445,12 @@ class DataHandler {
             return false;
         }
 
-        if (player.isLiveStream()) {
+        if(isFirstPlay) {
+            isFirstPlay = false;
+            return false;
+        }
+
+        if (player.isLive()) {
             long distanceFromLive = player.getDuration() - player.getCurrentPosition();
             return distanceFromLive >= dvrThreshold;
         }

@@ -2,10 +2,10 @@ apply plugin: 'com.android.library'
 apply from: 'version.gradle'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 27
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 26
+        targetSdkVersion 27
         versionName libVersion
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -21,16 +21,18 @@ android {
 }
 
 dependencies {
+    implementation 'com.kaltura.netkit:netkit-core:1.0.9'
 //    implementation 'com.kaltura.playkit:playkit:3.4.+'
 //    implementation project(":playkit")
     implementation 'com.kaltura:playkit-android:dev-SNAPSHOT'
 
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
 }
 
 repositories {
-    maven { url "https://jitpack.io" }
     google()
+    jcenter()
+    maven { url "https://jitpack.io" }
 }
 
