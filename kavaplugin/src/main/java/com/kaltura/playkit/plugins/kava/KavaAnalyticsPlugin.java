@@ -269,10 +269,12 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                         case PLAYHEAD_UPDATED:
                             PlayerEvent.PlayheadUpdated playheadUpdated = (PlayerEvent.PlayheadUpdated) event;
                             //log.d("playheadUpdated event  position = " + playheadUpdated.position + " duration = " + playheadUpdated.duration);
-                            if (playheadUpdated.duration != 0) {
-                                progress = Float.valueOf(playheadUpdated.position / playheadUpdated.duration);
-                                maybeSentPlayerReachedEvent();
+                            if (playheadUpdated.duration > 0 && player.getDuration() >= 0) {
+                                progress = (float) playheadUpdated.position / playheadUpdated.duration;
+                            } else {
+                                progress = 0f;
                             }
+                            maybeSentPlayerReachedEvent();
                             break;
                     }
                 }
