@@ -25,6 +25,7 @@ import com.kaltura.playkit.MessageBus;
 import com.kaltura.playkit.PKEvent;
 import com.kaltura.playkit.PKLog;
 import com.kaltura.playkit.PKMediaConfig;
+import com.kaltura.playkit.PKMediaEntry;
 import com.kaltura.playkit.PKPlugin;
 import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
@@ -55,6 +56,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private KavaAnalyticsConfig pluginConfig;
     private PKEvent.Listener eventListener = initEventListener();
 
+    private float progress;
     private boolean playReached25;
     private boolean playReached50;
     private boolean playReached75;
@@ -127,7 +129,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
         applicationBackgroundTimeStamp = System.currentTimeMillis();
         if (dataHandler != null) {
-            dataHandler.onApplicationPaused();
+            PKMediaEntry.MediaEntryType mediaEntryType = PKMediaEntry.MediaEntryType.Unknown;
+            if (mediaConfig != null && mediaConfig.getMediaEntry() != null) {
+                mediaEntryType = mediaConfig.getMediaEntry().getMediaType();
+            }
+            dataHandler.onApplicationPaused(mediaEntryType);
         }
         if (viewTimer != null) {
             viewTimer.setViewEventTrigger(null);
@@ -171,6 +177,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     private PKEvent.Listener initEventListener() {
         return new PKEvent.Listener() {
+
             @Override
             public void onEvent(PKEvent event) {
                 if (event instanceof PlayerEvent) {
@@ -216,7 +223,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             setIsPaused(false);
                             break;
                         case SEEKING:
-                            if(isFirstPlay && dataHandler.getPlaybackType(KavaEvents.SEEK) == KavaMediaEntryType.Live) {
+                            if(isFirstPlay && (PKMediaEntry.MediaEntryType.DvrLive.equals(mediaConfig.getMediaEntry().getMediaType())|| PKMediaEntry.MediaEntryType.DvrLive.equals(mediaConfig.getMediaEntry().getMediaType()))) {
                                 return;
                             }
                             dataHandler.handleSeek(event);
@@ -259,6 +266,14 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             dataHandler.handleError(event);
                             sendAnalyticsEvent(KavaEvents.ERROR);
                             break;
+                        case PLAYHEAD_UPDATED:
+                            PlayerEvent.PlayheadUpdated playheadUpdated = (PlayerEvent.PlayheadUpdated) event;
+                            //log.d("playheadUpdated event  position = " + playheadUpdated.position + " duration = " + playheadUpdated.duration);
+                            if (playheadUpdated.duration != 0) {
+                                progress = Float.valueOf(playheadUpdated.position / playheadUpdated.duration);
+                                maybeSentPlayerReachedEvent();
+                            }
+                            break;
                     }
                 }
             }
@@ -291,7 +306,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             return;
         }
 
-        Map<String, String> params = dataHandler.collectData(event);
+        Map<String, String> params = dataHandler.collectData(event,mediaConfig.getMediaEntry().getMediaType(), progress);
 
         RequestBuilder requestBuilder = KavaService.sendAnalyticsEvent(pluginConfig.getBaseUrl(), dataHandler.getUserAgent(), params);
         requestBuilder.completion(new OnRequestCompletion() {
@@ -334,11 +349,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private void maybeSentPlayerReachedEvent() {
-        if (player.isLive()) {
-            return;
-        }
-
-        float progress = (float) player.getCurrentPosition() / player.getDuration();
 
         if (progress < 0.25) {
             return;
@@ -397,9 +407,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             }
 
             @Override
-            public void onTick() {
-                maybeSentPlayerReachedEvent();
-            }
+            public void onTick() {}
         };
     }
 }
