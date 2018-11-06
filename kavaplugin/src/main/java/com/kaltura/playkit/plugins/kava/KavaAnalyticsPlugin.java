@@ -56,7 +56,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private KavaAnalyticsConfig pluginConfig;
     private PKEvent.Listener eventListener = initEventListener();
 
-    private float progress;
+    private PlayerEvent.PlayheadUpdated playheadUpdated;
     private boolean playReached25;
     private boolean playReached50;
     private boolean playReached75;
@@ -199,7 +199,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             if (isFirstPlay) {
                                 dataHandler.handleFirstPlay();
                             }
-                            if (isImpressionSent) {
+                            if (isImpressionSent && (isFirstPlay || !isPaused)) {
                                 sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
                             } else {
                                 isAutoPlay = true;
@@ -267,13 +267,8 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             sendAnalyticsEvent(KavaEvents.ERROR);
                             break;
                         case PLAYHEAD_UPDATED:
-                            PlayerEvent.PlayheadUpdated playheadUpdated = (PlayerEvent.PlayheadUpdated) event;
+                            playheadUpdated = (PlayerEvent.PlayheadUpdated) event;
                             //log.d("playheadUpdated event  position = " + playheadUpdated.position + " duration = " + playheadUpdated.duration);
-                            if (playheadUpdated.position >= 0 && playheadUpdated.duration > 0) {
-                                progress = (float) playheadUpdated.position / playheadUpdated.duration;
-                            } else {
-                                progress = 0f;
-                            }
                             maybeSentPlayerReachedEvent();
                             break;
                     }
@@ -308,7 +303,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             return;
         }
 
-        Map<String, String> params = dataHandler.collectData(event,mediaConfig.getMediaEntry().getMediaType(), progress);
+        Map<String, String> params = dataHandler.collectData(event,mediaConfig.getMediaEntry().getMediaType(), playheadUpdated);
 
         RequestBuilder requestBuilder = KavaService.sendAnalyticsEvent(pluginConfig.getBaseUrl(), dataHandler.getUserAgent(), params);
         requestBuilder.completion(new OnRequestCompletion() {
@@ -351,7 +346,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private void maybeSentPlayerReachedEvent() {
-
+        float progress = 0f;
+        if (playheadUpdated != null && playheadUpdated.position >= 0 && playheadUpdated.duration > 0) {
+            progress = (float) playheadUpdated.position / playheadUpdated.duration;
+        }
         if (progress < 0.25) {
             return;
         }

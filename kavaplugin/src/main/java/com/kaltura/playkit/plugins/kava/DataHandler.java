@@ -108,7 +108,7 @@ class DataHandler {
      * @param event - current Kava event.
      * @return - Map with all the event relevant information
      */
-    Map<String, String> collectData(KavaEvents event, PKMediaEntry.MediaEntryType mediaEntryType, float progress) {
+    Map<String, String> collectData(KavaEvents event, PKMediaEntry.MediaEntryType mediaEntryType, PlayerEvent.PlayheadUpdated playheadUpdated) {
         if (!onApplicationPaused) {
             playbackType = getPlaybackType(mediaEntryType);
         }
@@ -126,7 +126,7 @@ class DataHandler {
         params.put("deliveryType", deliveryType);
         params.put("playbackType", playbackType.name().toLowerCase());
         params.put("clientVer", PlayKitManager.CLIENT_TAG);
-        params.put("position", String.valueOf(progress));
+        params.put("position", getPlayerPosition(mediaEntryType, playheadUpdated));
         params.put("application", context.getPackageName());
 
         if (sessionStartTime != null) {
@@ -357,21 +357,24 @@ class DataHandler {
      *
      * @param mediaEntryType - {@link KavaMediaEntryType} of the media for the moment of sending event.
      */
-    private String getPlayerPosition(KavaMediaEntryType mediaEntryType) {
+    private String getPlayerPosition(PKMediaEntry.MediaEntryType mediaEntryType, PlayerEvent.PlayheadUpdated playheadUpdated) {
         //When position obtained not from onApplicationPaused state update position/duration.
         if (!onApplicationPaused) {
-            currentPosition = player.getCurrentPosition();
-            currentDuration = player.getDuration();
+            if (playheadUpdated == null) {
+                currentPosition = 0;
+                currentDuration = 0;
+            } else {
+                currentPosition = playheadUpdated.position;
+                currentDuration = playheadUpdated.duration;
+            }
         }
 
         long playerPosition = currentPosition;
-        if (mediaEntryType == KavaMediaEntryType.Dvr
-                || mediaEntryType == KavaMediaEntryType.Live) {
+        if (mediaEntryType == PKMediaEntry.MediaEntryType.DvrLive || mediaEntryType == PKMediaEntry.MediaEntryType.Live) {
             playerPosition = currentPosition - currentDuration;
         }
 
         return playerPosition == 0 ? "0" : Float.toString(playerPosition / Consts.MILLISECONDS_MULTIPLIER_FLOAT);
-
     }
 
     /**
