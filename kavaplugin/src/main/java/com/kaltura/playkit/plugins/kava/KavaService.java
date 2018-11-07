@@ -37,10 +37,10 @@ public class KavaService {
 
         Uri.Builder builder = Uri.parse(baserUrl).buildUpon();
 
-        Iterator iterator = params.entrySet().iterator();
-        Map.Entry<String, String> entry;
+        Iterator<Map.Entry<String,String>> iterator = params.entrySet().iterator();
+        Map.Entry<String,String> entry;
         while (iterator.hasNext()) {
-            entry = (Map.Entry) iterator.next();
+            entry = iterator.next();
             builder.appendQueryParameter(entry.getKey(), entry.getValue());
         }
 
