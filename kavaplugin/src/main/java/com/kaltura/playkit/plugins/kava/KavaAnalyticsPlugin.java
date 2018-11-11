@@ -223,7 +223,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             setIsPaused(false);
                             break;
                         case SEEKING:
-                            if(isFirstPlay && (PKMediaEntry.MediaEntryType.DvrLive.equals(mediaConfig.getMediaEntry().getMediaType())|| PKMediaEntry.MediaEntryType.DvrLive.equals(mediaConfig.getMediaEntry().getMediaType()))) {
+                            PKMediaEntry.MediaEntryType mediaEntryType = PKMediaEntry.MediaEntryType.Unknown;
+                            if (mediaConfig != null && mediaConfig.getMediaEntry() != null) {
+                                mediaEntryType = mediaConfig.getMediaEntry().getMediaType();
+                            }
+                            if(isFirstPlay && (PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType)|| PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType))) {
                                 return;
                             }
                             dataHandler.handleSeek(event);
