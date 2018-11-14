@@ -18,6 +18,7 @@ import com.kaltura.playkit.player.PKPlayerErrorType;
 import com.kaltura.playkit.utils.Consts;
 
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -123,7 +124,7 @@ class DataHandler {
         params.put("eventIndex", Integer.toString(eventIndex));
         params.put("referrer", referrer);
         params.put("deliveryType", deliveryType);
-        params.put("playbackType", playbackType.name().toLowerCase());
+        params.put("playbackType", playbackType.name().toLowerCase(Locale.ROOT));
         params.put("clientVer", PlayKitManager.CLIENT_TAG);
         params.put("position", getPlayerPosition(mediaEntryType, playheadUpdated));
         params.put("application", context.getPackageName());
