@@ -8,7 +8,6 @@ import com.kaltura.playkit.PKEvent;
 import com.kaltura.playkit.PKLog;
 import com.kaltura.playkit.PKMediaConfig;
 import com.kaltura.playkit.PKMediaEntry;
-import com.kaltura.playkit.PKMediaFormat;
 import com.kaltura.playkit.PKMediaSource;
 import com.kaltura.playkit.PlayKitManager;
 import com.kaltura.playkit.PlaybackInfo;
@@ -19,6 +18,7 @@ import com.kaltura.playkit.player.PKPlayerErrorType;
 import com.kaltura.playkit.utils.Consts;
 
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -56,7 +56,6 @@ class DataHandler {
     private String deliveryType;
     private String sessionStartTime;
     private String referrer;
-    private String metadataPlaybackType;
     private String currentAudioLanguage;
     private String currentCaptionLanguage;
 
@@ -98,9 +97,6 @@ class DataHandler {
 
         this.entryId = (pluginConfig != null && pluginConfig.getEntryId() != null) ? pluginConfig.getEntryId() : mediaConfig.getMediaEntry().getId();
         this.sessionId = player.getSessionId() != null ? player.getSessionId() : "";
-        this.metadataPlaybackType = (mediaConfig.getMediaEntry().getMediaType() != null) ?
-                mediaConfig.getMediaEntry().getMediaType().name() : PKMediaEntry.MediaEntryType.Unknown.name();
-
         resetValues();
     }
 
@@ -112,9 +108,9 @@ class DataHandler {
      * @param event - current Kava event.
      * @return - Map with all the event relevant information
      */
-    Map<String, String> collectData(KavaEvents event) {
+    Map<String, String> collectData(KavaEvents event, PKMediaEntry.MediaEntryType mediaEntryType, PlayerEvent.PlayheadUpdated playheadUpdated) {
         if (!onApplicationPaused) {
-            playbackType = getPlaybackType(event);
+            playbackType = getPlaybackType(mediaEntryType);
         }
 
         Map<String, String> params = new LinkedHashMap<>();
@@ -128,9 +124,9 @@ class DataHandler {
         params.put("eventIndex", Integer.toString(eventIndex));
         params.put("referrer", referrer);
         params.put("deliveryType", deliveryType);
-        params.put("playbackType", playbackType.name().toLowerCase());
+        params.put("playbackType", playbackType.name().toLowerCase(Locale.ROOT));
         params.put("clientVer", PlayKitManager.CLIENT_TAG);
-        params.put("position", getPlayerPosition(playbackType));
+        params.put("position", getPlayerPosition(mediaEntryType, playheadUpdated));
         params.put("application", context.getPackageName());
 
         if (sessionStartTime != null) {
@@ -361,21 +357,24 @@ class DataHandler {
      *
      * @param mediaEntryType - {@link KavaMediaEntryType} of the media for the moment of sending event.
      */
-    private String getPlayerPosition(KavaMediaEntryType mediaEntryType) {
+    private String getPlayerPosition(PKMediaEntry.MediaEntryType mediaEntryType, PlayerEvent.PlayheadUpdated playheadUpdated) {
         //When position obtained not from onApplicationPaused state update position/duration.
         if (!onApplicationPaused) {
-            currentPosition = player.getCurrentPosition();
-            currentDuration = player.getDuration();
+            if (playheadUpdated == null) {
+                currentPosition = 0;
+                currentDuration = 0;
+            } else {
+                currentPosition = playheadUpdated.position;
+                currentDuration = playheadUpdated.duration;
+            }
         }
 
         long playerPosition = currentPosition;
-        if (mediaEntryType == KavaMediaEntryType.Dvr
-                || mediaEntryType == KavaMediaEntryType.Live) {
+        if (mediaEntryType == PKMediaEntry.MediaEntryType.DvrLive || mediaEntryType == PKMediaEntry.MediaEntryType.Live) {
             playerPosition = currentPosition - currentDuration;
         }
 
         return playerPosition == 0 ? "0" : Float.toString(playerPosition / Consts.MILLISECONDS_MULTIPLIER_FLOAT);
-
     }
 
     /**
@@ -401,32 +400,21 @@ class DataHandler {
      * we will rely on player to provide this data.
      * In case when current event of type ERROR - we will concern it as KavaMediaEntryType.Unknown.
      *
-     * @param event - KavaEvent type.
      * @return - {@link KavaMediaEntryType} of the media for the moment of sending event.
      */
-    KavaMediaEntryType getPlaybackType(KavaEvents event) {
+    KavaMediaEntryType getPlaybackType(PKMediaEntry.MediaEntryType mediaEntryType) {
 
-        KavaMediaEntryType kavaPlaybackType;
-
-        if (KavaMediaEntryType.Vod.name().equals(metadataPlaybackType)) {
-            kavaPlaybackType = KavaMediaEntryType.Vod;
-        } else if (PKMediaEntry.MediaEntryType.Live.name().equals(metadataPlaybackType)) {
-            kavaPlaybackType = hasDvr(event) ? KavaMediaEntryType.Dvr : KavaMediaEntryType.Live;
-        } else {
-            //If there is no playback type in metadata, obtain it from player as fallback.
-            if (player == null || event == KavaEvents.ERROR) {
-                //If player is null it is impossible to obtain the playbackType, so it will be unknown.
-                kavaPlaybackType = KavaMediaEntryType.Unknown;
-            } else {
-                if (!player.isLive()) {
-                    kavaPlaybackType = KavaMediaEntryType.Vod;
-                } else {
-                    kavaPlaybackType = hasDvr(event) ? KavaMediaEntryType.Dvr : KavaMediaEntryType.Live;
-                }
-            }
+        if (player == null) {
+            //If player is null it is impossible to obtain the playbackType, so it will be unknown.
+            return KavaMediaEntryType.Unknown;
         }
 
-        return kavaPlaybackType;
+        if (PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType)) {
+            return KavaMediaEntryType.Dvr;
+        } else if (PKMediaEntry.MediaEntryType.Live.equals(mediaEntryType)) {
+            return KavaMediaEntryType.Live;
+        }
+        return KavaMediaEntryType.Vod;
     }
 
     /**
@@ -501,12 +489,12 @@ class DataHandler {
         return userAgent;
     }
 
-    void onApplicationPaused() {
+    void onApplicationPaused(PKMediaEntry.MediaEntryType mediaEntryType) {
         //Player is destroyed during onApplicationPaused call.
         //So we should update this values before PAUSE event sent.
         currentDuration = player.getDuration();
         currentPosition = player.getCurrentPosition();
-        playbackType = getPlaybackType(null);
+        playbackType = getPlaybackType(mediaEntryType);
         onApplicationPaused = true;
     }
 

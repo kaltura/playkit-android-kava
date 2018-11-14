@@ -2,3 +2,5 @@ include ':kavaplugin'
 
 //include ':playkit'
 //project(':playkit').projectDir = new File('../playkit-android/playkit')
+//include ':netkit'
+//project(':netkit').projectDir = new File('../netkit-android/netkit')
