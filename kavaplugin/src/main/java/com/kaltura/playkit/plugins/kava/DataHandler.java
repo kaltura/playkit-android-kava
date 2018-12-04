@@ -403,46 +403,18 @@ class DataHandler {
      * @return - {@link KavaMediaEntryType} of the media for the moment of sending event.
      */
     KavaMediaEntryType getPlaybackType(PKMediaEntry.MediaEntryType mediaEntryType) {
-
+        //If player is null it is impossible to obtain the playbackType, so it will be unknown.
         if (player == null) {
-            //If player is null it is impossible to obtain the playbackType, so it will be unknown.
             return KavaMediaEntryType.Unknown;
         }
 
         if (PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType)) {
-            return KavaMediaEntryType.Dvr;
+            long distanceFromLive = player.getDuration() - player.getCurrentPosition();
+            return (distanceFromLive >= dvrThreshold) ? KavaMediaEntryType.Dvr : KavaMediaEntryType.Live;
         } else if (PKMediaEntry.MediaEntryType.Live.equals(mediaEntryType)) {
             return KavaMediaEntryType.Live;
         }
         return KavaMediaEntryType.Vod;
-    }
-
-    /**
-     * Chceck if current playback state is in LIVE or DVR mode.
-     *
-     * @param - Event type. When IMPRESSION event sent player still does not know its current position.
-     *          So in this case we can assume that playbackType is live.
-     * @return - true if distance from live edge grater the requested dvr threshold.
-     */
-    private boolean hasDvr(KavaEvents event) {
-        if (player == null) {
-            return false;
-        }
-        if (event == KavaEvents.IMPRESSION) {
-            //For Impression event assume that playbackType is live.
-            return false;
-        }
-
-        if(isFirstPlay) {
-            isFirstPlay = false;
-            return false;
-        }
-
-        if (player.isLive()) {
-            long distanceFromLive = player.getDuration() - player.getCurrentPosition();
-            return distanceFromLive >= dvrThreshold;
-        }
-        return false;
     }
 
     /**
