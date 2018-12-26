@@ -270,7 +270,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                         case ERROR:
                             PKError error = ((PlayerEvent.Error) event).error;
                             if (error != null && !error.isFatal()) {
-                                log.v("Error eventType = " + error.errorType + " severity = " + error.severity+ " errorMessage = " + error.message);
+                                log.v("Error eventType = " + error.errorType + " severity = " + error.severity + " errorMessage = " + error.message);
                                 return;
                             }
                             dataHandler.handleError(event);
