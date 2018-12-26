@@ -16,7 +16,6 @@ import android.net.Uri;
 
 import com.kaltura.netkit.connect.request.RequestBuilder;
 
-import java.util.Iterator;
 import java.util.Map;
 
 /**
