@@ -347,7 +347,9 @@ class DataHandler {
         sessionStartTime = null;
         totalBufferTimePerEntry = 0;
         totalBufferTimePerViewEvent = 0;
-        averageBitrateCounter.reset();
+        if (averageBitrateCounter != null) {
+            averageBitrateCounter.reset();
+        }
     }
 
     /**
