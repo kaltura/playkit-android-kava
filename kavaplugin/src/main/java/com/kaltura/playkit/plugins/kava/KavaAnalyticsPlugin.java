@@ -13,6 +13,7 @@
 package com.kaltura.playkit.plugins.kava;
 
 import android.content.Context;
+import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -308,7 +309,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             log.w("Can not send analytics event. Mandatory field partnerId is missing");
             return;
         }
-        if (mediaConfig == null || mediaConfig.getMediaEntry() == null || mediaConfig.getMediaEntry().getId() == null) {
+        if (dataHandler.getEntryId() == null || isNumericOrEmpty(dataHandler.getEntryId())) {
             log.w("Can not send analytics event. Mandatory field entryId is missing");
             return;
         }
@@ -419,5 +420,12 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             @Override
             public void onTick() {}
         };
+    }
+
+    private boolean isNumericOrEmpty(String strNum) {
+        if (TextUtils.isEmpty(strNum)) {
+            return true;
+        }
+        return strNum.matches("-?\\d+(\\.\\d+)?");
     }
 }

@@ -475,4 +475,8 @@ class DataHandler {
     void setOnApplicationResumed() {
         onApplicationPaused = false;
     }
+
+    public String getEntryId() {
+        return entryId;
+    }
 }
