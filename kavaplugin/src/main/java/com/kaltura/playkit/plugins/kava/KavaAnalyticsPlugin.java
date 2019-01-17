@@ -23,7 +23,6 @@ import com.kaltura.netkit.connect.response.ResponseElement;
 import com.kaltura.netkit.utils.OnRequestCompletion;
 import com.kaltura.playkit.MessageBus;
 import com.kaltura.playkit.PKError;
-import com.kaltura.playkit.PKEvent;
 import com.kaltura.playkit.PKLog;
 import com.kaltura.playkit.PKMediaConfig;
 import com.kaltura.playkit.PKMediaEntry;
@@ -33,6 +32,7 @@ import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.PlayerState;
 
 import com.kaltura.playkit.plugin.kava.BuildConfig;
+import com.kaltura.playkit.plugins.ads.AdEvent;
 import com.kaltura.playkit.utils.Consts;
 
 import org.json.JSONException;
@@ -55,7 +55,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private DataHandler dataHandler;
     private RequestQueue requestExecutor;
     private KavaAnalyticsConfig pluginConfig;
-    private PKEvent.Listener eventListener = initEventListener();
 
     private PlayerEvent.PlayheadUpdated playheadUpdated;
     private boolean playReached25;
@@ -102,9 +101,127 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         this.player = player;
         this.messageBus = messageBus;
         this.requestExecutor = APIOkRequestsExecutor.getSingleton();
-        this.messageBus.listen(eventListener, (Enum[]) PlayerEvent.Type.values());
+        addListeners();
         dataHandler = new DataHandler(context, player);
         onUpdateConfig(config);
+    }
+
+    private void addListeners() {
+        this.messageBus.addListener(this, PlayerEvent.stateChanged, event -> {
+            handleStateChanged(event);
+        });
+
+        //this.messageBus.addListener(this, PlayerEvent.canPlay, event -> {
+            ///handleStateChanged(event);
+        //});
+
+        this.messageBus.addListener(this, PlayerEvent.loadedMetadata, event -> {
+            if (!isImpressionSent) {
+                sendAnalyticsEvent(KavaEvents.IMPRESSION);
+                if (isAutoPlay) {
+                    sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
+                    isAutoPlay = false;
+                }
+                isImpressionSent = true;
+            }
+        });
+
+        this.messageBus.addListener(this, PlayerEvent.play, event -> {
+            if (isFirstPlay) {
+                dataHandler.handleFirstPlay();
+            }
+            if (isImpressionSent && (isFirstPlay || !isPaused)) {
+                sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
+            } else {
+                isAutoPlay = true;
+            }
+        });
+
+        this.messageBus.addListener(this, PlayerEvent.pause, event -> {
+            setIsPaused(true);
+            sendAnalyticsEvent(KavaEvents.PAUSE);
+        });
+
+        this.messageBus.addListener(this, PlayerEvent.playing, event -> {
+            if (isFirstPlay) {
+                isFirstPlay = false;
+                startViewTimer();
+                sendAnalyticsEvent(KavaEvents.PLAY);
+            } else {
+                if (isPaused && !isEnded) {
+                    sendAnalyticsEvent(KavaEvents.RESUME);
+                }
+            }
+            isEnded = false; // needed in order to prevent sending of RESUME event after REPLAY.
+            setIsPaused(false);
+        });
+
+        this.messageBus.addListener(this, PlayerEvent.seeking, event -> {
+            PKMediaEntry.MediaEntryType mediaEntryType = PKMediaEntry.MediaEntryType.Unknown;
+            if (mediaConfig != null && mediaConfig.getMediaEntry() != null) {
+                mediaEntryType = mediaConfig.getMediaEntry().getMediaType();
+            }
+            if(isFirstPlay && (PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType)|| PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType))) {
+                return;
+            }
+            dataHandler.handleSeek(event);
+            sendAnalyticsEvent(KavaEvents.SEEK);
+        });
+
+        this.messageBus.addListener(this, PlayerEvent.replay, event -> {
+            sendAnalyticsEvent(KavaEvents.REPLAY);
+        });
+        this.messageBus.addListener(this, PlayerEvent.sourceSelected, event -> {
+            dataHandler.handleSourceSelected(event);
+        });
+
+        this.messageBus.addListener(this, PlayerEvent.ended, event -> {
+            maybeSentPlayerReachedEvent();
+            if (!playReached100) {
+                playReached100 = true;
+                sendAnalyticsEvent(KavaEvents.PLAY_REACHED_100_PERCENT);
+            }
+
+            isEnded = true;
+            setIsPaused(true);
+        });
+
+        this.messageBus.addListener(this, PlayerEvent.playbackInfoUpdated, event -> {
+            if (dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_VIDEO)) {
+                sendAnalyticsEvent(KavaEvents.FLAVOR_SWITCHED);
+            }
+        });
+
+        this.messageBus.addListener(this, PlayerEvent.videoTrackChanged, event -> {
+            dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_VIDEO);
+            sendAnalyticsEvent(KavaEvents.SOURCE_SELECTED);
+        });
+
+        this.messageBus.addListener(this, PlayerEvent.audioTrackChanged, event -> {
+            dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_AUDIO);
+            sendAnalyticsEvent(KavaEvents.AUDIO_SELECTED);
+        });
+
+        this.messageBus.addListener(this, PlayerEvent.textTrackChanged, event -> {
+            dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_TEXT);
+            sendAnalyticsEvent(KavaEvents.CAPTIONS);
+        });
+
+        this.messageBus.addListener(this, PlayerEvent.error, event -> {
+            PKError error =  event.error;
+            if (error != null && !error.isFatal()) {
+                log.v("Error eventType = " + error.errorType + " severity = " + error.severity + " errorMessage = " + error.message);
+                return;
+            }
+            dataHandler.handleError(event);
+            sendAnalyticsEvent(KavaEvents.ERROR);
+        });
+
+        this.messageBus.addListener(this, PlayerEvent.playheadUpdated, event -> {
+            playheadUpdated = event;
+            //log.d("playheadUpdated event  position = " + playheadUpdated.position + " duration = " + playheadUpdated.duration);
+            maybeSentPlayerReachedEvent();
+        });
     }
 
     @Override
@@ -174,117 +291,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             viewTimer.stop();
             viewTimer = null;
         }
-    }
-
-    private PKEvent.Listener initEventListener() {
-        return new PKEvent.Listener() {
-
-            @Override
-            public void onEvent(PKEvent event) {
-                if (event instanceof PlayerEvent) {
-                    switch (((PlayerEvent) event).type) {
-                        case STATE_CHANGED:
-                            handleStateChanged((PlayerEvent.StateChanged) event);
-                            break;
-                        case LOADED_METADATA:
-                            if (!isImpressionSent) {
-                                sendAnalyticsEvent(KavaEvents.IMPRESSION);
-                                if (isAutoPlay) {
-                                    sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
-                                    isAutoPlay = false;
-                                }
-                                isImpressionSent = true;
-                            }
-                            break;
-                        case PLAY:
-                            if (isFirstPlay) {
-                                dataHandler.handleFirstPlay();
-                            }
-                            if (isImpressionSent && (isFirstPlay || !isPaused)) {
-                                sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
-                            } else {
-                                isAutoPlay = true;
-                            }
-                            break;
-                        case PAUSE:
-                            setIsPaused(true);
-                            sendAnalyticsEvent(KavaEvents.PAUSE);
-                            break;
-                        case PLAYING:
-                            if (isFirstPlay) {
-                                isFirstPlay = false;
-                                startViewTimer();
-                                sendAnalyticsEvent(KavaEvents.PLAY);
-                            } else {
-                                if (isPaused && !isEnded) {
-                                    sendAnalyticsEvent(KavaEvents.RESUME);
-                                }
-                            }
-                            isEnded = false; // needed in order to prevent sending of RESUME event after REPLAY.
-                            setIsPaused(false);
-                            break;
-                        case SEEKING:
-                            PKMediaEntry.MediaEntryType mediaEntryType = PKMediaEntry.MediaEntryType.Unknown;
-                            if (mediaConfig != null && mediaConfig.getMediaEntry() != null) {
-                                mediaEntryType = mediaConfig.getMediaEntry().getMediaType();
-                            }
-                            if(isFirstPlay && (PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType)|| PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType))) {
-                                return;
-                            }
-                            dataHandler.handleSeek(event);
-                            sendAnalyticsEvent(KavaEvents.SEEK);
-                            break;
-                        case REPLAY:
-                            sendAnalyticsEvent(KavaEvents.REPLAY);
-                            break;
-                        case SOURCE_SELECTED:
-                            dataHandler.handleSourceSelected(event);
-                            break;
-                        case ENDED:
-                            maybeSentPlayerReachedEvent();
-                            if (!playReached100) {
-                                playReached100 = true;
-                                sendAnalyticsEvent(KavaEvents.PLAY_REACHED_100_PERCENT);
-                            }
-
-                            isEnded = true;
-                            setIsPaused(true);
-                            break;
-                        case PLAYBACK_INFO_UPDATED:
-                            if (dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_VIDEO)) {
-                                sendAnalyticsEvent(KavaEvents.FLAVOR_SWITCHED);
-                            }
-                            break;
-                        case VIDEO_TRACK_CHANGED:
-                            dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_VIDEO);
-                            sendAnalyticsEvent(KavaEvents.SOURCE_SELECTED);
-                            break;
-                        case AUDIO_TRACK_CHANGED:
-                            dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_AUDIO);
-                            sendAnalyticsEvent(KavaEvents.AUDIO_SELECTED);
-                            break;
-                        case TEXT_TRACK_CHANGED:
-                            dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_TEXT);
-                            sendAnalyticsEvent(KavaEvents.CAPTIONS);
-                            break;
-                        case ERROR:
-                            PKError error = ((PlayerEvent.Error) event).error;
-                            if (error != null && !error.isFatal()) {
-                                log.v("Error eventType = " + error.errorType + " severity = " + error.severity + " errorMessage = " + error.message);
-                                return;
-                            }
-                            dataHandler.handleError(event);
-                            sendAnalyticsEvent(KavaEvents.ERROR);
-                            break;
-                        case PLAYHEAD_UPDATED:
-                            playheadUpdated = (PlayerEvent.PlayheadUpdated) event;
-                            //log.d("playheadUpdated event  position = " + playheadUpdated.position + " duration = " + playheadUpdated.duration);
-                            maybeSentPlayerReachedEvent();
-                            break;
-                    }
-                }
-            }
-        };
     }
 
     private void handleStateChanged(PlayerEvent.StateChanged event) {
