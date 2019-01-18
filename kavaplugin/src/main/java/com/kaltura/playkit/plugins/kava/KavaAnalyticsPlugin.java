@@ -299,6 +299,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                 //We should start count buffering time only after IMPRESSION was sent.
                 if (isImpressionSent) {
                     dataHandler.handleBufferingStart();
+                    if (!isBufferStart) {
+                        sendAnalyticsEvent(KavaEvents.BUFFER_START);
+                        isBufferStart = true;
+                    }
                 }
                 break;
             case READY:
