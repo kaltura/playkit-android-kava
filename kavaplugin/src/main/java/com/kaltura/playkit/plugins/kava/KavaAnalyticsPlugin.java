@@ -65,7 +65,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     private boolean isAutoPlay;
     private boolean isImpressionSent;
-    private boolean isBufferStart;
     private boolean isEnded = false;
     private boolean isPaused = true;
     private boolean isFirstPlay = true;
@@ -188,10 +187,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                             handleStateChanged((PlayerEvent.StateChanged) event);
                             break;
                         case LOADED_METADATA:
-                            if (isImpressionSent && !isBufferStart) {
-                                sendAnalyticsEvent(KavaEvents.BUFFER_START);
-                                isBufferStart = true;
-                            }
                             if (!isImpressionSent) {
                                 sendAnalyticsEvent(KavaEvents.IMPRESSION);
                                 if (isAutoPlay) {
@@ -299,17 +294,13 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                 //We should start count buffering time only after IMPRESSION was sent.
                 if (isImpressionSent) {
                     dataHandler.handleBufferingStart();
-                    if (!isBufferStart) {
-                        sendAnalyticsEvent(KavaEvents.BUFFER_START);
-                        isBufferStart = true;
-                    }
+                    sendAnalyticsEvent(KavaEvents.BUFFER_START);
                 }
                 break;
             case READY:
                 playerState = PlayerState.READY;
-                sendAnalyticsEvent(KavaEvents.BUFFER_END);
                 dataHandler.handleBufferingEnd();
-                isBufferStart = false;
+                sendAnalyticsEvent(KavaEvents.BUFFER_END);
                 break;
         }
     }
@@ -407,7 +398,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         isEnded = false;
         isFirstPlay = true;
         isImpressionSent = false;
-        isBufferStart = false;
         playReached25 = playReached50 = playReached75 = playReached100 = false;
     }
 
