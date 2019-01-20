@@ -107,7 +107,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private void addListeners() {
-        this.messageBus.addListener(this, PlayerEvent.stateChanged, event -> {
+        messageBus.addListener(this, PlayerEvent.stateChanged, event -> {
             handleStateChanged(event);
         });
 
@@ -115,7 +115,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             ///handleStateChanged(event);
         //});
 
-        this.messageBus.addListener(this, PlayerEvent.loadedMetadata, event -> {
+        messageBus.addListener(this, PlayerEvent.loadedMetadata, event -> {
             if (!isImpressionSent) {
                 sendAnalyticsEvent(KavaEvents.IMPRESSION);
                 if (isAutoPlay) {
@@ -126,7 +126,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             }
         });
 
-        this.messageBus.addListener(this, PlayerEvent.play, event -> {
+        messageBus.addListener(this, PlayerEvent.play, event -> {
             if (isFirstPlay) {
                 dataHandler.handleFirstPlay();
             }
@@ -137,12 +137,12 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             }
         });
 
-        this.messageBus.addListener(this, PlayerEvent.pause, event -> {
+        messageBus.addListener(this, PlayerEvent.pause, event -> {
             setIsPaused(true);
             sendAnalyticsEvent(KavaEvents.PAUSE);
         });
 
-        this.messageBus.addListener(this, PlayerEvent.playing, event -> {
+        messageBus.addListener(this, PlayerEvent.playing, event -> {
             if (isFirstPlay) {
                 isFirstPlay = false;
                 startViewTimer();
@@ -156,7 +156,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             setIsPaused(false);
         });
 
-        this.messageBus.addListener(this, PlayerEvent.seeking, event -> {
+        messageBus.addListener(this, PlayerEvent.seeking, event -> {
             PKMediaEntry.MediaEntryType mediaEntryType = PKMediaEntry.MediaEntryType.Unknown;
             if (mediaConfig != null && mediaConfig.getMediaEntry() != null) {
                 mediaEntryType = mediaConfig.getMediaEntry().getMediaType();
@@ -168,14 +168,15 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             sendAnalyticsEvent(KavaEvents.SEEK);
         });
 
-        this.messageBus.addListener(this, PlayerEvent.replay, event -> {
+        messageBus.addListener(this, PlayerEvent.replay, event -> {
             sendAnalyticsEvent(KavaEvents.REPLAY);
         });
-        this.messageBus.addListener(this, PlayerEvent.sourceSelected, event -> {
+
+        messageBus.addListener(this, PlayerEvent.sourceSelected, event -> {
             dataHandler.handleSourceSelected(event);
         });
 
-        this.messageBus.addListener(this, PlayerEvent.ended, event -> {
+        messageBus.addListener(this, PlayerEvent.ended, event -> {
             maybeSentPlayerReachedEvent();
             if (!playReached100) {
                 playReached100 = true;
@@ -186,28 +187,28 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             setIsPaused(true);
         });
 
-        this.messageBus.addListener(this, PlayerEvent.playbackInfoUpdated, event -> {
+        messageBus.addListener(this, PlayerEvent.playbackInfoUpdated, event -> {
             if (dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_VIDEO)) {
                 sendAnalyticsEvent(KavaEvents.FLAVOR_SWITCHED);
             }
         });
 
-        this.messageBus.addListener(this, PlayerEvent.videoTrackChanged, event -> {
+        messageBus.addListener(this, PlayerEvent.videoTrackChanged, event -> {
             dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_VIDEO);
             sendAnalyticsEvent(KavaEvents.SOURCE_SELECTED);
         });
 
-        this.messageBus.addListener(this, PlayerEvent.audioTrackChanged, event -> {
+        messageBus.addListener(this, PlayerEvent.audioTrackChanged, event -> {
             dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_AUDIO);
             sendAnalyticsEvent(KavaEvents.AUDIO_SELECTED);
         });
 
-        this.messageBus.addListener(this, PlayerEvent.textTrackChanged, event -> {
+        messageBus.addListener(this, PlayerEvent.textTrackChanged, event -> {
             dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_TEXT);
             sendAnalyticsEvent(KavaEvents.CAPTIONS);
         });
 
-        this.messageBus.addListener(this, PlayerEvent.error, event -> {
+        messageBus.addListener(this, PlayerEvent.error, event -> {
             PKError error =  event.error;
             if (error != null && !error.isFatal()) {
                 log.v("Error eventType = " + error.errorType + " severity = " + error.severity + " errorMessage = " + error.message);
@@ -217,7 +218,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             sendAnalyticsEvent(KavaEvents.ERROR);
         });
 
-        this.messageBus.addListener(this, PlayerEvent.playheadUpdated, event -> {
+        messageBus.addListener(this, PlayerEvent.playheadUpdated, event -> {
             playheadUpdated = event;
             //log.d("playheadUpdated event  position = " + playheadUpdated.position + " duration = " + playheadUpdated.duration);
             maybeSentPlayerReachedEvent();
@@ -282,6 +283,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     @Override
     protected void onDestroy() {
+        if (messageBus != null) {
+            messageBus.removeListeners(this);
+        }
         clearViewTimer();
     }
 
