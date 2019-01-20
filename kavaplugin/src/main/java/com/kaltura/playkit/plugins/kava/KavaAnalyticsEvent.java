@@ -20,6 +20,9 @@ import com.kaltura.playkit.PKEvent;
 
 public class KavaAnalyticsEvent implements PKEvent {
 
+    public static final Class<KavaAnalyticsReport> reportSent = KavaAnalyticsReport.class;
+
+
     public enum Type {
         REPORT_SENT
     }
