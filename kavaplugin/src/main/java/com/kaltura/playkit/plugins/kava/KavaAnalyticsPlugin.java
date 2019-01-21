@@ -111,13 +111,16 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             handleStateChanged(event);
         });
 
-        //this.messageBus.addListener(this, PlayerEvent.canPlay, event -> {
-            ///handleStateChanged(event);
-        //});
+        this.messageBus.addListener(this, PlayerEvent.canPlay, event -> {
+            if (isFirstPlay) {
+                sendAnalyticsEvent(KavaEvents.CAN_PLAY);
+            }
+        });
 
         messageBus.addListener(this, PlayerEvent.loadedMetadata, event -> {
             if (!isImpressionSent) {
                 sendAnalyticsEvent(KavaEvents.IMPRESSION);
+                dataHandler.handleLoadMetaData();
                 if (isAutoPlay) {
                     sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
                     isAutoPlay = false;

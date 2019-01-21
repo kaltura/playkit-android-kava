@@ -9,6 +9,7 @@ public enum KavaEvents {
     PLAY_REQUEST(2),
     PLAY(3),
     RESUME(4),
+    CAN_PLAY(5),
     PLAY_REACHED_25_PERCENT(11),
     PLAY_REACHED_50_PERCENT(12),
     PLAY_REACHED_75_PERCENT(13),
