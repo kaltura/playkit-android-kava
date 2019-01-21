@@ -189,11 +189,17 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                         case LOADED_METADATA:
                             if (!isImpressionSent) {
                                 sendAnalyticsEvent(KavaEvents.IMPRESSION);
+                                dataHandler.handleLoadMetaData();
                                 if (isAutoPlay) {
                                     sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
                                     isAutoPlay = false;
                                 }
                                 isImpressionSent = true;
+                            }
+                            break;
+                        case CAN_PLAY:
+                            if (isFirstPlay) {
+                                sendAnalyticsEvent(KavaEvents.CAN_PLAY);
                             }
                             break;
                         case PLAY:

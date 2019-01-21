@@ -45,6 +45,7 @@ class DataHandler {
     private long currentPosition;
     private long currentDuration;
     private long joinTimeStartTimestamp;
+    private long loadMetaDataTimestamp;
     private long totalBufferTimePerEntry;
     private long lastKnownBufferingTimestamp;
     private long targetSeekPositionInSeconds;
@@ -147,6 +148,10 @@ class DataHandler {
 
                 addBufferParams(params);
 
+                break;
+            case CAN_PLAY:
+                float canPlay = (System.currentTimeMillis() - loadMetaDataTimestamp) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
+                params.put("canPlay", Float.toString(canPlay));
                 break;
             case PLAY:
             case RESUME:
@@ -324,6 +329,10 @@ class DataHandler {
     void handleFirstPlay() {
         joinTimeStartTimestamp = System.currentTimeMillis();
         isFirstPlay = true;
+    }
+
+    void handleLoadMetaData() {
+        loadMetaDataTimestamp = System.currentTimeMillis();
     }
 
     /**
