@@ -32,7 +32,6 @@ import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.PlayerState;
 
 import com.kaltura.playkit.plugin.kava.BuildConfig;
-import com.kaltura.playkit.plugins.ads.AdEvent;
 import com.kaltura.playkit.utils.Consts;
 
 import org.json.JSONException;
@@ -112,15 +111,13 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         });
 
         this.messageBus.addListener(this, PlayerEvent.canPlay, event -> {
-            if (isFirstPlay) {
-                sendAnalyticsEvent(KavaEvents.CAN_PLAY);
-            }
+            dataHandler.handleCanPlay();
         });
 
         messageBus.addListener(this, PlayerEvent.loadedMetadata, event -> {
             if (!isImpressionSent) {
                 sendAnalyticsEvent(KavaEvents.IMPRESSION);
-                dataHandler.handleLoadMetaData();
+                dataHandler.handleLoadedMetaData();
                 if (isAutoPlay) {
                     sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
                     isAutoPlay = false;
