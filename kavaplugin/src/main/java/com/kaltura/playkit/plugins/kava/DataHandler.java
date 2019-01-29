@@ -45,6 +45,8 @@ class DataHandler {
     private long currentPosition;
     private long currentDuration;
     private long joinTimeStartTimestamp;
+    private long canPlayTimestamp;
+    private long loadedMetaDataTimestamp;
     private long totalBufferTimePerEntry;
     private long lastKnownBufferingTimestamp;
     private long targetSeekPositionInSeconds;
@@ -149,12 +151,19 @@ class DataHandler {
 
                 break;
             case PLAY:
+                params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
+
+                float joinTime = (System.currentTimeMillis() - joinTimeStartTimestamp) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
+                params.put("joinTime", Float.toString(joinTime));
+
+                float canPlay = (canPlayTimestamp - loadedMetaDataTimestamp) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
+                params.put("canPlay", Float.toString(canPlay));
+
+                averageBitrateCounter.resumeCounting();
+                addBufferParams(params);
+                break;
             case RESUME:
                 params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
-                if (event == KavaEvents.PLAY) {
-                    float joinTime = (System.currentTimeMillis() - joinTimeStartTimestamp) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
-                    params.put("joinTime", Float.toString(joinTime));
-                }
                 averageBitrateCounter.resumeCounting();
                 addBufferParams(params);
                 break;
@@ -326,6 +335,14 @@ class DataHandler {
         isFirstPlay = true;
     }
 
+    void handleCanPlay() {
+        canPlayTimestamp = System.currentTimeMillis();
+    }
+
+    void handleLoadedMetaData() {
+        loadedMetaDataTimestamp = System.currentTimeMillis();
+    }
+
     /**
      * Set view session start time.
      *
@@ -453,6 +470,8 @@ class DataHandler {
         sessionStartTime = null;
         onApplicationPaused = false;
         lastKnownBufferingTimestamp = 0;
+        canPlayTimestamp = 0;
+        loadedMetaDataTimestamp = 0;
         handleViewEventSessionClosed();
     }
 
