@@ -112,7 +112,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         });
 
         this.messageBus.addListener(this, PlayerEvent.canPlay, event -> {
-            dataHandler.handleCanPlay();
+            if (isFirstPlay) {
+                dataHandler.handleCanPlay();
+            }
         });
 
         messageBus.addListener(this, PlayerEvent.loadedMetadata, event -> {
