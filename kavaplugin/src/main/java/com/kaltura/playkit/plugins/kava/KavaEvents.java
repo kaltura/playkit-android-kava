@@ -20,6 +20,8 @@ public enum KavaEvents {
     SOURCE_SELECTED(39), // video track changed manually.
     AUDIO_SELECTED(42), // audio track changed manually
     FLAVOR_SWITCHED(43), // abr bitrate switch.
+    BUFFER_START (45),
+    BUFFER_END (46),
     ERROR(98),
     VIEW(99);
 

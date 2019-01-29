@@ -64,6 +64,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     private boolean isAutoPlay;
     private boolean isImpressionSent;
+    private boolean isBufferingStart;
     private boolean isEnded = false;
     private boolean isPaused = true;
     private boolean isFirstPlay = true;
@@ -304,11 +305,17 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                 //We should start count buffering time only after IMPRESSION was sent.
                 if (isImpressionSent) {
                     dataHandler.handleBufferingStart();
+                    sendAnalyticsEvent(KavaEvents.BUFFER_START);
+                    isBufferingStart = true;
                 }
                 break;
             case READY:
                 playerState = PlayerState.READY;
                 dataHandler.handleBufferingEnd();
+                if (isBufferingStart) {
+                    sendAnalyticsEvent(KavaEvents.BUFFER_END);
+                    isBufferingStart = false;
+                }
                 break;
         }
     }
@@ -406,6 +413,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         isEnded = false;
         isFirstPlay = true;
         isImpressionSent = false;
+        isBufferingStart = false;
         playReached25 = playReached50 = playReached75 = playReached100 = false;
     }
 
