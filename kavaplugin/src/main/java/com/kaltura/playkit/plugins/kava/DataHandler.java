@@ -97,9 +97,27 @@ class DataHandler {
 
         averageBitrateCounter = new AverageBitrateCounter();
 
-        this.entryId = (pluginConfig != null && pluginConfig.getEntryId() != null) ? pluginConfig.getEntryId() : mediaConfig.getMediaEntry().getId();
+        this.entryId = populateEntryId(mediaConfig, pluginConfig);
         this.sessionId = player.getSessionId() != null ? player.getSessionId() : "";
         resetValues();
+    }
+
+    private String populateEntryId(PKMediaConfig mediaConfig, KavaAnalyticsConfig pluginConfig) {
+        
+        String kavaEntryId = null;
+        if (pluginConfig != null && pluginConfig.getEntryId() != null) {
+            kavaEntryId = pluginConfig.getEntryId();
+        } else if (isValidMediaEntry(mediaConfig) && mediaConfig.getMediaEntry().getMetadata() != null && mediaConfig.getMediaEntry().getMetadata().containsKey("entryId")) {
+            kavaEntryId = mediaConfig.getMediaEntry().getMetadata().get("entryId");
+        } else if (isValidMediaEntry(mediaConfig)) {
+            kavaEntryId = mediaConfig.getMediaEntry().getId();
+        }
+        return kavaEntryId;
+    }
+
+    private boolean isValidMediaEntry(PKMediaConfig mediaConfig) {
+
+        return mediaConfig != null && mediaConfig.getMediaEntry() != null;
     }
 
     /**

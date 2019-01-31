@@ -13,6 +13,7 @@
 package com.kaltura.playkit.plugins.kava;
 
 import android.content.Context;
+import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -327,10 +328,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             log.w("Can not send analytics event. Mandatory field partnerId is missing");
             return;
         }
-        if (mediaConfig == null || mediaConfig.getMediaEntry() == null || mediaConfig.getMediaEntry().getId() == null) {
-            log.w("Can not send analytics event. Mandatory field entryId is missing");
+
+        if (!isValidEntryId())
             return;
-        }
 
         Map<String, String> params = dataHandler.collectData(event,mediaConfig.getMediaEntry().getMediaType(), playheadUpdated);
 
@@ -362,6 +362,30 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         });
         log.d("request sent " + requestBuilder.build().getUrl());
         requestExecutor.queue(requestBuilder.build());
+    }
+
+    private boolean isValidEntryId() {
+
+        boolean mediaEntryValid = true;
+        if (mediaConfig == null || mediaConfig.getMediaEntry() == null || mediaConfig.getMediaEntry().getId() == null) {
+            log.w("Can not send analytics event. Mandatory field entryId is missing");
+            mediaEntryValid = false;
+        } else {
+            // for OTT assetId is not valid for Kava
+            mediaEntryValid = mediaEntryValid && !TextUtils.isDigitsOnly(mediaConfig.getMediaEntry().getId());
+        }
+
+        boolean metadataVaild = true;
+        if ((pluginConfig == null || pluginConfig.getEntryId() == null) && !isEntryIdInMetadata()) {
+            log.w("Can not send analytics event. Mandatory field entryId is missing");
+            metadataVaild = false;
+        }
+
+        return mediaEntryValid || metadataVaild;
+    }
+
+    private boolean isEntryIdInMetadata() {
+        return (mediaConfig != null && mediaConfig.getMediaEntry() != null && mediaConfig.getMediaEntry().getMetadata() != null) && mediaConfig.getMediaEntry().getMetadata().containsKey("entryId");
     }
 
     private KavaAnalyticsConfig parsePluginConfig(Object config) {
