@@ -36,7 +36,7 @@ public class KavaAnalyticsConfig {
     private static final String PLAYBACK_CONTEXT = "playbackContext";
     private static final String ENTRY_ID   = "entryId";
 
-    private static final String DEFAULT_BASE_URL = "http://analytics.kaltura.com/api_v3/index.php";
+    private static final String DEFAULT_BASE_URL = "https://analytics.kaltura.com/api_v3/index.php";
 
     private int uiconfId;
     private int partnerId;
