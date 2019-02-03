@@ -380,7 +380,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         }
 
         boolean metadataVaild = true;
-        if ((pluginConfig == null || pluginConfig.getEntryId() == null) && !isEntryIdInMetadata()) {
+        if ((pluginConfig == null || TextUtils.isEmpty(pluginConfig.getEntryId())) && !isEntryIdInMetadata()) {
             log.w("Can not send analytics event. Mandatory field entryId is missing");
             metadataVaild = false;
         }
