@@ -196,6 +196,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             }
         });
 
+        messageBus.addListener(this, PlayerEvent.tracksAvailable, event -> {
+            dataHandler.handleTracksAvailable(event);
+        });
+
         messageBus.addListener(this, PlayerEvent.videoTrackChanged, event -> {
             dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_VIDEO);
             sendAnalyticsEvent(KavaEvents.SOURCE_SELECTED);

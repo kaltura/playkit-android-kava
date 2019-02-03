@@ -15,6 +15,7 @@ import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.ads.PKAdErrorType;
 import com.kaltura.playkit.player.PKPlayerErrorType;
+import com.kaltura.playkit.player.PKTracks;
 import com.kaltura.playkit.utils.Consts;
 
 import java.util.LinkedHashMap;
@@ -146,7 +147,12 @@ class DataHandler {
                 params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
                 long averageBitrate = averageBitrateCounter.getAverageBitrate(playTimeSum + totalBufferTimePerEntry);
                 params.put("averageBitrate", Long.toString(averageBitrate / KB_MULTIPLIER));
-
+                if (currentAudioLanguage != null) {
+                    params.put("audioLanguage", currentAudioLanguage);
+                }
+                if (currentCaptionLanguage != null) {
+                    params.put("captionsLanguage", currentCaptionLanguage);
+                }
                 addBufferParams(params);
 
                 break;
@@ -236,6 +242,19 @@ class DataHandler {
         }
 
         return shouldSendEvent;
+    }
+
+    /**
+     * Player tracks available handler.
+     *
+     * @param event =  TracksAvailable event.
+     */
+    void handleTracksAvailable(PlayerEvent.TracksAvailable event) {
+            PKTracks trackInfo = ((PlayerEvent.TracksAvailable) event).tracksInfo;
+            if (trackInfo != null) {
+                currentAudioLanguage = trackInfo.getAudioTracks().get(trackInfo.getDefaultAudioTrackIndex()).getLanguage();
+                currentCaptionLanguage = trackInfo.getTextTracks().get(trackInfo.getDefaultTextTrackIndex()).getLanguage();
+            }
     }
 
     /**
