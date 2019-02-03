@@ -380,7 +380,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         }
 
         boolean metadataVaild = true;
-        if ((pluginConfig == null || pluginConfig.getEntryId() == null) && !isEntryIdInMetadata()) {
+        if ((pluginConfig == null || TextUtils.isEmpty(pluginConfig.getEntryId())) && !isEntryIdInMetadata()) {
             log.w("Can not send analytics event. Mandatory field entryId is missing");
             metadataVaild = false;
         }
@@ -389,7 +389,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private boolean isEntryIdInMetadata() {
-        return (mediaConfig != null && mediaConfig.getMediaEntry() != null && mediaConfig.getMediaEntry().getMetadata() != null) && mediaConfig.getMediaEntry().getMetadata().containsKey("entryId");
+        return (mediaConfig != null && mediaConfig.getMediaEntry() != null &&
+                mediaConfig.getMediaEntry().getMetadata() != null) &&
+                mediaConfig.getMediaEntry().getMetadata().containsKey("entryId") &&
+                !TextUtils.isEmpty(mediaConfig.getMediaEntry().getMetadata().get("entryId"));
     }
 
     private KavaAnalyticsConfig parsePluginConfig(Object config) {
