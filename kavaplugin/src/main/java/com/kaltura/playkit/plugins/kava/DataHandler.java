@@ -276,8 +276,6 @@ class DataHandler {
                 if (trackInfo.getTextTracks().size() > 0 && trackInfo.getTextTracks().get(trackInfo.getDefaultTextTrackIndex()) != null) {
                     currentCaptionLanguage = trackInfo.getTextTracks().get(trackInfo.getDefaultTextTrackIndex()).getLanguage();
                 }
-                currentAudioLanguage = trackInfo.getAudioTracks().get(trackInfo.getDefaultAudioTrackIndex()).getLanguage();
-                currentCaptionLanguage = trackInfo.getTextTracks().get(trackInfo.getDefaultTextTrackIndex()).getLanguage();
             }
     }
 
