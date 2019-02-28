@@ -448,6 +448,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         isImpressionSent = false;
         isBufferingStart = false;
         playReached25 = playReached50 = playReached75 = playReached100 = false;
+        playheadUpdated = null;
     }
 
     private ViewTimer.ViewEventTrigger initViewTrigger() {
