@@ -77,7 +77,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     public static final Factory factory = new Factory() {
         @Override
         public String getName() {
-            return "KavaAnalytics";
+            return "kava";
         }
 
         @Override
