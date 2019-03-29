@@ -333,10 +333,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             return;
         }
 
-        if (!isValidEntryId())
+        if (!isValidEntryId()) {
             return;
+        }
 
-        Map<String, String> params = dataHandler.collectData(event,mediaConfig.getMediaEntry().getMediaType(), playheadUpdated);
+        Map<String, String> params = dataHandler.collectData(event, mediaConfig.getMediaEntry().getMediaType(), playheadUpdated);
 
         RequestBuilder requestBuilder = KavaService.sendAnalyticsEvent(pluginConfig.getBaseUrl(), dataHandler.getUserAgent(), params);
         requestBuilder.completion(new OnRequestCompletion() {
@@ -371,7 +372,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private boolean isValidEntryId() {
 
         boolean mediaEntryValid = true;
-        if (mediaConfig == null || mediaConfig.getMediaEntry() == null || mediaConfig.getMediaEntry().getId() == null) {
+        if (mediaConfig == null || mediaConfig.getMediaEntry() == null) {
+            return false;
+        }
+
+        if (mediaConfig.getMediaEntry().getId() == null) {
             log.w("Can not send analytics event. Mandatory field entryId is missing");
             mediaEntryValid = false;
         } else {
