@@ -374,6 +374,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         if (mediaConfig == null || mediaConfig.getMediaEntry() == null) {
             return false;
         }
+        
         boolean mediaEntryValid = true;
         if (mediaConfig.getMediaEntry().getId() == null) {
             log.w("Can not send analytics event. Mandatory field entryId is missing");
