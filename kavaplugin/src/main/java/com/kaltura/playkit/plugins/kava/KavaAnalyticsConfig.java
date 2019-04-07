@@ -24,19 +24,19 @@ public class KavaAnalyticsConfig {
 
     private static final PKLog log = PKLog.get(KavaAnalyticsConfig.class.getSimpleName());
 
-    private static final String KS = "ks";
-    private static final String BASE_URL = "baseUrl";
-    private static final String UICONF_ID = "uiconfId";
-    private static final String PARTNER_ID = "partnerId";
-    private static final String CUSTOM_VAR_1 = "customVar1";
-    private static final String CUSTOM_VAR_2 = "customVar2";
-    private static final String CUSTOM_VAR_3 = "customVar3";
-    private static final String REFERRER = "referrer";
-    private static final String DVR_THRESHOLD = "dvrThreshold";
-    private static final String PLAYBACK_CONTEXT = "playbackContext";
-    private static final String ENTRY_ID   = "entryId";
+    public static final String KS = "ks";
+    public static final String BASE_URL = "baseUrl";
+    //private static final String UICONF_ID = "uiconfId";
+    public static final String PARTNER_ID = "partnerId";
+    public static final String CUSTOM_VAR_1 = "customVar1";
+    public static final String CUSTOM_VAR_2 = "customVar2";
+    public static final String CUSTOM_VAR_3 = "customVar3";
+    public static final String REFERRER = "referrer";
+    public static final String DVR_THRESHOLD = "dvrThreshold";
+    public static final String PLAYBACK_CONTEXT = "playbackContext";
+    public static final String ENTRY_ID   = "entryId";
 
-    private static final String DEFAULT_BASE_URL = "https://analytics.kaltura.com/api_v3/index.php";
+    public static final String DEFAULT_BASE_URL = "https://analytics.kaltura.com/api_v3/index.php";
 
     private int uiconfId;
     private int partnerId;
@@ -52,6 +52,7 @@ public class KavaAnalyticsConfig {
 
     private long dvrThreshold = Consts.DISTANCE_FROM_LIVE_THRESHOLD;
 
+    @Deprecated
     public KavaAnalyticsConfig setUiConfId(int uiConfId) {
         this.uiconfId = uiConfId;
         return this;
@@ -119,6 +120,7 @@ public class KavaAnalyticsConfig {
 
     }
 
+    @Deprecated
     int getUiConfId() {
         return uiconfId;
     }
@@ -217,7 +219,7 @@ public class KavaAnalyticsConfig {
     public JsonObject toJson() {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty(PARTNER_ID, partnerId);
-        jsonObject.addProperty(UICONF_ID, uiconfId);
+        //jsonObject.addProperty(UICONF_ID, uiconfId);
         jsonObject.addProperty(BASE_URL, baseUrl);
         jsonObject.addProperty(DVR_THRESHOLD, dvrThreshold);
 

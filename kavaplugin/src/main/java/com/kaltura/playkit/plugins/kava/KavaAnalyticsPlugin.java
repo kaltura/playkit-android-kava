@@ -240,6 +240,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         clearViewTimer();
         viewTimer = new ViewTimer();
         viewTimer.setViewEventTrigger(viewEventTrigger);
+        if (pluginConfig != null && this.pluginConfig.getPartnerId() == Consts.DEFAULT_KAVA_PARTNER_ID) {
+            this.pluginConfig.setEntryId(Consts.DEFAULT_KAVA_ENTRY_ID);
+        }
         dataHandler.onUpdateMedia(mediaConfig, pluginConfig);
         resetFlags();
     }
@@ -374,7 +377,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         if (mediaConfig == null || mediaConfig.getMediaEntry() == null) {
             return false;
         }
-        
+
         boolean mediaEntryValid = true;
         if (mediaConfig.getMediaEntry().getId() == null) {
             log.w("Can not send analytics event. Mandatory field entryId is missing");
