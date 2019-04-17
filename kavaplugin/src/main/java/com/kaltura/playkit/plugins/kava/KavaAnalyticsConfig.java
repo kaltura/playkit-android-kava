@@ -26,7 +26,7 @@ public class KavaAnalyticsConfig {
 
     public static final String KS = "ks";
     public static final String BASE_URL = "baseUrl";
-    //private static final String UICONF_ID = "uiconfId";
+    public static final String UICONF_ID = "uiconfId";
     public static final String PARTNER_ID = "partnerId";
     public static final String CUSTOM_VAR_1 = "customVar1";
     public static final String CUSTOM_VAR_2 = "customVar2";
@@ -38,8 +38,8 @@ public class KavaAnalyticsConfig {
 
     public static final String DEFAULT_BASE_URL = "https://analytics.kaltura.com/api_v3/index.php";
 
-    private int uiconfId;
-    private int partnerId;
+    private Integer uiconfId;
+    private Integer partnerId;
 
     private String ks;
     private String referrer;
@@ -52,13 +52,8 @@ public class KavaAnalyticsConfig {
 
     private long dvrThreshold = Consts.DISTANCE_FROM_LIVE_THRESHOLD;
 
-    @Deprecated
-    public KavaAnalyticsConfig setUiConfId(int uiConfId) {
-        this.uiconfId = uiConfId;
-        return this;
-    }
 
-    public KavaAnalyticsConfig setPartnerId(int partnerId) {
+    public KavaAnalyticsConfig setPartnerId(Integer partnerId) {
         this.partnerId = partnerId;
         return this;
     }
@@ -80,6 +75,11 @@ public class KavaAnalyticsConfig {
 
     public KavaAnalyticsConfig setDvrThreshold(long dvrThreshold) {
         this.dvrThreshold = dvrThreshold;
+        return this;
+    }
+
+    public KavaAnalyticsConfig setUiConfId(Integer uiConfId) {
+        this.uiconfId = uiConfId;
         return this;
     }
 
@@ -120,12 +120,11 @@ public class KavaAnalyticsConfig {
 
     }
 
-    @Deprecated
-    int getUiConfId() {
+    Integer getUiConfId() {
         return uiconfId;
     }
 
-    int getPartnerId() {
+    Integer getPartnerId() {
         return partnerId;
     }
 
@@ -205,7 +204,7 @@ public class KavaAnalyticsConfig {
     }
 
     boolean hasUiConfId() {
-        return uiconfId != 0;
+        return uiconfId != null && uiconfId != 0;
     }
 
     private boolean isValidReferrer(String referrer) {
@@ -213,20 +212,22 @@ public class KavaAnalyticsConfig {
     }
 
     boolean isPartnerIdValid() {
-        return partnerId != 0;
+        return partnerId != null && partnerId != 0;
     }
 
     public JsonObject toJson() {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty(PARTNER_ID, partnerId);
-        //jsonObject.addProperty(UICONF_ID, uiconfId);
+        jsonObject.addProperty(ENTRY_ID, entryId);
         jsonObject.addProperty(BASE_URL, baseUrl);
         jsonObject.addProperty(DVR_THRESHOLD, dvrThreshold);
 
         jsonObject.addProperty(KS, ks);
         jsonObject.addProperty(PLAYBACK_CONTEXT, playbackContext);
         jsonObject.addProperty(REFERRER, referrer);
-        jsonObject.addProperty(ENTRY_ID, entryId);
+        if (uiconfId != null) {
+            jsonObject.addProperty(UICONF_ID, uiconfId);
+        }
         jsonObject.addProperty(CUSTOM_VAR_1, customVar1);
         jsonObject.addProperty(CUSTOM_VAR_2, customVar2);
         jsonObject.addProperty(CUSTOM_VAR_3, customVar3);

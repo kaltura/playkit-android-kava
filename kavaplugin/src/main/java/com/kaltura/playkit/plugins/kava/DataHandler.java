@@ -81,8 +81,9 @@ class DataHandler {
      * @param pluginConfig - plugin configurations.
      */
     void onUpdateConfig(KavaAnalyticsConfig pluginConfig) {
-
-        partnerId = Integer.toString(pluginConfig.getPartnerId());
+        if (pluginConfig.getPartnerId() != null) {
+            partnerId = Integer.toString(pluginConfig.getPartnerId());
+        }
         dvrThreshold = pluginConfig.getDvrThreshold();
         generateReferrer(pluginConfig.getReferrer());
         optionalParams = new OptionalParams(pluginConfig);

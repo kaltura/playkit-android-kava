@@ -240,9 +240,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         clearViewTimer();
         viewTimer = new ViewTimer();
         viewTimer.setViewEventTrigger(viewEventTrigger);
-        if (pluginConfig != null && this.pluginConfig.getPartnerId() == Consts.DEFAULT_KAVA_PARTNER_ID) {
-            this.pluginConfig.setEntryId(Consts.DEFAULT_KAVA_ENTRY_ID);
-        }
         dataHandler.onUpdateMedia(mediaConfig, pluginConfig);
         resetFlags();
     }
@@ -331,14 +328,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private void sendAnalyticsEvent(final KavaEvents event) {
-        if (!pluginConfig.isPartnerIdValid()) {
-            log.w("Can not send analytics event. Mandatory field partnerId is missing");
-            return;
-        }
 
-        if (!isValidEntryId()) {
+        if (isInputInvalid())
             return;
-        }
 
         Map<String, String> params = dataHandler.collectData(event, mediaConfig.getMediaEntry().getMediaType(), playheadUpdated);
 
@@ -370,6 +362,23 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         });
         log.d("request sent " + requestBuilder.build().getUrl());
         requestExecutor.queue(requestBuilder.build());
+    }
+
+    private boolean isInputInvalid() {
+        if (!isValidEntryId()) {
+            if (pluginConfig.getPartnerId() == null && pluginConfig.getEntryId() == null) {
+                pluginConfig.setPartnerId(Consts.DEFAULT_KAVA_PARTNER_ID);
+                pluginConfig.setEntryId(Consts.DEFAULT_KAVA_ENTRY_ID);
+            } else {
+                return true;
+            }
+        }
+
+        if (!pluginConfig.isPartnerIdValid()) {
+            log.w("Can not send analytics event. Mandatory field partnerId is missing");
+            return true;
+        }
+        return false;
     }
 
     private boolean isValidEntryId() {

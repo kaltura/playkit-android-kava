@@ -13,19 +13,19 @@ class OptionalParams {
     OptionalParams(KavaAnalyticsConfig config) {
         optionalParams = new LinkedHashMap<>();
 
-        if (config.hasPlaybackContext()) {
+        if (config.hasPlaybackContext() && config.getPlaybackContext() != null) {
             optionalParams.put("playbackContext", config.getPlaybackContext());
         }
 
-        if (config.hasCustomVar1()) {
+        if (config.hasCustomVar1() && config.getCustomVar1() != null) {
             optionalParams.put("customVar1", config.getCustomVar1());
         }
 
-        if (config.hasCustomVar2()) {
+        if (config.hasCustomVar2() && config.getCustomVar2() != null) {
             optionalParams.put("customVar2", config.getCustomVar2());
         }
 
-        if (config.hasCustomVar3()) {
+        if (config.hasCustomVar3() && config.getCustomVar3() != null) {
             optionalParams.put("customVar3", config.getCustomVar3());
         }
 
@@ -33,15 +33,15 @@ class OptionalParams {
             optionalParams.put("ks", config.getKs());
         }
 
-        if (config.hasUiConfId()) {
+        if (config.hasUiConfId() && config.getUiConfId() != null) {
             optionalParams.put("uiConfId", Integer.toString(config.getUiConfId()));
         }
 
-        if(config.hasApplicationVersion()) {
+        if(config.hasApplicationVersion() && config.getApplicationVersion() != null) {
             optionalParams.put("applicationVer", config.getApplicationVersion());
         }
 
-        if(config.hasPlaylistId()) {
+        if(config.hasPlaylistId() && config.getPlaylistId() != null) {
             optionalParams.put("playlistId", config.getPlaylistId());
         }
     }
