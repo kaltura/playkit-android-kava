@@ -365,6 +365,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private boolean isInputInvalid() {
+        if (mediaConfig == null || mediaConfig.getMediaEntry() == null) {
+            return true;
+        }
+
         if (!isValidEntryId()) {
             if (pluginConfig.getPartnerId() == null && pluginConfig.getEntryId() == null) {
                 pluginConfig.setPartnerId(Consts.DEFAULT_KAVA_PARTNER_ID);
