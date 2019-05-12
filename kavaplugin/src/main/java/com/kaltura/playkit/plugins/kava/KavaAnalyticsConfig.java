@@ -24,6 +24,9 @@ public class KavaAnalyticsConfig {
 
     private static final PKLog log = PKLog.get(KavaAnalyticsConfig.class.getSimpleName());
 
+    public static final int DEFAULT_KAVA_PARTNER_ID = 2504201;
+    public static final String DEFAULT_KAVA_ENTRY_ID = "1_3bwzbc9o";
+
     public static final String KS = "ks";
     public static final String BASE_URL = "baseUrl";
     public static final String UICONF_ID = "uiconfId";

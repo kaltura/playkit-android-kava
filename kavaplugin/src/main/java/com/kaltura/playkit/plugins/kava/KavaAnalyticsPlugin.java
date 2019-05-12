@@ -48,9 +48,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
     private static final PKLog log = PKLog.get(KavaAnalyticsPlugin.class.getSimpleName());
 
-    public static final int DEFAULT_KAVA_PARTNER_ID = 2504201;
-    public static final String DEFAULT_KAVA_ENTRY_ID = "1_3bwzbc9o";
-
     private Player player;
     private MessageBus messageBus;
     private PlayerState playerState;
@@ -374,8 +371,8 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
         if (!isValidEntryId()) {
             if (pluginConfig.getPartnerId() == null && pluginConfig.getEntryId() == null) {
-                pluginConfig.setPartnerId(DEFAULT_KAVA_PARTNER_ID);
-                pluginConfig.setEntryId(DEFAULT_KAVA_ENTRY_ID);
+                pluginConfig.setPartnerId(KavaAnalyticsConfig.DEFAULT_KAVA_PARTNER_ID);
+                pluginConfig.setEntryId(KavaAnalyticsConfig.DEFAULT_KAVA_ENTRY_ID);
             } else {
                 return true;
             }
