@@ -1,7 +1,8 @@
 package com.kaltura.playkit.plugins.kava;
 
 import android.content.Context;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.Nullable;
 
 import com.kaltura.playkit.PKError;
 import com.kaltura.playkit.PKEvent;
