@@ -34,11 +34,12 @@ public class KavaAnalyticsConfig {
     public static final String CUSTOM_VAR_1 = "customVar1";
     public static final String CUSTOM_VAR_2 = "customVar2";
     public static final String CUSTOM_VAR_3 = "customVar3";
+    public static final String APPLICATION_VERSION = "applicationVersion";
+    public static final String PLAY_LIST_ID = "playlistId";
     public static final String REFERRER = "referrer";
     public static final String DVR_THRESHOLD = "dvrThreshold";
     public static final String PLAYBACK_CONTEXT = "playbackContext";
     public static final String ENTRY_ID   = "entryId";
-
     public static final String DEFAULT_BASE_URL = "https://analytics.kaltura.com/api_v3/index.php";
 
     private Integer uiconfId;
@@ -234,6 +235,8 @@ public class KavaAnalyticsConfig {
         jsonObject.addProperty(CUSTOM_VAR_1, customVar1);
         jsonObject.addProperty(CUSTOM_VAR_2, customVar2);
         jsonObject.addProperty(CUSTOM_VAR_3, customVar3);
+        jsonObject.addProperty(PLAY_LIST_ID, playlistId);
+        jsonObject.addProperty(APPLICATION_VERSION, applicationVersion);
 
         return jsonObject;
     }
