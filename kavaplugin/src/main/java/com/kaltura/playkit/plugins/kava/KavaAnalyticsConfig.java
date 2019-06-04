@@ -31,6 +31,8 @@ public class KavaAnalyticsConfig {
     private static final String CUSTOM_VAR_1 = "customVar1";
     private static final String CUSTOM_VAR_2 = "customVar2";
     private static final String CUSTOM_VAR_3 = "customVar3";
+    public static final String APPLICATION_VERSION = "applicationVersion";
+    public static final String PLAY_LIST_ID = "playlistId";
     private static final String REFERRER = "referrer";
     private static final String DVR_THRESHOLD = "dvrThreshold";
     private static final String PLAYBACK_CONTEXT = "playbackContext";
@@ -228,6 +230,8 @@ public class KavaAnalyticsConfig {
         jsonObject.addProperty(CUSTOM_VAR_1, customVar1);
         jsonObject.addProperty(CUSTOM_VAR_2, customVar2);
         jsonObject.addProperty(CUSTOM_VAR_3, customVar3);
+        jsonObject.addProperty(PLAY_LIST_ID, playlistId);
+        jsonObject.addProperty(APPLICATION_VERSION, applicationVersion);
 
         return jsonObject;
     }
