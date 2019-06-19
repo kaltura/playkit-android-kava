@@ -57,6 +57,7 @@ public class KavaAnalyticsConfig {
     private long dvrThreshold = Consts.DISTANCE_FROM_LIVE_THRESHOLD;
 
 
+    // Expecting here the OVP partner Id even for OTT account
     public KavaAnalyticsConfig setPartnerId(Integer partnerId) {
         this.partnerId = partnerId;
         return this;
