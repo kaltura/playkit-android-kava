@@ -125,43 +125,43 @@ public class KavaAnalyticsConfig {
 
     }
 
-    Integer getUiConfId() {
+    public Integer getUiConfId() {
         return uiconfId;
     }
 
-    Integer getPartnerId() {
+    public Integer getPartnerId() {
         return partnerId;
     }
 
-    String getKs() {
+    public String getKs() {
         return ks;
     }
 
-    String getEntryId() {
+    public String getEntryId() {
         return entryId;
     }
 
-    String getBaseUrl() {
+    public String getBaseUrl() {
         return baseUrl;
     }
 
-    long getDvrThreshold() {
+    public long getDvrThreshold() {
         return dvrThreshold;
     }
 
-    String getCustomVar1() {
+    public String getCustomVar1() {
         return customVar1;
     }
 
-    String getCustomVar2() {
+    public String getCustomVar2() {
         return customVar2;
     }
 
-    String getCustomVar3() {
+    public String getCustomVar3() {
         return customVar3;
     }
 
-    String getPlaybackContext() {
+    public String getPlaybackContext() {
         return playbackContext;
     }
 
@@ -173,7 +173,7 @@ public class KavaAnalyticsConfig {
         return applicationVersion;
     }
 
-    String getReferrer() {
+    public String getReferrer() {
         if (isValidReferrer(referrer)) {
             return this.referrer;
         }
