@@ -29,7 +29,6 @@ dependencies {
     //implementation project(":netkit")
     //implementation project(":playkit")
 
-
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2', {
         exclude group: 'com.android.support', module: 'support-v4'

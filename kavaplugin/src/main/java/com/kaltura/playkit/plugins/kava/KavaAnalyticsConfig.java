@@ -24,24 +24,26 @@ public class KavaAnalyticsConfig {
 
     private static final PKLog log = PKLog.get(KavaAnalyticsConfig.class.getSimpleName());
 
-    private static final String KS = "ks";
-    private static final String BASE_URL = "baseUrl";
-    private static final String UICONF_ID = "uiconfId";
-    private static final String PARTNER_ID = "partnerId";
-    private static final String CUSTOM_VAR_1 = "customVar1";
-    private static final String CUSTOM_VAR_2 = "customVar2";
-    private static final String CUSTOM_VAR_3 = "customVar3";
-    private static final String APPLICATION_VERSION = "applicationVersion";
-    private static final String PLAY_LIST_ID = "playlistId";
-    private static final String REFERRER = "referrer";
-    private static final String DVR_THRESHOLD = "dvrThreshold";
-    private static final String PLAYBACK_CONTEXT = "playbackContext";
-    private static final String ENTRY_ID   = "entryId";
+    public static final int DEFAULT_KAVA_PARTNER_ID = 2504201;
+    public static final String DEFAULT_KAVA_ENTRY_ID = "1_3bwzbc9o";
 
-    private static final String DEFAULT_BASE_URL = "https://analytics.kaltura.com/api_v3/index.php";
+    public static final String KS = "ks";
+    public static final String BASE_URL = "baseUrl";
+    public static final String UICONF_ID = "uiconfId";
+    public static final String PARTNER_ID = "partnerId";
+    public static final String CUSTOM_VAR_1 = "customVar1";
+    public static final String CUSTOM_VAR_2 = "customVar2";
+    public static final String CUSTOM_VAR_3 = "customVar3";
+    public static final String APPLICATION_VERSION = "applicationVersion";
+    public static final String PLAY_LIST_ID = "playlistId";
+    public static final String REFERRER = "referrer";
+    public static final String DVR_THRESHOLD = "dvrThreshold";
+    public static final String PLAYBACK_CONTEXT = "playbackContext";
+    public static final String ENTRY_ID   = "entryId";
+    public static final String DEFAULT_BASE_URL = "https://analytics.kaltura.com/api_v3/index.php";
 
-    private int uiconfId;
-    private int partnerId;
+    private Integer uiconfId;
+    private Integer partnerId;
 
     private String ks;
     private String referrer;
@@ -54,12 +56,9 @@ public class KavaAnalyticsConfig {
 
     private long dvrThreshold = Consts.DISTANCE_FROM_LIVE_THRESHOLD;
 
-    public KavaAnalyticsConfig setUiConfId(int uiConfId) {
-        this.uiconfId = uiConfId;
-        return this;
-    }
 
-    public KavaAnalyticsConfig setPartnerId(int partnerId) {
+    // Expecting here the OVP partner Id even for OTT account
+    public KavaAnalyticsConfig setPartnerId(Integer partnerId) {
         this.partnerId = partnerId;
         return this;
     }
@@ -81,6 +80,11 @@ public class KavaAnalyticsConfig {
 
     public KavaAnalyticsConfig setDvrThreshold(long dvrThreshold) {
         this.dvrThreshold = dvrThreshold;
+        return this;
+    }
+
+    public KavaAnalyticsConfig setUiConfId(Integer uiConfId) {
+        this.uiconfId = uiConfId;
         return this;
     }
 
@@ -121,43 +125,43 @@ public class KavaAnalyticsConfig {
 
     }
 
-    int getUiConfId() {
+    public Integer getUiConfId() {
         return uiconfId;
     }
 
-    int getPartnerId() {
+    public Integer getPartnerId() {
         return partnerId;
     }
 
-    String getKs() {
+    public String getKs() {
         return ks;
     }
 
-    String getEntryId() {
+    public String getEntryId() {
         return entryId;
     }
 
-    String getBaseUrl() {
+    public String getBaseUrl() {
         return baseUrl;
     }
 
-    long getDvrThreshold() {
+    public long getDvrThreshold() {
         return dvrThreshold;
     }
 
-    String getCustomVar1() {
+    public String getCustomVar1() {
         return customVar1;
     }
 
-    String getCustomVar2() {
+    public String getCustomVar2() {
         return customVar2;
     }
 
-    String getCustomVar3() {
+    public String getCustomVar3() {
         return customVar3;
     }
 
-    String getPlaybackContext() {
+    public String getPlaybackContext() {
         return playbackContext;
     }
 
@@ -169,43 +173,11 @@ public class KavaAnalyticsConfig {
         return applicationVersion;
     }
 
-    String getReferrer() {
+    public String getReferrer() {
         if (isValidReferrer(referrer)) {
             return this.referrer;
         }
         return null;
-    }
-
-    boolean hasPlaybackContext() {
-        return playbackContext != null;
-    }
-
-    boolean hasCustomVar1() {
-        return customVar1 != null;
-    }
-
-    boolean hasCustomVar2() {
-        return customVar2 != null;
-    }
-
-    boolean hasCustomVar3() {
-        return customVar3 != null;
-    }
-
-    boolean hasPlaylistId() {
-        return playlistId != null;
-    }
-
-    boolean hasApplicationVersion() {
-        return applicationVersion != null;
-    }
-
-    boolean hasKs() {
-        return ks != null;
-    }
-
-    boolean hasUiConfId() {
-        return uiconfId != 0;
     }
 
     private boolean isValidReferrer(String referrer) {
@@ -213,20 +185,22 @@ public class KavaAnalyticsConfig {
     }
 
     boolean isPartnerIdValid() {
-        return partnerId != 0;
+        return partnerId != null && partnerId != 0;
     }
 
     public JsonObject toJson() {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty(PARTNER_ID, partnerId);
-        jsonObject.addProperty(UICONF_ID, uiconfId);
+        jsonObject.addProperty(ENTRY_ID, entryId);
         jsonObject.addProperty(BASE_URL, baseUrl);
         jsonObject.addProperty(DVR_THRESHOLD, dvrThreshold);
 
         jsonObject.addProperty(KS, ks);
         jsonObject.addProperty(PLAYBACK_CONTEXT, playbackContext);
         jsonObject.addProperty(REFERRER, referrer);
-        jsonObject.addProperty(ENTRY_ID, entryId);
+        if (uiconfId != null) {
+            jsonObject.addProperty(UICONF_ID, uiconfId);
+        }
         jsonObject.addProperty(CUSTOM_VAR_1, customVar1);
         jsonObject.addProperty(CUSTOM_VAR_2, customVar2);
         jsonObject.addProperty(CUSTOM_VAR_3, customVar3);
