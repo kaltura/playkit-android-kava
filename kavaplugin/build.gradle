@@ -25,11 +25,9 @@ android {
 dependencies {
     implementation 'com.kaltura.netkit:netkit-core:1.1.0'
     //implementation 'com.kaltura.playkit:playkit:3.6.+'
-    //implementation 'com.kaltura:playkit-android:dev-SNAPSHOT'
+    implementation 'com.kaltura:playkit-android:dev-SNAPSHOT'
     //implementation project(":netkit")
     //implementation project(":playkit")
-    implementation 'com.github.kaltura:playkit-android:a6b338689490ac1edbaeab3bf3f24d958c634e21'
-
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2', {
