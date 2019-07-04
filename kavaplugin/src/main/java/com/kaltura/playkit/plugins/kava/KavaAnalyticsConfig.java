@@ -180,38 +180,6 @@ public class KavaAnalyticsConfig {
         return null;
     }
 
-    boolean hasPlaybackContext() {
-        return playbackContext != null;
-    }
-
-    boolean hasCustomVar1() {
-        return customVar1 != null;
-    }
-
-    boolean hasCustomVar2() {
-        return customVar2 != null;
-    }
-
-    boolean hasCustomVar3() {
-        return customVar3 != null;
-    }
-
-    boolean hasPlaylistId() {
-        return playlistId != null;
-    }
-
-    boolean hasApplicationVersion() {
-        return applicationVersion != null;
-    }
-
-    boolean hasKs() {
-        return ks != null;
-    }
-
-    boolean hasUiConfId() {
-        return uiconfId != null && uiconfId != 0;
-    }
-
     private boolean isValidReferrer(String referrer) {
         return referrer != null && (referrer.startsWith("app://") || referrer.startsWith("http://") || referrer.startsWith("https://"));
     }
