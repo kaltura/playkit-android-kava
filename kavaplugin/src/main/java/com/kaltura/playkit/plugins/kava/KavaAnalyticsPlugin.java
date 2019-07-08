@@ -77,7 +77,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     public static final Factory factory = new Factory() {
         @Override
         public String getName() {
-            return "KavaAnalytics";
+            return "kava";
         }
 
         @Override
@@ -328,14 +328,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     }
 
     private void sendAnalyticsEvent(final KavaEvents event) {
-        if (!pluginConfig.isPartnerIdValid()) {
-            log.w("Can not send analytics event. Mandatory field partnerId is missing");
-            return;
-        }
 
-        if (!isValidEntryId()) {
+        if (isInputInvalid())
             return;
-        }
 
         Map<String, String> params = dataHandler.collectData(event, mediaConfig.getMediaEntry().getMediaType(), playheadUpdated);
 
@@ -369,12 +364,33 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         requestExecutor.queue(requestBuilder.build());
     }
 
+    private boolean isInputInvalid() {
+        if (mediaConfig == null || mediaConfig.getMediaEntry() == null) {
+            return true;
+        }
+
+        if (!isValidEntryId()) {
+            if (pluginConfig.getPartnerId() == null && pluginConfig.getEntryId() == null) {
+                pluginConfig.setPartnerId(KavaAnalyticsConfig.DEFAULT_KAVA_PARTNER_ID);
+                pluginConfig.setEntryId(KavaAnalyticsConfig.DEFAULT_KAVA_ENTRY_ID);
+            } else {
+                return true;
+            }
+        }
+
+        if (!pluginConfig.isPartnerIdValid()) {
+            log.w("Can not send analytics event. Mandatory field partnerId is missing");
+            return true;
+        }
+        return false;
+    }
+
     private boolean isValidEntryId() {
 
         if (mediaConfig == null || mediaConfig.getMediaEntry() == null) {
             return false;
         }
-        
+
         boolean mediaEntryValid = true;
         if (mediaConfig.getMediaEntry().getId() == null) {
             log.w("Can not send analytics event. Mandatory field entryId is missing");
