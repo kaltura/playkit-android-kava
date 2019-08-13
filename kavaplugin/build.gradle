@@ -25,7 +25,7 @@ android {
 dependencies {
     implementation 'com.kaltura.netkit:netkit-core:1.2.0'
     //implementation 'com.kaltura.playkit:playkit:3.6.+'
-    implementation 'com.kaltura:playkit-android:dev-SNAPSHOT'
+    implementation 'com.kaltura.playkit:playkit:4.1.0'
     //implementation project(":netkit")
     //implementation project(":playkit")
 
