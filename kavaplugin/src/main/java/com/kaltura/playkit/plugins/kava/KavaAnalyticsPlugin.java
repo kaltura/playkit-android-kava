@@ -361,7 +361,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             }
         });
         log.d("request sent " + requestBuilder.build().getUrl());
-        requestExecutor.queue(requestBuilder.build());
+        requestExecutor.queue(requestBuilder.build(), APIOkRequestsExecutor.rertryPolicy.getNumRetries());
     }
 
     private boolean isInputInvalid() {
