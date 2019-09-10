@@ -44,6 +44,10 @@ class OptionalParams {
         if(config.getPlaylistId() != null) {
             optionalParams.put("playlistId", config.getPlaylistId());
         }
+
+        if(config.getUserId() != null) {
+            optionalParams.put("userId", config.getUserId());
+        }
     }
 
     LinkedHashMap<String, String> getParams() {

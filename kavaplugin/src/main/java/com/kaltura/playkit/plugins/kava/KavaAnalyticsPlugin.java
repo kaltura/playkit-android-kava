@@ -332,6 +332,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         if (isInputInvalid())
             return;
 
+
         Map<String, String> params = dataHandler.collectData(event, mediaConfig.getMediaEntry().getMediaType(), playheadUpdated);
 
         RequestBuilder requestBuilder = KavaService.sendAnalyticsEvent(pluginConfig.getBaseUrl(), dataHandler.getUserAgent(), params);

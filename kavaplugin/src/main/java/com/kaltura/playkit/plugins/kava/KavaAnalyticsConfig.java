@@ -31,6 +31,7 @@ public class KavaAnalyticsConfig {
     public static final String BASE_URL = "baseUrl";
     public static final String UICONF_ID = "uiconfId";
     public static final String PARTNER_ID = "partnerId";
+    public static final String USER_ID = "userId";
     public static final String CUSTOM_VAR_1 = "customVar1";
     public static final String CUSTOM_VAR_2 = "customVar2";
     public static final String CUSTOM_VAR_3 = "customVar3";
@@ -52,6 +53,7 @@ public class KavaAnalyticsConfig {
     private String playbackContext;
     private String applicationVersion;
     private String baseUrl = DEFAULT_BASE_URL;
+    private String userId;
     private String customVar1, customVar2, customVar3;
 
     private long dvrThreshold = Consts.DISTANCE_FROM_LIVE_THRESHOLD;
@@ -85,6 +87,11 @@ public class KavaAnalyticsConfig {
 
     public KavaAnalyticsConfig setUiConfId(Integer uiConfId) {
         this.uiconfId = uiConfId;
+        return this;
+    }
+
+    public KavaAnalyticsConfig setUserId(String userId) {
+        this.userId = userId;
         return this;
     }
 
@@ -149,6 +156,10 @@ public class KavaAnalyticsConfig {
         return dvrThreshold;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
     public String getCustomVar1() {
         return customVar1;
     }
@@ -201,6 +212,7 @@ public class KavaAnalyticsConfig {
         if (uiconfId != null) {
             jsonObject.addProperty(UICONF_ID, uiconfId);
         }
+        jsonObject.addProperty(USER_ID, userId);
         jsonObject.addProperty(CUSTOM_VAR_1, customVar1);
         jsonObject.addProperty(CUSTOM_VAR_2, customVar2);
         jsonObject.addProperty(CUSTOM_VAR_3, customVar3);
