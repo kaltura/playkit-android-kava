@@ -536,8 +536,11 @@ class DataHandler {
     void onApplicationPaused(PKMediaEntry.MediaEntryType mediaEntryType) {
         //Player is destroyed during onApplicationPaused call.
         //So we should update this values before PAUSE event sent.
-        currentDuration = player.getDuration();
-        currentPosition = player.getCurrentPosition();
+        if (player != null) {
+            currentDuration = player.getDuration();
+            currentPosition = player.getCurrentPosition();
+        }
+
         playbackType = getPlaybackType(mediaEntryType, currentPosition, currentDuration);
         onApplicationPaused = true;
     }
