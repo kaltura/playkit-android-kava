@@ -133,7 +133,15 @@ class DataHandler {
      */
     Map<String, String> collectData(KavaEvents event, PKMediaEntry.MediaEntryType mediaEntryType, PlayerEvent.PlayheadUpdated playheadUpdated) {
         if (!onApplicationPaused) {
-            playbackType = getPlaybackType(mediaEntryType);
+
+            long playerPosition = Consts.POSITION_UNSET;
+            long playerDuration = Consts.TIME_UNSET;
+            if (playheadUpdated != null) {
+                playerPosition = playheadUpdated.position;
+                playerDuration = playheadUpdated.duration;
+
+            }
+            playbackType = getPlaybackType(mediaEntryType, playerPosition, playerDuration);
         }
 
         Map<String, String> params = new LinkedHashMap<>();
@@ -464,14 +472,14 @@ class DataHandler {
      *
      * @return - {@link KavaMediaEntryType} of the media for the moment of sending event.
      */
-    KavaMediaEntryType getPlaybackType(PKMediaEntry.MediaEntryType mediaEntryType) {
+    KavaMediaEntryType getPlaybackType(PKMediaEntry.MediaEntryType mediaEntryType, long playerPosition, long playerDuration) {
         //If player is null it is impossible to obtain the playbackType, so it will be unknown.
         if (player == null) {
             return KavaMediaEntryType.Unknown;
         }
 
         if (PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType)) {
-            long distanceFromLive = player.getDuration() - player.getCurrentPosition();
+            long distanceFromLive = playerDuration - playerPosition;
             return (distanceFromLive >= dvrThreshold) ? KavaMediaEntryType.Dvr : KavaMediaEntryType.Live;
         } else if (PKMediaEntry.MediaEntryType.Live.equals(mediaEntryType)) {
             return KavaMediaEntryType.Live;
@@ -528,9 +536,12 @@ class DataHandler {
     void onApplicationPaused(PKMediaEntry.MediaEntryType mediaEntryType) {
         //Player is destroyed during onApplicationPaused call.
         //So we should update this values before PAUSE event sent.
-        currentDuration = player.getDuration();
-        currentPosition = player.getCurrentPosition();
-        playbackType = getPlaybackType(mediaEntryType);
+        if (player != null) {
+            currentDuration = player.getDuration();
+            currentPosition = player.getCurrentPosition();
+        }
+
+        playbackType = getPlaybackType(mediaEntryType, currentPosition, currentDuration);
         onApplicationPaused = true;
     }
 
