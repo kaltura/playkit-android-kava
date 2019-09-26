@@ -20,6 +20,7 @@ import com.kaltura.playkit.player.PKTracks;
 import com.kaltura.playkit.utils.Consts;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Map;
 
@@ -34,10 +35,13 @@ class DataHandler {
 
     private static final long KB_MULTIPLIER = 1024L;
 
+    private static final String PLAYER_ERROR_STR = "Player error occurred";
+
     private Context context;
     private final Player player;
 
     private int errorCode;
+    private String errorDetails;
     private int eventIndex;
     private int totalBufferTimePerViewEvent;
 
@@ -217,8 +221,12 @@ class DataHandler {
             case ERROR:
                 if (errorCode != -1) {
                     params.put("errorCode", Integer.toString(errorCode));
-                    errorCode = -1;
                 }
+                if (errorDetails != null) {
+                    params.put("errorDetails", errorDetails);
+                }
+                errorCode = -1;
+                errorDetails = null;
                 break;
             case PAUSE:
                 //When player was paused we should update average bitrate value,
@@ -299,11 +307,59 @@ class DataHandler {
         int errorCode = -1;
         if (error.errorType instanceof PKPlayerErrorType) {
             errorCode = ((PKPlayerErrorType) error.errorType).errorCode;
+            errorDetails = getErrorDetails(event);
         } else if (error.errorType instanceof PKAdErrorType) {
             errorCode = ((PKAdErrorType) error.errorType).errorCode;
         }
         log.e("Playback ERROR. errorCode : " + errorCode);
         this.errorCode = errorCode;
+    }
+
+    private String getErrorDetails(PKEvent event) {
+
+        PlayerEvent.Error errorEvent = (PlayerEvent.Error) event;
+        String errorMetadata = (errorEvent != null && errorEvent.error != null) ? errorEvent.error.message : PLAYER_ERROR_STR;
+
+        if (errorEvent == null || errorEvent.error == null || errorEvent.error.exception == null) {
+            return errorMetadata + "-" + event.eventType().name();
+        }
+
+        PKError error = errorEvent.error;
+        Exception playerErrorException = (Exception) error.exception;
+        String exceptionClass = "";
+
+        if (playerErrorException != null && playerErrorException.getCause() != null && playerErrorException.getCause().getClass() != null) {
+            exceptionClass = playerErrorException.getCause().getClass().getName();
+            errorMetadata = (playerErrorException.getCause().toString() != null) ? playerErrorException.getCause().toString() : errorMetadata;
+        } else {
+            if (error.exception.getClass() != null) {
+                exceptionClass = error.exception.getClass().getName();
+            }
+        }
+
+        LinkedHashSet<String> causeMessages = getExceptionMessageChain(playerErrorException);
+        StringBuilder exceptionCauseBuilder = new StringBuilder();
+        if (playerErrorException != null && causeMessages.isEmpty()) {
+            exceptionCauseBuilder.append(playerErrorException.toString());
+        } else {
+            for (String cause : causeMessages) {
+                exceptionCauseBuilder.append(cause).append("\n");
+            }
+        }
+
+        String errorCode = (errorEvent.error.errorType != null) ? errorEvent.error.errorType + " - " : "";
+        return  errorCode + exceptionClass + "-" + exceptionCauseBuilder.toString() + "-" + errorMetadata;
+    }
+
+    public static LinkedHashSet<String> getExceptionMessageChain(Throwable throwable) {
+        LinkedHashSet<String> result = new LinkedHashSet<>();
+        while (throwable != null) {
+            if (throwable.getMessage() != null){
+                result.add(throwable.getMessage());
+            }
+            throwable = throwable.getCause();
+        }
+        return result;
     }
 
     /**
