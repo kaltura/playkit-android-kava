@@ -33,6 +33,7 @@ import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.PlayerState;
 
 import com.kaltura.playkit.plugin.kava.BuildConfig;
+import com.kaltura.playkit.plugins.ads.AdEvent;
 import com.kaltura.playkit.utils.Consts;
 
 import org.json.JSONException;
@@ -217,6 +218,16 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         });
 
         messageBus.addListener(this, PlayerEvent.error, event -> {
+            PKError error =  event.error;
+            if (error != null && !error.isFatal()) {
+                log.v("Error eventType = " + error.errorType + " severity = " + error.severity + " errorMessage = " + error.message);
+                return;
+            }
+            dataHandler.handleError(event);
+            sendAnalyticsEvent(KavaEvents.ERROR);
+        });
+
+        messageBus.addListener(this, AdEvent.error, event -> {
             PKError error =  event.error;
             if (error != null && !error.isFatal()) {
                 log.v("Error eventType = " + error.errorType + " severity = " + error.severity + " errorMessage = " + error.message);

@@ -17,6 +17,7 @@ import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.ads.PKAdErrorType;
 import com.kaltura.playkit.player.PKPlayerErrorType;
 import com.kaltura.playkit.player.PKTracks;
+import com.kaltura.playkit.plugins.ads.AdEvent;
 import com.kaltura.playkit.utils.Consts;
 
 import java.util.LinkedHashMap;
@@ -303,13 +304,19 @@ class DataHandler {
      * @param event - current event.
      */
     void handleError(PKEvent event) {
-        PKError error = ((PlayerEvent.Error) event).error;
+        PKError error = null;
+        if (event instanceof PlayerEvent.Error) {
+            error = ((PlayerEvent.Error) event).error;
+        } else if (event instanceof AdEvent.Error) {
+            error = ((AdEvent.Error) event).error;
+        }
         int errorCode = -1;
         if (error.errorType instanceof PKPlayerErrorType) {
             errorCode = ((PKPlayerErrorType) error.errorType).errorCode;
             errorDetails = getErrorDetails(event);
         } else if (error.errorType instanceof PKAdErrorType) {
             errorCode = ((PKAdErrorType) error.errorType).errorCode;
+            errorDetails = getAdErrorDetails(event);;
         }
         log.e("Playback ERROR. errorCode : " + errorCode);
         this.errorCode = errorCode;
@@ -325,15 +332,35 @@ class DataHandler {
         }
 
         PKError error = errorEvent.error;
+        String errorCode = (error.errorType != null) ? error.errorType.name() + " - " : "";
         Exception playerErrorException = (Exception) error.exception;
+        return buildExcptionDetails(errorMetadata, errorCode, playerErrorException);
+    }
+
+    private String getAdErrorDetails(PKEvent event) {
+
+        AdEvent.Error errorEvent = (AdEvent.Error) event;
+        String errorMetadata = (errorEvent != null && errorEvent.error != null) ? errorEvent.error.message : PLAYER_ERROR_STR;
+
+        if (errorEvent == null || errorEvent.error == null || errorEvent.error.exception == null) {
+            return errorMetadata + "-" + event.eventType().name();
+        }
+
+        PKError error = errorEvent.error;
+        String errorCode = (error.errorType != null) ? error.errorType.name() + " - " : "";
+        Exception playerErrorException = (Exception) error.exception;
+        return buildExcptionDetails(errorMetadata, errorCode, playerErrorException);
+    }
+
+    private String buildExcptionDetails(String errorMetadata, String errorCode, Exception playerErrorException) {
         String exceptionClass = "";
 
         if (playerErrorException != null && playerErrorException.getCause() != null && playerErrorException.getCause().getClass() != null) {
             exceptionClass = playerErrorException.getCause().getClass().getName();
             errorMetadata = (playerErrorException.getCause().toString() != null) ? playerErrorException.getCause().toString() : errorMetadata;
         } else {
-            if (error.exception.getClass() != null) {
-                exceptionClass = error.exception.getClass().getName();
+            if (playerErrorException != null && playerErrorException.getClass() != null) {
+                exceptionClass = playerErrorException.getClass().getName();
             }
         }
 
@@ -346,9 +373,7 @@ class DataHandler {
                 exceptionCauseBuilder.append(cause).append("\n");
             }
         }
-
-        String errorCode = (errorEvent.error.errorType != null) ? errorEvent.error.errorType + " - " : "";
-        return  errorCode + exceptionClass + "-" + exceptionCauseBuilder.toString() + "-" + errorMetadata;
+        return errorCode + exceptionClass + "-" + exceptionCauseBuilder.toString() + "-" + errorMetadata;
     }
 
     public static LinkedHashSet<String> getExceptionMessageChain(Throwable throwable) {
