@@ -15,13 +15,16 @@ import com.kaltura.playkit.PlaybackInfo;
 import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.ads.PKAdErrorType;
+import com.kaltura.playkit.player.AudioTrack;
 import com.kaltura.playkit.player.PKPlayerErrorType;
 import com.kaltura.playkit.player.PKTracks;
+import com.kaltura.playkit.player.TextTrack;
 import com.kaltura.playkit.plugins.ads.AdEvent;
 import com.kaltura.playkit.utils.Consts;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -289,11 +292,16 @@ class DataHandler {
     void handleTracksAvailable(PlayerEvent.TracksAvailable event) {
             PKTracks trackInfo = ((PlayerEvent.TracksAvailable) event).tracksInfo;
             if (trackInfo != null) {
-                if (trackInfo.getAudioTracks().size() > 0 && trackInfo.getAudioTracks().get(trackInfo.getDefaultAudioTrackIndex()) != null) {
-                    currentAudioLanguage = trackInfo.getAudioTracks().get(trackInfo.getDefaultAudioTrackIndex()).getLanguage();
+                List<AudioTrack> trackInfoAudioTracks = trackInfo.getAudioTracks();
+                int defaultAudioTrackIndex = trackInfo.getDefaultAudioTrackIndex();
+                if (defaultAudioTrackIndex < trackInfoAudioTracks.size() && trackInfoAudioTracks.get(defaultAudioTrackIndex) != null) {
+                    currentAudioLanguage = trackInfoAudioTracks.get(defaultAudioTrackIndex).getLanguage();
                 }
-                if (trackInfo.getTextTracks().size() > 0 && trackInfo.getTextTracks().get(trackInfo.getDefaultTextTrackIndex()) != null) {
-                    currentCaptionLanguage = trackInfo.getTextTracks().get(trackInfo.getDefaultTextTrackIndex()).getLanguage();
+
+                List<TextTrack> trackInfoTextTracks = trackInfo.getTextTracks();
+                int defaultTextTrackIndex = trackInfo.getDefaultTextTrackIndex();
+                if (defaultTextTrackIndex < trackInfoTextTracks.size() && trackInfoTextTracks.get(defaultTextTrackIndex) != null) {
+                    currentCaptionLanguage = trackInfoTextTracks.get(defaultTextTrackIndex).getLanguage();
                 }
             }
     }
