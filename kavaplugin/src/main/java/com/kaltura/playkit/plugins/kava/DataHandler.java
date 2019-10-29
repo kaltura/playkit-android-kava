@@ -289,10 +289,10 @@ class DataHandler {
     void handleTracksAvailable(PlayerEvent.TracksAvailable event) {
             PKTracks trackInfo = ((PlayerEvent.TracksAvailable) event).tracksInfo;
             if (trackInfo != null) {
-                if (trackInfo.getAudioTracks().size() > 0 && trackInfo.getAudioTracks().get(trackInfo.getDefaultAudioTrackIndex()) != null) {
+                if (trackInfo.getDefaultAudioTrackIndex() < trackInfo.getAudioTracks().size() && trackInfo.getAudioTracks().get(trackInfo.getDefaultAudioTrackIndex()) != null) {
                     currentAudioLanguage = trackInfo.getAudioTracks().get(trackInfo.getDefaultAudioTrackIndex()).getLanguage();
                 }
-                if (trackInfo.getTextTracks().size() > 0 && trackInfo.getTextTracks().get(trackInfo.getDefaultTextTrackIndex()) != null) {
+                if (trackInfo.getDefaultTextTrackIndex() < trackInfo.getTextTracks().size() && trackInfo.getTextTracks().get(trackInfo.getDefaultTextTrackIndex()) != null) {
                     currentCaptionLanguage = trackInfo.getTextTracks().get(trackInfo.getDefaultTextTrackIndex()).getLanguage();
                 }
             }
