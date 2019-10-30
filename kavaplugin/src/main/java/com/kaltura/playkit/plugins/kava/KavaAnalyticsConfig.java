@@ -149,6 +149,9 @@ public class KavaAnalyticsConfig {
     }
 
     public String getBaseUrl() {
+        if (baseUrl == null) {
+            return DEFAULT_BASE_URL;
+        }
         return baseUrl;
     }
 
