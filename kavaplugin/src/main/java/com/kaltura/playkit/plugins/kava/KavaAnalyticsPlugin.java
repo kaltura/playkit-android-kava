@@ -17,6 +17,7 @@ import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.kaltura.android.exoplayer2.C;
 import com.kaltura.netkit.connect.executor.APIOkRequestsExecutor;
 import com.kaltura.netkit.connect.executor.RequestQueue;
 import com.kaltura.netkit.connect.request.RequestBuilder;
@@ -28,10 +29,13 @@ import com.kaltura.playkit.PKLog;
 import com.kaltura.playkit.PKMediaConfig;
 import com.kaltura.playkit.PKMediaEntry;
 import com.kaltura.playkit.PKPlugin;
+import com.kaltura.playkit.PlaybackInfo;
 import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
 import com.kaltura.playkit.PlayerState;
 
+import com.kaltura.playkit.player.metadata.PKMetadata;
+import com.kaltura.playkit.player.metadata.PKTextInformationFrame;
 import com.kaltura.playkit.plugin.kava.BuildConfig;
 import com.kaltura.playkit.plugins.ads.AdEvent;
 import com.kaltura.playkit.utils.Consts;
@@ -48,6 +52,7 @@ import java.util.Map;
 public class KavaAnalyticsPlugin extends PKPlugin {
 
     private static final PKLog log = PKLog.get(KavaAnalyticsPlugin.class.getSimpleName());
+    private static final String TEXT = "TEXT";
 
     private Player player;
     private MessageBus messageBus;
@@ -147,6 +152,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             sendAnalyticsEvent(KavaEvents.PAUSE);
         });
 
+        messageBus.addListener(this, PlayerEvent.playbackRateChanged, event -> {
+            sendAnalyticsEvent(KavaEvents.SPEED);
+        });
+
         messageBus.addListener(this, PlayerEvent.playing, event -> {
             if (isFirstPlay) {
                 isFirstPlay = false;
@@ -215,6 +224,44 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         messageBus.addListener(this, PlayerEvent.textTrackChanged, event -> {
             dataHandler.handleTrackChange(event, Consts.TRACK_TYPE_TEXT);
             sendAnalyticsEvent(KavaEvents.CAPTIONS);
+        });
+
+        messageBus.addListener(this, PlayerEvent.videoFramesDropped, event -> {
+            dataHandler.handleFramesDropped(event);
+        });
+
+        messageBus.addListener(this, PlayerEvent.bytesLoaded, event -> {
+            //log.d("bytesLoaded = " + event.trackType + " load time " + event.loadDuration);
+            if (C.TRACK_TYPE_VIDEO == event.trackType) {
+                 dataHandler.handleSegmentDownloadTime(event);
+            } else if (C.TRACK_TYPE_UNKNOWN == event.trackType){
+                dataHandler.handleManifestDownloadTime(event);
+            }
+        });
+
+        messageBus.addListener(this, PlayerEvent.metadataAvailable, event -> {
+            log.d("metadataAvailable = " + event.eventType());
+            for (PKMetadata pkMetadata : event.metadataList){
+                    if (pkMetadata instanceof PKTextInformationFrame) {
+                        PKTextInformationFrame textFrame = (PKTextInformationFrame) pkMetadata;
+                        if (textFrame != null) {
+                            if (TEXT.equals(textFrame.id)) {
+                                try {
+                                    if(textFrame.value != null) {
+                                        JSONObject textFrameValue = new JSONObject(textFrame.value);
+                                        String flavorParamsId = textFrameValue.getString("sequenceId");
+                                        //log.d("metadataAvailable Received user text: flavorParamsId = " + flavorParamsId);
+                                        dataHandler.handleSequenceId(flavorParamsId); //flavorParamsId = sequenceId from {"timestamp":1573049629312,"sequenceId":"32"}
+                                    }
+                                } catch (JSONException e) {
+                                    //e.printStackTrace();
+                                    log.e("Failed to parse the sequenceId from TEXT ID3 frame");
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
         });
 
         messageBus.addListener(this, PlayerEvent.error, event -> {

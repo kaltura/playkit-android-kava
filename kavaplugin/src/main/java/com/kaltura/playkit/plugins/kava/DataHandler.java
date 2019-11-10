@@ -1,6 +1,7 @@
 package com.kaltura.playkit.plugins.kava;
 
 import android.content.Context;
+import android.media.AudioManager;
 
 import androidx.annotation.Nullable;
 
@@ -18,6 +19,7 @@ import com.kaltura.playkit.ads.PKAdErrorType;
 import com.kaltura.playkit.player.AudioTrack;
 import com.kaltura.playkit.player.PKPlayerErrorType;
 import com.kaltura.playkit.player.PKTracks;
+import com.kaltura.playkit.player.PlayerSettings;
 import com.kaltura.playkit.player.TextTrack;
 import com.kaltura.playkit.plugins.ads.AdEvent;
 import com.kaltura.playkit.utils.Consts;
@@ -70,6 +72,14 @@ class DataHandler {
     private String referrer;
     private String currentAudioLanguage;
     private String currentCaptionLanguage;
+    private String flavorParamsId;
+    private long manifestMaxDownloadTime = -1;
+    private long segmentMaxDownloadTime = -1;
+    private long totalSegmentDownloadTime = 0;
+    private long totalSegmentDownloadSize = 0;
+
+    private long droppedVideoFrames = 0;
+    private long renderedVideoFrames = 0;
 
     private OptionalParams optionalParams;
     private KavaMediaEntryType playbackType;
@@ -77,11 +87,13 @@ class DataHandler {
 
     private boolean onApplicationPaused = false;
     private boolean isFirstPlay;
+    AudioManager audioManager;
 
     DataHandler(Context context, Player player) {
         this.context = context;
         this.player = player;
         this.userAgent = context.getPackageName() + " " + PlayKitManager.CLIENT_TAG + " " + System.getProperty("http.agent");
+        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
     }
 
     /**
@@ -177,9 +189,58 @@ class DataHandler {
 
             case VIEW:
 
+                if (audioManager != null) {
+                    int musicVolume =  audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+                    if (musicVolume == 0 || audioManager.getRingerMode() != AudioManager.RINGER_MODE_NORMAL) {
+                        params.put("soundMode", "1"); // sound Off
+                    } else {
+                        params.put("soundMode", "2"); // sound On
+                    }
+                }
+
+                if (manifestMaxDownloadTime != -1) {
+                    params.put("manifestDownloadTime", Long.toString(manifestMaxDownloadTime));
+                    manifestMaxDownloadTime = -1;
+                }
+                if (segmentMaxDownloadTime != -1) {
+                    params.put("segmentDownloadTime", Long.toString(segmentMaxDownloadTime));
+                    segmentMaxDownloadTime = -1;
+                }
+                if (totalSegmentDownloadTime > 0 && totalSegmentDownloadSize > 0) {
+                    double bandwidth = totalSegmentDownloadSize / totalSegmentDownloadTime;
+                    params.put("bandwidth", bandwidth + "");  //kbps
+
+                    totalSegmentDownloadTime = 0;
+                    totalSegmentDownloadSize = 0;
+                }
+
+                if (flavorParamsId != null) {
+                    params.put("flavorParamsId", flavorParamsId); // --> in live
+                }
+
+                if (droppedVideoFrames > 0 && renderedVideoFrames > 0) {
+                    double droppedFramesRatio = droppedVideoFrames / renderedVideoFrames;
+                    params.put("droppedFramesRatio", droppedFramesRatio + "");
+                    droppedVideoFrames = 0;
+                    renderedVideoFrames = 0;
+                }
+
+                if (player.getSettings() instanceof PlayerSettings) {
+                     params.put("targetBuffer", (((PlayerSettings) player.getSettings()).getLoadControlBuffers().getBackBufferDurationMs() / Consts.MILLISECONDS_MULTIPLIER) + "");
+                }
+
+
+
+
+//
+
+//????                eventModel.networkConnectionType
+//????                eventModel.networkConnectionOverhead
+//????                eventModel.targetBuffer
+//????                eventModel.
+
                 playTimeSum += ViewTimer.TEN_SECONDS_IN_MS - totalBufferTimePerViewEvent;
                 params.put("playTimeSum", Float.toString(playTimeSum / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
-
                 params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
                 long averageBitrate = averageBitrateCounter.getAverageBitrate(playTimeSum + totalBufferTimePerEntry);
                 params.put("averageBitrate", Long.toString(averageBitrate / KB_MULTIPLIER));
@@ -189,10 +250,15 @@ class DataHandler {
                 if (currentCaptionLanguage != null) {
                     params.put("captionsLanguage", currentCaptionLanguage);
                 }
-                addBufferParams(params);
 
+                addBufferParams(params);
+                break;
+            case IMPRESSION:
+                //eventModel.playerJSLoadTime
                 break;
             case PLAY:
+                //bufferTime
+                //bufferTimeSum
                 params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
 
                 float joinTime = (System.currentTimeMillis() - joinTimeStartTimestamp) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
@@ -205,6 +271,8 @@ class DataHandler {
                 addBufferParams(params);
                 break;
             case RESUME:
+                //bufferTime
+                //bufferTimeSum  -- > not in KAvsa for now
                 params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
                 averageBitrateCounter.resumeCounting();
                 addBufferParams(params);
@@ -221,6 +289,9 @@ class DataHandler {
                 break;
             case CAPTIONS:
                 params.put("caption", currentCaptionLanguage);
+                break;
+            case SPEED:
+                params.put("playbackSpeed", String.valueOf(player.getPlaybackRate()));
                 break;
             case ERROR:
                 if (errorCode != -1) {
@@ -304,6 +375,24 @@ class DataHandler {
                     currentCaptionLanguage = trackInfoTextTracks.get(defaultTextTrackIndex).getLanguage();
                 }
             }
+    }
+
+    void handleSegmentDownloadTime(PlayerEvent.BytesLoaded event) {
+        segmentMaxDownloadTime = Math.max(event.loadDuration, segmentMaxDownloadTime);
+        totalSegmentDownloadSize += event.bytesLoaded;
+        totalSegmentDownloadTime += event.loadDuration;
+    }
+
+    void handleManifestDownloadTime(PlayerEvent.BytesLoaded event) {
+        manifestMaxDownloadTime =  Math.max(event.loadDuration, manifestMaxDownloadTime);
+    }
+
+    void handleSequenceId(String sequenceId) {
+        flavorParamsId = sequenceId;
+    }
+
+    void handleFramesDropped(PlayerEvent.VideoFramesDropped event) {
+        this.droppedVideoFrames = event.droppedVideoFrames;
     }
 
     /**
@@ -612,6 +701,13 @@ class DataHandler {
         lastKnownBufferingTimestamp = 0;
         canPlayTimestamp = 0;
         loadedMetaDataTimestamp = 0;
+        manifestMaxDownloadTime = -1;
+        segmentMaxDownloadTime = -1;
+        totalSegmentDownloadTime = 0;
+        totalSegmentDownloadSize = 0;
+        droppedVideoFrames = 0;
+        renderedVideoFrames = 0;
+
         handleViewEventSessionClosed();
     }
 
