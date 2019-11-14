@@ -289,6 +289,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             //log.d("playheadUpdated event  position = " + playheadUpdated.position + " duration = " + playheadUpdated.duration);
             maybeSentPlayerReachedEvent();
         });
+
+        messageBus.addListener(this, PlayerEvent.connectionAcquired, event -> {
+            dataHandler.handleConnectionAcquired(event);
+        });
+
     }
 
     @Override

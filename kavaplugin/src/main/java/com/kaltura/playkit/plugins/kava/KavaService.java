@@ -18,6 +18,8 @@ import com.kaltura.netkit.connect.request.RequestBuilder;
 
 import java.util.Map;
 
+import static com.kaltura.playkit.utils.Consts.HTTP_METHOD_GET;
+
 /**
  * Created by anton.afanasiev on 02/10/2017.
  */
@@ -26,7 +28,7 @@ public class KavaService {
 
     public static RequestBuilder sendAnalyticsEvent(String baseUrl, String userAgent, Map<String, String> params) {
         RequestBuilder requestBuilder = new RequestBuilder()
-                .method("GET")
+                .method(HTTP_METHOD_GET)
                 .url(buildUrlWithParams(baseUrl, params));
         requestBuilder.build().getHeaders().put("User-Agent", userAgent);
         return requestBuilder;

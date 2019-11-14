@@ -15,6 +15,7 @@ import com.kaltura.playkit.PlayKitManager;
 import com.kaltura.playkit.PlaybackInfo;
 import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
+import com.kaltura.playkit.Utils;
 import com.kaltura.playkit.ads.PKAdErrorType;
 import com.kaltura.playkit.player.AudioTrack;
 import com.kaltura.playkit.player.PKPlayerErrorType;
@@ -75,9 +76,9 @@ class DataHandler {
     private String flavorParamsId;
     private long manifestMaxDownloadTime = -1;
     private long segmentMaxDownloadTime = -1;
-    private long totalSegmentDownloadTime = 0;
-    private long totalSegmentDownloadSize = 0;
-
+    private long maxConnectDurationMs = -1;
+    private long totalSegmentDownloadTimeMs = 0;
+    private long totalSegmentDownloadSizeByte = 0;
     private long droppedVideoFrames = 0;
     private long renderedVideoFrames = 0;
 
@@ -85,9 +86,13 @@ class DataHandler {
     private KavaMediaEntryType playbackType;
     private AverageBitrateCounter averageBitrateCounter;
 
+
     private boolean onApplicationPaused = false;
     private boolean isFirstPlay;
     AudioManager audioManager;
+    private double targetBuffer;
+
+
 
     DataHandler(Context context, Player player) {
         this.context = context;
@@ -126,7 +131,7 @@ class DataHandler {
     }
 
     private String populateEntryId(PKMediaConfig mediaConfig, KavaAnalyticsConfig pluginConfig) {
-        
+
         String kavaEntryId = null;
         if (pluginConfig != null && pluginConfig.getEntryId() != null) {
             kavaEntryId = pluginConfig.getEntryId();
@@ -159,7 +164,6 @@ class DataHandler {
             if (playheadUpdated != null) {
                 playerPosition = playheadUpdated.position;
                 playerDuration = playheadUpdated.duration;
-
             }
             playbackType = getPlaybackType(mediaEntryType, playerPosition, playerDuration);
         }
@@ -206,12 +210,12 @@ class DataHandler {
                     params.put("segmentDownloadTime", Long.toString(segmentMaxDownloadTime));
                     segmentMaxDownloadTime = -1;
                 }
-                if (totalSegmentDownloadTime > 0 && totalSegmentDownloadSize > 0) {
-                    double bandwidth = totalSegmentDownloadSize / totalSegmentDownloadTime;
-                    params.put("bandwidth", bandwidth + "");  //kbps
+                if (totalSegmentDownloadTimeMs > 0 && totalSegmentDownloadSizeByte > 0) {
 
-                    totalSegmentDownloadTime = 0;
-                    totalSegmentDownloadSize = 0;
+                    double bandwidthInByteMS = totalSegmentDownloadSizeByte / totalSegmentDownloadTimeMs;
+                    params.put("bandwidth", convertToKbps(bandwidthInByteMS) + "");
+                    totalSegmentDownloadTimeMs = 0;
+                    totalSegmentDownloadSizeByte = 0;
                 }
 
                 if (flavorParamsId != null) {
@@ -225,19 +229,26 @@ class DataHandler {
                     renderedVideoFrames = 0;
                 }
 
-                if (player.getSettings() instanceof PlayerSettings) {
-                     params.put("targetBuffer", (((PlayerSettings) player.getSettings()).getLoadControlBuffers().getBackBufferDurationMs() / Consts.MILLISECONDS_MULTIPLIER) + "");
+                if (targetBuffer == -1 && player.getSettings() instanceof PlayerSettings) {
+                    targetBuffer = ((PlayerSettings) player.getSettings()).getLoadControlBuffers().getBackBufferDurationMs() / Consts.MILLISECONDS_MULTIPLIER;
+                }
+                if (targetBuffer > 0) {
+                    params.put("targetBuffer", targetBuffer + "");
+                    if (player != null) {
+                        long bufferPos = player.getBufferedPosition();
+                        long playerPos = player.getCurrentPosition();
+\
+                        if (bufferPos > 0 && playerPos > 0 && bufferPos > playerPos) {
+                            params.put("forwardBufferHealth", (bufferPos - playerPos / targetBuffer) + "");
+                        }
+                    }
                 }
 
-
-
-
-//
-
-//????                eventModel.networkConnectionType
-//????                eventModel.networkConnectionOverhead
-//????                eventModel.targetBuffer
-//????                eventModel.
+                params.put("networkConnectionType", Utils.getNetworkClass(context));
+                if (maxConnectDurationMs > 0) {
+                    params.put("networkConnectionOverhead", maxConnectDurationMs / Consts.MILLISECONDS_MULTIPLIER_FLOAT + ""); // 	max dns+ssl+tcp resolving time over all video segments in sec
+                    maxConnectDurationMs = -1;
+                }
 
                 playTimeSum += ViewTimer.TEN_SECONDS_IN_MS - totalBufferTimePerViewEvent;
                 params.put("playTimeSum", Float.toString(playTimeSum / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
@@ -254,11 +265,8 @@ class DataHandler {
                 addBufferParams(params);
                 break;
             case IMPRESSION:
-                //eventModel.playerJSLoadTime
                 break;
             case PLAY:
-                //bufferTime
-                //bufferTimeSum
                 params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
 
                 float joinTime = (System.currentTimeMillis() - joinTimeStartTimestamp) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
@@ -266,13 +274,11 @@ class DataHandler {
 
                 float canPlay = (canPlayTimestamp - loadedMetaDataTimestamp) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
                 params.put("canPlay", Float.toString(canPlay));
-
+                params.put("networkConnectionType", Utils.getNetworkClass(context));
                 averageBitrateCounter.resumeCounting();
                 addBufferParams(params);
                 break;
             case RESUME:
-                //bufferTime
-                //bufferTimeSum  -- > not in KAvsa for now
                 params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
                 averageBitrateCounter.resumeCounting();
                 addBufferParams(params);
@@ -315,6 +321,13 @@ class DataHandler {
         params.putAll(optionalParams.getParams());
         eventIndex++;
         return params;
+    }
+
+    private double convertToKbps(double bandwidthInByteMS) {
+        bandwidthInByteMS *= 8;    // b/ms
+        bandwidthInByteMS /= 1024; // kb/ms
+        bandwidthInByteMS *= 1000; // kb/s
+        return bandwidthInByteMS;
     }
 
 
@@ -361,26 +374,26 @@ class DataHandler {
      * @param event =  TracksAvailable event.
      */
     void handleTracksAvailable(PlayerEvent.TracksAvailable event) {
-            PKTracks trackInfo = ((PlayerEvent.TracksAvailable) event).tracksInfo;
-            if (trackInfo != null) {
-                List<AudioTrack> trackInfoAudioTracks = trackInfo.getAudioTracks();
-                int defaultAudioTrackIndex = trackInfo.getDefaultAudioTrackIndex();
-                if (defaultAudioTrackIndex < trackInfoAudioTracks.size() && trackInfoAudioTracks.get(defaultAudioTrackIndex) != null) {
-                    currentAudioLanguage = trackInfoAudioTracks.get(defaultAudioTrackIndex).getLanguage();
-                }
-
-                List<TextTrack> trackInfoTextTracks = trackInfo.getTextTracks();
-                int defaultTextTrackIndex = trackInfo.getDefaultTextTrackIndex();
-                if (defaultTextTrackIndex < trackInfoTextTracks.size() && trackInfoTextTracks.get(defaultTextTrackIndex) != null) {
-                    currentCaptionLanguage = trackInfoTextTracks.get(defaultTextTrackIndex).getLanguage();
-                }
+        PKTracks trackInfo = ((PlayerEvent.TracksAvailable) event).tracksInfo;
+        if (trackInfo != null) {
+            List<AudioTrack> trackInfoAudioTracks = trackInfo.getAudioTracks();
+            int defaultAudioTrackIndex = trackInfo.getDefaultAudioTrackIndex();
+            if (defaultAudioTrackIndex < trackInfoAudioTracks.size() && trackInfoAudioTracks.get(defaultAudioTrackIndex) != null) {
+                currentAudioLanguage = trackInfoAudioTracks.get(defaultAudioTrackIndex).getLanguage();
             }
+
+            List<TextTrack> trackInfoTextTracks = trackInfo.getTextTracks();
+            int defaultTextTrackIndex = trackInfo.getDefaultTextTrackIndex();
+            if (defaultTextTrackIndex < trackInfoTextTracks.size() && trackInfoTextTracks.get(defaultTextTrackIndex) != null) {
+                currentCaptionLanguage = trackInfoTextTracks.get(defaultTextTrackIndex).getLanguage();
+            }
+        }
     }
 
     void handleSegmentDownloadTime(PlayerEvent.BytesLoaded event) {
         segmentMaxDownloadTime = Math.max(event.loadDuration, segmentMaxDownloadTime);
-        totalSegmentDownloadSize += event.bytesLoaded;
-        totalSegmentDownloadTime += event.loadDuration;
+        totalSegmentDownloadSizeByte += event.bytesLoaded;
+        totalSegmentDownloadTimeMs += event.loadDuration;
     }
 
     void handleManifestDownloadTime(PlayerEvent.BytesLoaded event) {
@@ -598,6 +611,10 @@ class DataHandler {
         }
     }
 
+    public void handleConnectionAcquired(PlayerEvent.ConnectionAcquired event) {
+        maxConnectDurationMs = (event.connectDurationMs > maxConnectDurationMs) ? event.connectDurationMs : maxConnectDurationMs;
+    }
+
     /**
      * Updates player position based on playbackType. If current playbackType is LIVE or DVR
      * player position will be calculated based on distance from the live edge. Therefore should be 0 or negative value.
@@ -703,10 +720,12 @@ class DataHandler {
         loadedMetaDataTimestamp = 0;
         manifestMaxDownloadTime = -1;
         segmentMaxDownloadTime = -1;
-        totalSegmentDownloadTime = 0;
-        totalSegmentDownloadSize = 0;
+        maxConnectDurationMs = -1;
+        totalSegmentDownloadTimeMs = 0;
+        totalSegmentDownloadSizeByte = 0;
         droppedVideoFrames = 0;
         renderedVideoFrames = 0;
+        targetBuffer = -1;
 
         handleViewEventSessionClosed();
     }
