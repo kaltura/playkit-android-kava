@@ -237,7 +237,7 @@ class DataHandler {
                     if (player != null) {
                         long bufferPos = player.getBufferedPosition();
                         long playerPos = player.getCurrentPosition();
-\
+
                         if (bufferPos > 0 && playerPos > 0 && bufferPos > playerPos) {
                             params.put("forwardBufferHealth", (bufferPos - playerPos / targetBuffer) + "");
                         }
