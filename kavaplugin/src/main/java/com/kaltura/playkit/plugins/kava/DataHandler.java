@@ -80,7 +80,8 @@ class DataHandler {
     private long totalSegmentDownloadTimeMs = 0;
     private long totalSegmentDownloadSizeByte = 0;
     private long droppedVideoFrames = 0;
-    private long renderedVideoFrames = 0;
+    private int lastKnownSkippedOutputBufferCount = 0;
+    private int lastKnownRenderedOutputBufferCount = 0;
 
     private OptionalParams optionalParams;
     private KavaMediaEntryType playbackType;
@@ -222,11 +223,16 @@ class DataHandler {
                     params.put("flavorParamsId", flavorParamsId); // --> in live
                 }
 
-                if (droppedVideoFrames > 0 && renderedVideoFrames > 0) {
-                    double droppedFramesRatio = droppedVideoFrames / renderedVideoFrames;
-                    params.put("droppedFramesRatio", droppedFramesRatio + "");
+                if (lastKnownRenderedOutputBufferCount > lastKnownSkippedOutputBufferCount && lastKnownSkippedOutputBufferCount > 0) {
+                    double droppedBufferssRatio = lastKnownSkippedOutputBufferCount / (lastKnownRenderedOutputBufferCount * 1.0);
+                    params.put("droppedFramesRatio", droppedBufferssRatio + "");
+                    log.v("SEND droppedFramesRatio droppedVideoFrames = " + droppedVideoFrames + " lastKnownSkippedOutputBufferCount = " + lastKnownSkippedOutputBufferCount + " lastKnownRenderedOutputBufferCount = " + lastKnownRenderedOutputBufferCount);
+
                     droppedVideoFrames = 0;
-                    renderedVideoFrames = 0;
+                    lastKnownSkippedOutputBufferCount = 0;
+                    lastKnownRenderedOutputBufferCount = 0;
+                } else if (lastKnownSkippedOutputBufferCount == 0) {
+                    params.put("droppedFramesRatio", 0 + "");
                 }
 
                 if (targetBuffer == -1 && player.getSettings() instanceof PlayerSettings) {
@@ -515,6 +521,11 @@ class DataHandler {
         }
     }
 
+    public void handleOutputBufferCountUpdate(PlayerEvent.OutputBufferCountUpdate event) {
+        lastKnownSkippedOutputBufferCount = event.skippedOutputBufferCount;
+        lastKnownRenderedOutputBufferCount = event.renderedOutputBufferCount;
+    }
+
     public enum StreamFormat {
         MpegDash("mpegdash"),
         AppleHttp("applehttp"),
@@ -724,7 +735,8 @@ class DataHandler {
         totalSegmentDownloadTimeMs = 0;
         totalSegmentDownloadSizeByte = 0;
         droppedVideoFrames = 0;
-        renderedVideoFrames = 0;
+        lastKnownSkippedOutputBufferCount = 0;
+        lastKnownRenderedOutputBufferCount = 0;
         targetBuffer = -1;
 
         handleViewEventSessionClosed();
