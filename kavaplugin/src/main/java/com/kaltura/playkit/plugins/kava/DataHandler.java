@@ -56,6 +56,7 @@ class DataHandler {
     private long dvrThreshold;
     private long actualBitrate;
     private long currentPosition;
+    private long currentBufferPosition;
     private long currentDuration;
     private long joinTimeStartTimestamp;
     private long canPlayTimestamp;
@@ -162,6 +163,7 @@ class DataHandler {
 
             long playerPosition = Consts.POSITION_UNSET;
             long playerDuration = Consts.TIME_UNSET;
+
             if (playheadUpdated != null) {
                 playerPosition = playheadUpdated.position;
                 playerDuration = playheadUpdated.duration;
@@ -236,16 +238,14 @@ class DataHandler {
                 }
 
                 if (targetBuffer == -1 && player.getSettings() instanceof PlayerSettings) {
-                    targetBuffer = ((PlayerSettings) player.getSettings()).getLoadControlBuffers().getBackBufferDurationMs() / Consts.MILLISECONDS_MULTIPLIER;
+                    targetBuffer = ((PlayerSettings) player.getSettings()).getLoadControlBuffers().getMaxPlayerBufferMs() / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
                 }
                 if (targetBuffer > 0) {
                     params.put("targetBuffer", targetBuffer + "");
                     if (player != null) {
-                        long bufferPos = player.getBufferedPosition();
-                        long playerPos = player.getCurrentPosition();
-
-                        if (bufferPos > 0 && playerPos > 0 && bufferPos > playerPos) {
-                            params.put("forwardBufferHealth", (bufferPos - playerPos / targetBuffer) + "");
+                        if (currentBufferPosition > 0 && currentPosition > 0 && currentBufferPosition > currentPosition) {
+                            double forwardBufferHealth = (((currentBufferPosition - currentPosition) / Consts.MILLISECONDS_MULTIPLIER_FLOAT) / targetBuffer);
+                            params.put("forwardBufferHealth", String.format("%.3f", forwardBufferHealth));
                         }
                     }
                 }
@@ -638,9 +638,11 @@ class DataHandler {
         if (!onApplicationPaused) {
             if (playheadUpdated == null) {
                 currentPosition = 0;
+                currentBufferPosition = 0;
                 currentDuration = 0;
             } else {
                 currentPosition = playheadUpdated.position;
+                currentBufferPosition = playheadUpdated.bufferPosition;
                 currentDuration = playheadUpdated.duration;
             }
         }
@@ -754,6 +756,7 @@ class DataHandler {
         //So we should update this values before PAUSE event sent.
         if (player != null) {
             currentDuration = player.getDuration();
+            currentBufferPosition = player.getBufferedPosition();
             currentPosition = player.getCurrentPosition();
         }
 
