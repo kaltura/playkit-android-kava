@@ -237,16 +237,14 @@ class DataHandler {
                     params.put("droppedFramesRatio", 0 + "");
                 }
 
-                if (targetBuffer == -1 && player.getSettings() instanceof PlayerSettings) {
+                if (targetBuffer == -1 && player != null && player.getSettings() instanceof PlayerSettings) {
                     targetBuffer = ((PlayerSettings) player.getSettings()).getLoadControlBuffers().getMaxPlayerBufferMs() / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
                 }
                 if (targetBuffer > 0) {
                     params.put("targetBuffer", targetBuffer + "");
-                    if (player != null) {
-                        if (currentBufferPosition > 0 && currentPosition > 0 && currentBufferPosition > currentPosition) {
-                            double forwardBufferHealth = (((currentBufferPosition - currentPosition) / Consts.MILLISECONDS_MULTIPLIER_FLOAT) / targetBuffer);
-                            params.put("forwardBufferHealth", String.format("%.3f", forwardBufferHealth));
-                        }
+                    if (currentBufferPosition > 0 && currentPosition > 0 && currentBufferPosition > currentPosition) {
+                        double forwardBufferHealth = (((currentBufferPosition - currentPosition) / Consts.MILLISECONDS_MULTIPLIER_FLOAT) / targetBuffer);
+                        params.put("forwardBufferHealth", String.format("%.3f", forwardBufferHealth));
                     }
                 }
 
