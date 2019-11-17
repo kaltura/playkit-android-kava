@@ -417,7 +417,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                     //If response is in Json format, handle it and update required values.
                     JSONObject jsonObject = new JSONObject(response.getResponse());
                     if (decimalFormat != null) {
-                        dataHandler.setSessionStartTime(decimalFormat.format(jsonObject.optDouble("time")) + "");
+                        dataHandler.setSessionStartTime(decimalFormat.format(jsonObject.optDouble("time")));
                     }
                     if (viewTimer != null) {
                         viewTimer.setViewEventsEnabled(jsonObject.optBoolean("viewEventsEnabled", true));
