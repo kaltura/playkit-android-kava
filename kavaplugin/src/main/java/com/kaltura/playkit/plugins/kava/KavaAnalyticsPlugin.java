@@ -43,6 +43,7 @@ import com.kaltura.playkit.utils.Consts;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DecimalFormat;
 import java.util.Map;
 
 /**
@@ -78,7 +79,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private ViewTimer viewTimer;
     private ViewTimer.ViewEventTrigger viewEventTrigger = initViewTrigger();
     private long applicationBackgroundTimeStamp;
-
+    private DecimalFormat decimalFormat;
 
     public static final Factory factory = new Factory() {
         @Override
@@ -105,6 +106,8 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     @Override
     protected void onLoad(Player player, Object config, MessageBus messageBus, Context context) {
         log.d("onLoad");
+        decimalFormat = new DecimalFormat("#");
+        decimalFormat.setMaximumFractionDigits(3);
         this.player = player;
         this.messageBus = messageBus;
         this.requestExecutor = APIOkRequestsExecutor.getSingleton();
@@ -237,7 +240,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         messageBus.addListener(this, PlayerEvent.bytesLoaded, event -> {
             //log.d("bytesLoaded = " + event.trackType + " load time " + event.loadDuration);
             if (C.TRACK_TYPE_VIDEO == event.trackType) {
-                 dataHandler.handleSegmentDownloadTime(event);
+                dataHandler.handleSegmentDownloadTime(event);
             } else if (C.TRACK_TYPE_UNKNOWN == event.trackType){
                 dataHandler.handleManifestDownloadTime(event);
             }
@@ -246,26 +249,26 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         messageBus.addListener(this, PlayerEvent.metadataAvailable, event -> {
             log.d("metadataAvailable = " + event.eventType());
             for (PKMetadata pkMetadata : event.metadataList){
-                    if (pkMetadata instanceof PKTextInformationFrame) {
-                        PKTextInformationFrame textFrame = (PKTextInformationFrame) pkMetadata;
-                        if (textFrame != null) {
-                            if (TEXT.equals(textFrame.id)) {
-                                try {
-                                    if(textFrame.value != null) {
-                                        JSONObject textFrameValue = new JSONObject(textFrame.value);
-                                        String flavorParamsId = textFrameValue.getString("sequenceId");
-                                        //log.d("metadataAvailable Received user text: flavorParamsId = " + flavorParamsId);
-                                        dataHandler.handleSequenceId(flavorParamsId); //flavorParamsId = sequenceId from {"timestamp":1573049629312,"sequenceId":"32"}
-                                    }
-                                } catch (JSONException e) {
-                                    //e.printStackTrace();
-                                    log.e("Failed to parse the sequenceId from TEXT ID3 frame");
-                                    return;
+                if (pkMetadata instanceof PKTextInformationFrame) {
+                    PKTextInformationFrame textFrame = (PKTextInformationFrame) pkMetadata;
+                    if (textFrame != null) {
+                        if (TEXT.equals(textFrame.id)) {
+                            try {
+                                if(textFrame.value != null) {
+                                    JSONObject textFrameValue = new JSONObject(textFrame.value);
+                                    String flavorParamsId = textFrameValue.getString("sequenceId");
+                                    //log.d("metadataAvailable Received user text: flavorParamsId = " + flavorParamsId);
+                                    dataHandler.handleSequenceId(flavorParamsId); //flavorParamsId = sequenceId from {"timestamp":1573049629312,"sequenceId":"32"}
                                 }
+                            } catch (JSONException e) {
+                                //e.printStackTrace();
+                                log.e("Failed to parse the sequenceId from TEXT ID3 frame");
+                                return;
                             }
                         }
                     }
                 }
+            }
         });
 
         messageBus.addListener(this, PlayerEvent.error, event -> {
@@ -398,7 +401,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
         if (isInputInvalid())
             return;
-        
+
         Map<String, String> params = dataHandler.collectData(event, mediaConfig.getMediaEntry().getMediaType(), playheadUpdated);
 
         RequestBuilder requestBuilder = KavaService.sendAnalyticsEvent(pluginConfig.getBaseUrl(), dataHandler.getUserAgent(), params);
@@ -413,7 +416,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                     }
                     //If response is in Json format, handle it and update required values.
                     JSONObject jsonObject = new JSONObject(response.getResponse());
-                    dataHandler.setSessionStartTime(jsonObject.optString("time"));
+                    if (decimalFormat != null) {
+                        dataHandler.setSessionStartTime(decimalFormat.format(jsonObject.optDouble("time")) + "");
+                    }
                     if (viewTimer != null) {
                         viewTimer.setViewEventsEnabled(jsonObject.optBoolean("viewEventsEnabled", true));
                     }
