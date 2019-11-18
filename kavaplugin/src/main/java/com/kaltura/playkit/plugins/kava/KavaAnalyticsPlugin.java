@@ -239,7 +239,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
         messageBus.addListener(this, PlayerEvent.bytesLoaded, event -> {
             //log.d("bytesLoaded = " + event.trackType + " load time " + event.loadDuration);
-            if (C.TRACK_TYPE_VIDEO == event.trackType) {
+            if (C.TRACK_TYPE_VIDEO == event.trackType || C.TRACK_TYPE_DEFAULT == event.trackType) {
                 dataHandler.handleSegmentDownloadTime(event);
             } else if (C.TRACK_TYPE_UNKNOWN == event.trackType){
                 dataHandler.handleManifestDownloadTime(event);
