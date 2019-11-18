@@ -215,8 +215,8 @@ class DataHandler {
                 }
                 if (totalSegmentDownloadTimeMs > 0 && totalSegmentDownloadSizeByte > 0) {
 
-                    double bandwidthInByteMS = totalSegmentDownloadSizeByte / totalSegmentDownloadTimeMs;
-                    params.put("bandwidth", convertToKbps(bandwidthInByteMS) + "");
+                    double bandwidthInByteMS = totalSegmentDownloadSizeByte / (totalSegmentDownloadTimeMs * 1.0);
+                    params.put("bandwidth", String.format("%.3f", convertToKbps(bandwidthInByteMS)));
                     totalSegmentDownloadTimeMs = 0;
                     totalSegmentDownloadSizeByte = 0;
                 }
