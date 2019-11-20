@@ -303,14 +303,18 @@ class DataHandler {
      * @param event - current event.
      */
     void handleSourceSelected(PKEvent event) {
+        deliveryType = StreamFormat.Url.formatName;
         PKMediaSource selectedSource = ((PlayerEvent.SourceSelected) event).source;
-        switch (selectedSource.getMediaFormat()) {
-            case dash:
-            case hls:
-                deliveryType = selectedSource.getMediaFormat().name();
-                break;
-            default:
-                deliveryType = StreamFormat.Url.formatName;
+        if (selectedSource != null && selectedSource.getMediaFormat() != null) {
+            PKMediaFormat selectedSourceMediaFormat = selectedSource.getMediaFormat();
+            switch (selectedSourceMediaFormat) {
+                case dash:
+                case hls:
+                    deliveryType = selectedSourceMediaFormat.name();
+                    break;
+                default:
+                    deliveryType = StreamFormat.Url.formatName;
+            }
         }
     }
 
