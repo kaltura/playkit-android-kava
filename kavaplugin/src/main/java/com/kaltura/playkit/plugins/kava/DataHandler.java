@@ -128,7 +128,7 @@ class DataHandler {
         averageBitrateCounter = new AverageBitrateCounter();
 
         this.entryId = populateEntryId(mediaConfig, pluginConfig);
-        this.sessionId = player.getSessionId() != null ? player.getSessionId() : "";
+        this.sessionId = (player != null && player.getSessionId() != null) ? player.getSessionId() : "";
         resetValues();
     }
 
