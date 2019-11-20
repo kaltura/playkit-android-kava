@@ -230,14 +230,6 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             sendAnalyticsEvent(KavaEvents.CAPTIONS);
         });
 
-        messageBus.addListener(this, PlayerEvent.videoFramesDropped, event -> {
-            dataHandler.handleFramesDropped(event);
-        });
-
-        messageBus.addListener(this, PlayerEvent.outputBufferCountUpdate, event -> {
-            dataHandler.handleOutputBufferCountUpdate(event);
-        });
-
         messageBus.addListener(this, PlayerEvent.bytesLoaded, event -> {
             //log.d("bytesLoaded = " + event.trackType + " load time " + event.loadDuration);
             if (C.TRACK_TYPE_VIDEO == event.trackType || C.TRACK_TYPE_DEFAULT == event.trackType) {

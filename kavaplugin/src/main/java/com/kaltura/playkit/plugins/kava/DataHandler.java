@@ -81,9 +81,6 @@ class DataHandler {
     private long maxConnectDurationMs = -1;
     private long totalSegmentDownloadTimeMs = 0;
     private long totalSegmentDownloadSizeByte = 0;
-    private long droppedVideoFrames = 0;
-    private int lastKnownSkippedOutputBufferCount = 0;
-    private int lastKnownRenderedOutputBufferCount = 0;
 
     private OptionalParams optionalParams;
     private KavaMediaEntryType playbackType;
@@ -196,77 +193,7 @@ class DataHandler {
         switch (event) {
 
             case VIEW:
-
-                if (audioManager != null) {
-                    int musicVolume =  audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-                    if (musicVolume == 0 || audioManager.getRingerMode() != AudioManager.RINGER_MODE_NORMAL) {
-                        params.put("soundMode", "1"); // sound Off
-                    } else {
-                        params.put("soundMode", "2"); // sound On
-                    }
-                }
-
-                if (manifestMaxDownloadTime != -1) {
-                    params.put("manifestDownloadTime", Long.toString(manifestMaxDownloadTime));
-                    manifestMaxDownloadTime = -1;
-                }
-                if (segmentMaxDownloadTime != -1) {
-                    params.put("segmentDownloadTime", Long.toString(segmentMaxDownloadTime));
-                    segmentMaxDownloadTime = -1;
-                }
-                if (totalSegmentDownloadTimeMs > 0 && totalSegmentDownloadSizeByte > 0) {
-
-                    double bandwidthInByteMS = totalSegmentDownloadSizeByte / (totalSegmentDownloadTimeMs * 1.0);
-                    params.put("bandwidth", String.format("%.3f", convertToKbps(bandwidthInByteMS)));
-                    totalSegmentDownloadTimeMs = 0;
-                    totalSegmentDownloadSizeByte = 0;
-                }
-
-                if (flavorParamsId != null) {
-                    params.put("flavorParamsId", flavorParamsId); // --> in live
-                }
-
-                if (lastKnownRenderedOutputBufferCount > lastKnownSkippedOutputBufferCount && lastKnownSkippedOutputBufferCount > 0) {
-                    double droppedBufferssRatio = lastKnownSkippedOutputBufferCount / (lastKnownRenderedOutputBufferCount * 1.0);
-                    params.put("droppedFramesRatio", droppedBufferssRatio + "");
-                    log.v("SEND droppedFramesRatio droppedVideoFrames = " + droppedVideoFrames + " lastKnownSkippedOutputBufferCount = " + lastKnownSkippedOutputBufferCount + " lastKnownRenderedOutputBufferCount = " + lastKnownRenderedOutputBufferCount);
-
-                    droppedVideoFrames = 0;
-                    lastKnownSkippedOutputBufferCount = 0;
-                    lastKnownRenderedOutputBufferCount = 0;
-                } else if (lastKnownSkippedOutputBufferCount == 0) {
-                    params.put("droppedFramesRatio", 0 + "");
-                }
-
-                if (targetBuffer == -1 && player != null && player.getSettings() instanceof PlayerSettings) {
-                    targetBuffer = ((PlayerSettings) player.getSettings()).getLoadControlBuffers().getMaxPlayerBufferMs() / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
-                }
-                if (targetBuffer > 0) {
-                    params.put("targetBuffer", targetBuffer + "");
-                    if (currentBufferPosition > 0 && currentPosition > 0 && currentBufferPosition > currentPosition) {
-                        double forwardBufferHealth = (((currentBufferPosition - currentPosition) / Consts.MILLISECONDS_MULTIPLIER_FLOAT) / targetBuffer);
-                        params.put("forwardBufferHealth", String.format("%.3f", forwardBufferHealth));
-                    }
-                }
-
-                params.put("networkConnectionType", Utils.getNetworkClass(context));
-                if (maxConnectDurationMs > 0) {
-                    params.put("networkConnectionOverhead", maxConnectDurationMs / Consts.MILLISECONDS_MULTIPLIER_FLOAT + ""); // 	max dns+ssl+tcp resolving time over all video segments in sec
-                    maxConnectDurationMs = -1;
-                }
-
-                playTimeSum += ViewTimer.TEN_SECONDS_IN_MS - totalBufferTimePerViewEvent;
-                params.put("playTimeSum", Float.toString(playTimeSum / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
-                params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
-                long averageBitrate = averageBitrateCounter.getAverageBitrate(playTimeSum + totalBufferTimePerEntry);
-                params.put("averageBitrate", Long.toString(averageBitrate / KB_MULTIPLIER));
-                if (currentAudioLanguage != null) {
-                    params.put("audioLanguage", currentAudioLanguage);
-                }
-                if (currentCaptionLanguage != null) {
-                    params.put("captionsLanguage", currentCaptionLanguage);
-                }
-
+                addViewParams(params);
                 addBufferParams(params);
                 break;
             case IMPRESSION:
@@ -326,6 +253,67 @@ class DataHandler {
         params.putAll(optionalParams.getParams());
         eventIndex++;
         return params;
+    }
+
+    private void addViewParams(Map<String, String> params) {
+
+        if (audioManager != null) {
+            int musicVolume =  audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+            if (musicVolume == 0 || audioManager.getRingerMode() != AudioManager.RINGER_MODE_NORMAL) {
+                params.put("soundMode", "1"); // sound Off
+            } else {
+                params.put("soundMode", "2"); // sound On
+            }
+        }
+
+        if (manifestMaxDownloadTime != -1) {
+            params.put("manifestDownloadTime", Long.toString(manifestMaxDownloadTime));
+            manifestMaxDownloadTime = -1;
+        }
+        if (segmentMaxDownloadTime != -1) {
+            params.put("segmentDownloadTime", Long.toString(segmentMaxDownloadTime));
+            segmentMaxDownloadTime = -1;
+        }
+        if (totalSegmentDownloadTimeMs > 0 && totalSegmentDownloadSizeByte > 0) {
+
+            double bandwidthInByteMS = totalSegmentDownloadSizeByte / (totalSegmentDownloadTimeMs * 1.0);
+            params.put("bandwidth", String.format("%.3f", convertToKbps(bandwidthInByteMS)));
+            totalSegmentDownloadTimeMs = 0;
+            totalSegmentDownloadSizeByte = 0;
+        }
+
+        if (flavorParamsId != null) {
+            params.put("flavorParamsId", flavorParamsId); // --> in live
+        }
+
+        if (targetBuffer == -1 && player != null && player.getSettings() instanceof PlayerSettings) {
+            targetBuffer = ((PlayerSettings) player.getSettings()).getLoadControlBuffers().getMaxPlayerBufferMs() / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
+        }
+        if (targetBuffer > 0) {
+            params.put("targetBuffer", targetBuffer + "");
+            if (currentBufferPosition > 0 && currentPosition > 0 && currentBufferPosition > currentPosition) {
+                double forwardBufferHealth = (((currentBufferPosition - currentPosition) / Consts.MILLISECONDS_MULTIPLIER_FLOAT) / targetBuffer);
+                params.put("forwardBufferHealth", String.format("%.3f", forwardBufferHealth));
+            }
+        }
+
+        params.put("networkConnectionType", Utils.getNetworkClass(context));
+        if (maxConnectDurationMs > 0) {
+            params.put("networkConnectionOverhead", maxConnectDurationMs / Consts.MILLISECONDS_MULTIPLIER_FLOAT + ""); // 	max dns+ssl+tcp resolving time over all video segments in sec
+            maxConnectDurationMs = -1;
+        }
+
+        playTimeSum += ViewTimer.TEN_SECONDS_IN_MS - totalBufferTimePerViewEvent;
+        params.put("playTimeSum", Float.toString(playTimeSum / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
+        params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
+        long averageBitrate = averageBitrateCounter.getAverageBitrate(playTimeSum + totalBufferTimePerEntry);
+        params.put("averageBitrate", Long.toString(averageBitrate / KB_MULTIPLIER));
+        if (currentAudioLanguage != null) {
+            params.put("audioLanguage", currentAudioLanguage);
+        }
+        if (currentCaptionLanguage != null) {
+            params.put("captionsLanguage", currentCaptionLanguage);
+        }
     }
 
     private double convertToKbps(double bandwidthInByteMS) {
@@ -407,10 +395,6 @@ class DataHandler {
 
     void handleSequenceId(String sequenceId) {
         flavorParamsId = sequenceId;
-    }
-
-    void handleFramesDropped(PlayerEvent.VideoFramesDropped event) {
-        this.droppedVideoFrames = event.droppedVideoFrames;
     }
 
     /**
@@ -518,11 +502,6 @@ class DataHandler {
             default:
                 deliveryType = StreamFormat.Url.formatName;
         }
-    }
-
-    public void handleOutputBufferCountUpdate(PlayerEvent.OutputBufferCountUpdate event) {
-        lastKnownSkippedOutputBufferCount = event.skippedOutputBufferCount;
-        lastKnownRenderedOutputBufferCount = event.renderedOutputBufferCount;
     }
 
     public void handlePlaybackSpeed(PlayerEvent.PlaybackRateChanged event) {
@@ -739,9 +718,6 @@ class DataHandler {
         maxConnectDurationMs = -1;
         totalSegmentDownloadTimeMs = 0;
         totalSegmentDownloadSizeByte = 0;
-        droppedVideoFrames = 0;
-        lastKnownSkippedOutputBufferCount = 0;
-        lastKnownRenderedOutputBufferCount = 0;
         lastKnownPlaybackSpeed = 1.0f;
         targetBuffer = -1;
 
