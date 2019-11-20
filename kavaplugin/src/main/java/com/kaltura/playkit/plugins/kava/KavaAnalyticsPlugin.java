@@ -161,8 +161,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         messageBus.addListener(this, PlayerEvent.playing, event -> {
             if (isFirstPlay) {
                 isFirstPlay = false;
-                startViewTimer();
                 sendAnalyticsEvent(KavaEvents.PLAY);
+                sendAnalyticsEvent(KavaEvents.VIEW);
+                startViewTimer();
             } else {
                 if (isPaused && !isEnded) {
                     sendAnalyticsEvent(KavaEvents.RESUME);
