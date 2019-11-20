@@ -64,6 +64,7 @@ class DataHandler {
     private long totalBufferTimePerEntry;
     private long lastKnownBufferingTimestamp;
     private long targetSeekPositionInSeconds;
+    private float lastKnownPlaybackSpeed = 1.0f;
 
     private String entryId;
     private String sessionId;
@@ -301,7 +302,7 @@ class DataHandler {
                 params.put("caption", currentCaptionLanguage);
                 break;
             case SPEED:
-                params.put("playbackSpeed", String.valueOf(player.getPlaybackRate()));
+                params.put("playbackSpeed", String.valueOf(lastKnownPlaybackSpeed));
                 break;
             case ERROR:
                 if (errorCode != -1) {
@@ -524,6 +525,10 @@ class DataHandler {
         lastKnownRenderedOutputBufferCount = event.renderedOutputBufferCount;
     }
 
+    public void handlePlaybackSpeed(PlayerEvent.PlaybackRateChanged event) {
+        lastKnownPlaybackSpeed = event.rate;
+    }
+
     public enum StreamFormat {
         MpegDash("mpegdash"),
         AppleHttp("applehttp"),
@@ -737,6 +742,7 @@ class DataHandler {
         droppedVideoFrames = 0;
         lastKnownSkippedOutputBufferCount = 0;
         lastKnownRenderedOutputBufferCount = 0;
+        lastKnownPlaybackSpeed = 1.0f;
         targetBuffer = -1;
 
         handleViewEventSessionClosed();

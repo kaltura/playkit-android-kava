@@ -155,6 +155,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         });
 
         messageBus.addListener(this, PlayerEvent.playbackRateChanged, event -> {
+            dataHandler.handlePlaybackSpeed(event);
             sendAnalyticsEvent(KavaEvents.SPEED);
         });
 
