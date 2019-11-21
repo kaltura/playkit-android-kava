@@ -98,7 +98,7 @@ class DataHandler {
     DataHandler(Context context, Player player) {
         this.context = context;
         this.player = player;
-        this.userAgent = context.getPackageName() + " " + PlayKitManager.CLIENT_TAG + " " + System.getProperty("http.agent");
+        this.userAgent = Utils.getUserAgent(context);
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
     }
 
@@ -610,7 +610,9 @@ class DataHandler {
     }
 
     public void handleConnectionAcquired(PlayerEvent.ConnectionAcquired event) {
-        maxConnectDurationMs = (event.connectDurationMs > maxConnectDurationMs) ? event.connectDurationMs : maxConnectDurationMs;
+        if (event.uriConnectionAcquiredInfo != null) {
+            maxConnectDurationMs = (event.uriConnectionAcquiredInfo.connectDurationMs > maxConnectDurationMs) ? event.uriConnectionAcquiredInfo.connectDurationMs : maxConnectDurationMs;
+        }
     }
 
     /**
