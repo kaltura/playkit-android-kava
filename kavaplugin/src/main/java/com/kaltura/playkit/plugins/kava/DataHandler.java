@@ -318,10 +318,10 @@ class DataHandler {
     }
 
     private double convertToKbps(double bandwidthInByteMS) {
-        bandwidthInByteMS *= 8;    // b/ms
-        bandwidthInByteMS /= 1024; // kb/ms
-        bandwidthInByteMS *= 1000; // kb/s
-        return bandwidthInByteMS;
+
+        return (((bandwidthInByteMS * 8)   // bytes to bits
+                                  / 1024)  // bits  to kbits
+                                  * 1000); // msec  to sec
     }
 
 
