@@ -1,6 +1,7 @@
 package com.kaltura.playkit.plugins.kava;
 
 import android.content.Context;
+import android.media.AudioManager;
 
 import androidx.annotation.Nullable;
 
@@ -9,15 +10,18 @@ import com.kaltura.playkit.PKEvent;
 import com.kaltura.playkit.PKLog;
 import com.kaltura.playkit.PKMediaConfig;
 import com.kaltura.playkit.PKMediaEntry;
+import com.kaltura.playkit.PKMediaFormat;
 import com.kaltura.playkit.PKMediaSource;
 import com.kaltura.playkit.PlayKitManager;
 import com.kaltura.playkit.PlaybackInfo;
 import com.kaltura.playkit.Player;
 import com.kaltura.playkit.PlayerEvent;
+import com.kaltura.playkit.Utils;
 import com.kaltura.playkit.ads.PKAdErrorType;
 import com.kaltura.playkit.player.AudioTrack;
 import com.kaltura.playkit.player.PKPlayerErrorType;
 import com.kaltura.playkit.player.PKTracks;
+import com.kaltura.playkit.player.PlayerSettings;
 import com.kaltura.playkit.player.TextTrack;
 import com.kaltura.playkit.plugins.ads.AdEvent;
 import com.kaltura.playkit.utils.Consts;
@@ -53,6 +57,7 @@ class DataHandler {
     private long dvrThreshold;
     private long actualBitrate;
     private long currentPosition;
+    private long currentBufferPosition;
     private long currentDuration;
     private long joinTimeStartTimestamp;
     private long canPlayTimestamp;
@@ -60,6 +65,7 @@ class DataHandler {
     private long totalBufferTimePerEntry;
     private long lastKnownBufferingTimestamp;
     private long targetSeekPositionInSeconds;
+    private float lastKnownPlaybackSpeed = 1.0f;
 
     private String entryId;
     private String sessionId;
@@ -70,18 +76,30 @@ class DataHandler {
     private String referrer;
     private String currentAudioLanguage;
     private String currentCaptionLanguage;
+    private String flavorParamsId;
+    private long manifestMaxDownloadTime = -1;
+    private long segmentMaxDownloadTime = -1;
+    private long maxConnectDurationMs = -1;
+    private long totalSegmentDownloadTimeMs = 0;
+    private long totalSegmentDownloadSizeByte = 0;
 
     private OptionalParams optionalParams;
     private KavaMediaEntryType playbackType;
     private AverageBitrateCounter averageBitrateCounter;
 
+
     private boolean onApplicationPaused = false;
     private boolean isFirstPlay;
+    AudioManager audioManager;
+    private double targetBuffer;
+
+
 
     DataHandler(Context context, Player player) {
         this.context = context;
         this.player = player;
-        this.userAgent = context.getPackageName() + " " + PlayKitManager.CLIENT_TAG + " " + System.getProperty("http.agent");
+        this.userAgent = Utils.getUserAgent(context);
+        audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
     }
 
     /**
@@ -109,12 +127,12 @@ class DataHandler {
         averageBitrateCounter = new AverageBitrateCounter();
 
         this.entryId = populateEntryId(mediaConfig, pluginConfig);
-        this.sessionId = player.getSessionId() != null ? player.getSessionId() : "";
+        this.sessionId = (player != null && player.getSessionId() != null) ? player.getSessionId() : "";
         resetValues();
     }
 
     private String populateEntryId(PKMediaConfig mediaConfig, KavaAnalyticsConfig pluginConfig) {
-        
+
         String kavaEntryId = null;
         if (pluginConfig != null && pluginConfig.getEntryId() != null) {
             kavaEntryId = pluginConfig.getEntryId();
@@ -144,10 +162,10 @@ class DataHandler {
 
             long playerPosition = Consts.POSITION_UNSET;
             long playerDuration = Consts.TIME_UNSET;
+
             if (playheadUpdated != null) {
                 playerPosition = playheadUpdated.position;
                 playerDuration = playheadUpdated.duration;
-
             }
             playbackType = getPlaybackType(mediaEntryType, playerPosition, playerDuration);
         }
@@ -176,21 +194,10 @@ class DataHandler {
         switch (event) {
 
             case VIEW:
-
-                playTimeSum += ViewTimer.TEN_SECONDS_IN_MS - totalBufferTimePerViewEvent;
-                params.put("playTimeSum", Float.toString(playTimeSum / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
-
-                params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
-                long averageBitrate = averageBitrateCounter.getAverageBitrate(playTimeSum + totalBufferTimePerEntry);
-                params.put("averageBitrate", Long.toString(averageBitrate / KB_MULTIPLIER));
-                if (currentAudioLanguage != null) {
-                    params.put("audioLanguage", currentAudioLanguage);
-                }
-                if (currentCaptionLanguage != null) {
-                    params.put("captionsLanguage", currentCaptionLanguage);
-                }
+                addViewParams(params);
                 addBufferParams(params);
-
+                break;
+            case IMPRESSION:
                 break;
             case PLAY:
                 params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
@@ -200,7 +207,7 @@ class DataHandler {
 
                 float canPlay = (canPlayTimestamp - loadedMetaDataTimestamp) / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
                 params.put("canPlay", Float.toString(canPlay));
-
+                params.put("networkConnectionType", Utils.getNetworkClass(context));
                 averageBitrateCounter.resumeCounting();
                 addBufferParams(params);
                 break;
@@ -221,6 +228,9 @@ class DataHandler {
                 break;
             case CAPTIONS:
                 params.put("caption", currentCaptionLanguage);
+                break;
+            case SPEED:
+                params.put("playbackSpeed", String.valueOf(lastKnownPlaybackSpeed));
                 break;
             case ERROR:
                 if (errorCode != -1) {
@@ -244,6 +254,74 @@ class DataHandler {
         params.putAll(optionalParams.getParams());
         eventIndex++;
         return params;
+    }
+
+    private void addViewParams(Map<String, String> params) {
+
+        if (audioManager != null) {
+            int musicVolume =  audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+            if (musicVolume == 0 || audioManager.getRingerMode() != AudioManager.RINGER_MODE_NORMAL) {
+                params.put("soundMode", "1"); // sound Off
+            } else {
+                params.put("soundMode", "2"); // sound On
+            }
+        }
+
+        if (manifestMaxDownloadTime != -1) {
+            params.put("manifestDownloadTime", Long.toString(manifestMaxDownloadTime));
+            manifestMaxDownloadTime = -1;
+        }
+        if (segmentMaxDownloadTime != -1) {
+            params.put("segmentDownloadTime", Long.toString(segmentMaxDownloadTime));
+            segmentMaxDownloadTime = -1;
+        }
+        if (totalSegmentDownloadTimeMs > 0 && totalSegmentDownloadSizeByte > 0) {
+
+            double bandwidthInByteMS = totalSegmentDownloadSizeByte / (totalSegmentDownloadTimeMs * 1.0);
+            params.put("bandwidth", String.format("%.3f", convertToKbps(bandwidthInByteMS)));
+            totalSegmentDownloadTimeMs = 0;
+            totalSegmentDownloadSizeByte = 0;
+        }
+
+        if (flavorParamsId != null) {
+            params.put("flavorParamsId", flavorParamsId); // --> in live
+        }
+
+        if (targetBuffer == -1 && player != null && player.getSettings() instanceof PlayerSettings) {
+            targetBuffer = ((PlayerSettings) player.getSettings()).getLoadControlBuffers().getMaxPlayerBufferMs() / Consts.MILLISECONDS_MULTIPLIER_FLOAT;
+        }
+        if (targetBuffer > 0) {
+            params.put("targetBuffer", targetBuffer + "");
+            if (currentBufferPosition > 0 && currentPosition > 0 && currentBufferPosition > currentPosition) {
+                double forwardBufferHealth = (((currentBufferPosition - currentPosition) / Consts.MILLISECONDS_MULTIPLIER_FLOAT) / targetBuffer);
+                params.put("forwardBufferHealth", String.format("%.3f", forwardBufferHealth));
+            }
+        }
+
+        params.put("networkConnectionType", Utils.getNetworkClass(context));
+        if (maxConnectDurationMs > 0) {
+            params.put("networkConnectionOverhead", maxConnectDurationMs / Consts.MILLISECONDS_MULTIPLIER_FLOAT + ""); // 	max dns+ssl+tcp resolving time over all video segments in sec
+            maxConnectDurationMs = -1;
+        }
+
+        playTimeSum += ViewTimer.TEN_SECONDS_IN_MS - totalBufferTimePerViewEvent;
+        params.put("playTimeSum", Float.toString(playTimeSum / Consts.MILLISECONDS_MULTIPLIER_FLOAT));
+        params.put("actualBitrate", Long.toString(actualBitrate / KB_MULTIPLIER));
+        long averageBitrate = averageBitrateCounter.getAverageBitrate(playTimeSum + totalBufferTimePerEntry);
+        params.put("averageBitrate", Long.toString(averageBitrate / KB_MULTIPLIER));
+        if (currentAudioLanguage != null) {
+            params.put("audioLanguage", currentAudioLanguage);
+        }
+        if (currentCaptionLanguage != null) {
+            params.put("captionsLanguage", currentCaptionLanguage);
+        }
+    }
+
+    private double convertToKbps(double bandwidthInByteMS) {
+
+        return (((bandwidthInByteMS * 8)   // bytes to bits
+                                  / 1024)  // bits  to kbits
+                                  * 1000); // msec  to sec
     }
 
 
@@ -290,20 +368,34 @@ class DataHandler {
      * @param event =  TracksAvailable event.
      */
     void handleTracksAvailable(PlayerEvent.TracksAvailable event) {
-            PKTracks trackInfo = ((PlayerEvent.TracksAvailable) event).tracksInfo;
-            if (trackInfo != null) {
-                List<AudioTrack> trackInfoAudioTracks = trackInfo.getAudioTracks();
-                int defaultAudioTrackIndex = trackInfo.getDefaultAudioTrackIndex();
-                if (defaultAudioTrackIndex < trackInfoAudioTracks.size() && trackInfoAudioTracks.get(defaultAudioTrackIndex) != null) {
-                    currentAudioLanguage = trackInfoAudioTracks.get(defaultAudioTrackIndex).getLanguage();
-                }
-
-                List<TextTrack> trackInfoTextTracks = trackInfo.getTextTracks();
-                int defaultTextTrackIndex = trackInfo.getDefaultTextTrackIndex();
-                if (defaultTextTrackIndex < trackInfoTextTracks.size() && trackInfoTextTracks.get(defaultTextTrackIndex) != null) {
-                    currentCaptionLanguage = trackInfoTextTracks.get(defaultTextTrackIndex).getLanguage();
-                }
+        PKTracks trackInfo = ((PlayerEvent.TracksAvailable) event).tracksInfo;
+        if (trackInfo != null) {
+            List<AudioTrack> trackInfoAudioTracks = trackInfo.getAudioTracks();
+            int defaultAudioTrackIndex = trackInfo.getDefaultAudioTrackIndex();
+            if (defaultAudioTrackIndex < trackInfoAudioTracks.size() && trackInfoAudioTracks.get(defaultAudioTrackIndex) != null) {
+                currentAudioLanguage = trackInfoAudioTracks.get(defaultAudioTrackIndex).getLanguage();
             }
+
+            List<TextTrack> trackInfoTextTracks = trackInfo.getTextTracks();
+            int defaultTextTrackIndex = trackInfo.getDefaultTextTrackIndex();
+            if (defaultTextTrackIndex < trackInfoTextTracks.size() && trackInfoTextTracks.get(defaultTextTrackIndex) != null) {
+                currentCaptionLanguage = trackInfoTextTracks.get(defaultTextTrackIndex).getLanguage();
+            }
+        }
+    }
+
+    void handleSegmentDownloadTime(PlayerEvent.BytesLoaded event) {
+        segmentMaxDownloadTime = Math.max(event.loadDuration, segmentMaxDownloadTime);
+        totalSegmentDownloadSizeByte += event.bytesLoaded;
+        totalSegmentDownloadTimeMs += event.loadDuration;
+    }
+
+    void handleManifestDownloadTime(PlayerEvent.BytesLoaded event) {
+        manifestMaxDownloadTime =  Math.max(event.loadDuration, manifestMaxDownloadTime);
+    }
+
+    void handleSequenceId(String sequenceId) {
+        flavorParamsId = sequenceId;
     }
 
     /**
@@ -402,15 +494,23 @@ class DataHandler {
      * @param event - current event.
      */
     void handleSourceSelected(PKEvent event) {
+        deliveryType = StreamFormat.Url.formatName;
         PKMediaSource selectedSource = ((PlayerEvent.SourceSelected) event).source;
-        switch (selectedSource.getMediaFormat()) {
-            case dash:
-            case hls:
-                deliveryType = selectedSource.getMediaFormat().name();
-                break;
-            default:
-                deliveryType = StreamFormat.Url.formatName;
+        if (selectedSource != null && selectedSource.getMediaFormat() != null) {
+            PKMediaFormat selectedSourceMediaFormat = selectedSource.getMediaFormat();
+            switch (selectedSourceMediaFormat) {
+                case dash:
+                case hls:
+                    deliveryType = selectedSourceMediaFormat.name();
+                    break;
+                default:
+                    deliveryType = StreamFormat.Url.formatName;
+            }
         }
+    }
+
+    public void handlePlaybackSpeed(PlayerEvent.PlaybackRateChanged event) {
+        lastKnownPlaybackSpeed = event.rate;
     }
 
     public enum StreamFormat {
@@ -509,6 +609,12 @@ class DataHandler {
         }
     }
 
+    public void handleConnectionAcquired(PlayerEvent.ConnectionAcquired event) {
+        if (event.uriConnectionAcquiredInfo != null) {
+            maxConnectDurationMs = (event.uriConnectionAcquiredInfo.connectDurationMs > maxConnectDurationMs) ? event.uriConnectionAcquiredInfo.connectDurationMs : maxConnectDurationMs;
+        }
+    }
+
     /**
      * Updates player position based on playbackType. If current playbackType is LIVE or DVR
      * player position will be calculated based on distance from the live edge. Therefore should be 0 or negative value.
@@ -521,9 +627,11 @@ class DataHandler {
         if (!onApplicationPaused) {
             if (playheadUpdated == null) {
                 currentPosition = 0;
+                currentBufferPosition = 0;
                 currentDuration = 0;
             } else {
                 currentPosition = playheadUpdated.position;
+                currentBufferPosition = playheadUpdated.bufferPosition;
                 currentDuration = playheadUpdated.duration;
             }
         }
@@ -612,6 +720,14 @@ class DataHandler {
         lastKnownBufferingTimestamp = 0;
         canPlayTimestamp = 0;
         loadedMetaDataTimestamp = 0;
+        manifestMaxDownloadTime = -1;
+        segmentMaxDownloadTime = -1;
+        maxConnectDurationMs = -1;
+        totalSegmentDownloadTimeMs = 0;
+        totalSegmentDownloadSizeByte = 0;
+        lastKnownPlaybackSpeed = 1.0f;
+        targetBuffer = -1;
+
         handleViewEventSessionClosed();
     }
 
@@ -627,6 +743,7 @@ class DataHandler {
         //So we should update this values before PAUSE event sent.
         if (player != null) {
             currentDuration = player.getDuration();
+            currentBufferPosition = player.getBufferedPosition();
             currentPosition = player.getCurrentPosition();
         }
 
