@@ -31,11 +31,14 @@ public class AverageBitrateCounter {
         updateBitratePlayTime();
 
         long bitrate;
-        long playTime;
+        Long playTime;
         long averageBitrate = 0;
         for (int i = 0; i < averageTrackPlaybackDuration.size(); i++) {
             bitrate = averageTrackPlaybackDuration.keyAt(i);
             playTime = averageTrackPlaybackDuration.get(bitrate);
+            if (playTime == null || totalPlaytimeSum == 0) {
+                continue;
+            }
             averageBitrate += (bitrate * playTime) / totalPlaytimeSum;
         }
         return averageBitrate;
@@ -52,15 +55,15 @@ public class AverageBitrateCounter {
 
         //When it is first time that this bitrate is was selected we add it to the averageTrackPlaybackDuration
         //with the playedTime value and bitrate as key.
-        if (averageTrackPlaybackDuration.get(currentTrackBitrate) == null) {
+        Long totalAveragePlayedTime = averageTrackPlaybackDuration.get(currentTrackBitrate);
+        if (totalAveragePlayedTime == null) {
             averageTrackPlaybackDuration.put(currentTrackBitrate, playedTime);
-
         } else {
             // Otherwise we will get the existing value and add the last played one.
             //After that save it to averageTrackPlaybackDuration.
-            long totalPlayedTime = averageTrackPlaybackDuration.get(currentTrackBitrate);
-            totalPlayedTime += playedTime;
-            averageTrackPlaybackDuration.put(currentTrackBitrate, totalPlayedTime);
+
+            totalAveragePlayedTime += playedTime;
+            averageTrackPlaybackDuration.put(currentTrackBitrate, totalAveragePlayedTime);
         }
 
         currentTrackStartTimestamp = currentTimeStamp;
