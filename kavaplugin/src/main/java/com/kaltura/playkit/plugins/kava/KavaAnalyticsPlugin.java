@@ -273,17 +273,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             dataHandler.handleError(event);
             sendAnalyticsEvent(KavaEvents.ERROR);
         });
-
-        messageBus.addListener(this, AdEvent.error, event -> {
-            PKError error =  event.error;
-            if (error != null && !error.isFatal()) {
-                log.v("Error eventType = " + error.errorType + " severity = " + error.severity + " errorMessage = " + error.message);
-                return;
-            }
-            dataHandler.handleError(event);
-            sendAnalyticsEvent(KavaEvents.ERROR);
-        });
-
+        
         messageBus.addListener(this, PlayerEvent.playheadUpdated, event -> {
             playheadUpdated = event;
             //log.d("playheadUpdated event  position = " + playheadUpdated.position + " duration = " + playheadUpdated.duration);
