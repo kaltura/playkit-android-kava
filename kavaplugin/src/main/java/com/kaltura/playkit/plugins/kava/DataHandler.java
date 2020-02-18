@@ -90,7 +90,6 @@ class DataHandler {
 
 
     private boolean onApplicationPaused = false;
-    private boolean isFirstPlay;
     AudioManager audioManager;
     private double targetBuffer;
 
@@ -594,7 +593,6 @@ class DataHandler {
      */
     void handleFirstPlay() {
         joinTimeStartTimestamp = System.currentTimeMillis();
-        isFirstPlay = true;
     }
 
     void handleCanPlay() {
