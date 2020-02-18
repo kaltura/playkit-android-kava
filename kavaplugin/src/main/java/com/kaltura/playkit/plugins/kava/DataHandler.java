@@ -50,6 +50,7 @@ class DataHandler {
 
     private int errorCode;
     private String errorDetails;
+    private Integer errorPosition;
     private int eventIndex;
     private int totalBufferTimePerViewEvent;
 
@@ -239,8 +240,12 @@ class DataHandler {
                 if (errorDetails != null) {
                     params.put("errorDetails", errorDetails);
                 }
+                if (errorPosition != null) {
+                    params.put("errorPosition", String.valueOf(errorPosition));
+                }
                 errorCode = -1;
                 errorDetails = null;
+                errorPosition = null;
                 break;
             case PAUSE:
                 //When player was paused we should update average bitrate value,
@@ -414,11 +419,12 @@ class DataHandler {
         if (error.errorType instanceof PKPlayerErrorType) {
             errorCode = ((PKPlayerErrorType) error.errorType).errorCode;
             errorDetails = getErrorDetails(event);
+            errorPosition = (currentPosition > 0) ? ErrorPositionType.MidStream.value : ErrorPositionType.PrePlaying.value;
         } else if (error.errorType instanceof PKAdErrorType) {
             errorCode = ((PKAdErrorType) error.errorType).errorCode;
             errorDetails = getAdErrorDetails(event);;
         }
-        log.e("Playback ERROR. errorCode : " + errorCode);
+        log.e("Playback ERROR. errorCode : " + errorCode + " errorPosition-Type = " + errorPosition);
         this.errorCode = errorCode;
     }
 
@@ -513,6 +519,21 @@ class DataHandler {
         lastKnownPlaybackSpeed = event.rate;
     }
 
+    enum ErrorPositionType {
+        PrePlaying(1),
+        MidStream(2);
+
+        private final int value;
+
+        ErrorPositionType(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return this.value;
+        }
+    }
+
     public enum StreamFormat {
         MpegDash("mpegdash"),
         AppleHttp("applehttp"),
@@ -537,6 +558,7 @@ class DataHandler {
             return Unknown;
         }
     }
+
     /**
      * Handle seek event. Update and cache target position.
      *
