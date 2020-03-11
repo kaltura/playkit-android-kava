@@ -187,7 +187,7 @@ class DataHandler {
         params.put("application", context.getPackageName());
         params.put("playbackSpeed", String.valueOf(lastKnownPlaybackSpeed));
         if (currentCaptionLanguage != null) {
-            params.put("captionsLanguage", currentCaptionLanguage);
+            params.put("caption", currentCaptionLanguage);
         }
         if (sessionStartTime != null) {
             params.put("sessionStartTime", sessionStartTime);
