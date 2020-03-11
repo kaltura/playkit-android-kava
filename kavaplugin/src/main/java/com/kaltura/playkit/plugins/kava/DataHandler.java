@@ -185,7 +185,10 @@ class DataHandler {
         params.put("clientVer", PlayKitManager.CLIENT_TAG);
         params.put("position", getPlayerPosition(mediaEntryType, playheadUpdated));
         params.put("application", context.getPackageName());
-
+        params.put("playbackSpeed", String.valueOf(lastKnownPlaybackSpeed));
+        if (currentCaptionLanguage != null) {
+            params.put("captionsLanguage", currentCaptionLanguage);
+        }
         if (sessionStartTime != null) {
             params.put("sessionStartTime", sessionStartTime);
         }
@@ -227,10 +230,8 @@ class DataHandler {
                 params.put("language", currentAudioLanguage);
                 break;
             case CAPTIONS:
-                params.put("caption", currentCaptionLanguage);
                 break;
             case SPEED:
-                params.put("playbackSpeed", String.valueOf(lastKnownPlaybackSpeed));
                 break;
             case ERROR:
                 if (errorCode != -1) {
@@ -315,9 +316,6 @@ class DataHandler {
         params.put("averageBitrate", Long.toString(averageBitrate / KB_MULTIPLIER));
         if (currentAudioLanguage != null) {
             params.put("audioLanguage", currentAudioLanguage);
-        }
-        if (currentCaptionLanguage != null) {
-            params.put("captionsLanguage", currentCaptionLanguage);
         }
     }
 
