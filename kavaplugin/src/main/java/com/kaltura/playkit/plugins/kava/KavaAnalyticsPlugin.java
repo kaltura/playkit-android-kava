@@ -73,7 +73,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private boolean isBufferingStart;
     private boolean isEnded = false;
     private boolean isPaused = true;
-    private boolean isFirstPlay = true;
+    private Boolean isFirstPlay;
 
     private ViewTimer viewTimer;
     private ViewTimer.ViewEventTrigger viewEventTrigger = initViewTrigger();
@@ -121,7 +121,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         });
 
         this.messageBus.addListener(this, PlayerEvent.canPlay, event -> {
-            if (isFirstPlay) {
+            if (isFirstPlay == null || isFirstPlay) {
                 dataHandler.handleCanPlay();
             }
         });
@@ -139,14 +139,16 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         });
 
         messageBus.addListener(this, PlayerEvent.play, event -> {
-            if (isFirstPlay) {
+            if (isFirstPlay == null) {
                 dataHandler.handleFirstPlay();
             }
-            if (isImpressionSent && (isFirstPlay || !isPaused)) {
+
+            if (isImpressionSent && (isFirstPlay == null || !isPaused)) {
                 sendAnalyticsEvent(KavaEvents.PLAY_REQUEST);
             } else {
                 isAutoPlay = true;
             }
+            isFirstPlay = true;
         });
 
         messageBus.addListener(this, PlayerEvent.pause, event -> {
@@ -160,7 +162,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         });
 
         messageBus.addListener(this, PlayerEvent.playing, event -> {
-            if (isFirstPlay) {
+            if (isFirstPlay == null || isFirstPlay) {
                 isFirstPlay = false;
                 sendAnalyticsEvent(KavaEvents.PLAY);
                 sendAnalyticsEvent(KavaEvents.VIEW);
@@ -179,7 +181,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             if (mediaConfig != null && mediaConfig.getMediaEntry() != null) {
                 mediaEntryType = mediaConfig.getMediaEntry().getMediaType();
             }
-            if(isFirstPlay && (PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType)|| PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType))) {
+            if((isFirstPlay == null || isFirstPlay) && (PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType)|| PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType))) {
                 return;
             }
             dataHandler.handleSeek(event);
@@ -270,7 +272,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                 log.v("Error eventType = " + error.errorType + " severity = " + error.severity + " errorMessage = " + error.message);
                 return;
             }
-            dataHandler.handleError(event);
+            dataHandler.handleError(event, isFirstPlay, player.getCurrentPosition());
             sendAnalyticsEvent(KavaEvents.ERROR);
         });
         
@@ -520,7 +522,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private void resetFlags() {
         setIsPaused(true);
         isEnded = false;
-        isFirstPlay = true;
+        isFirstPlay = null;
         isImpressionSent = false;
         isBufferingStart = false;
         playReached25 = playReached50 = playReached75 = playReached100 = false;
