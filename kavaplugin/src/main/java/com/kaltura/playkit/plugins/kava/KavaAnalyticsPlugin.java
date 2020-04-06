@@ -74,6 +74,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private boolean isEnded = false;
     private boolean isPaused = true;
     private Boolean isFirstPlay;
+    private boolean isFatalError;
 
     private ViewTimer viewTimer;
     private ViewTimer.ViewEventTrigger viewEventTrigger = initViewTrigger();
@@ -274,6 +275,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             }
             dataHandler.handleError(event, isFirstPlay, player.getCurrentPosition());
             sendAnalyticsEvent(KavaEvents.ERROR);
+            if (viewTimer != null) {
+                viewTimer.setViewEventTrigger(null);
+                viewTimer.stop();
+            }
         });
         
         messageBus.addListener(this, PlayerEvent.playheadUpdated, event -> {
@@ -386,6 +391,13 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
         if (isInputInvalid())
             return;
+
+        if (isFatalError) {
+            return;
+        }
+        if (event == KavaEvents.ERROR) {
+            isFatalError = true;
+        }
 
         Map<String, String> params = dataHandler.collectData(event, mediaConfig.getMediaEntry().getMediaType(), playheadUpdated);
 
@@ -523,6 +535,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         setIsPaused(true);
         isEnded = false;
         isFirstPlay = null;
+        isFatalError = false;
         isImpressionSent = false;
         isBufferingStart = false;
         playReached25 = playReached50 = playReached75 = playReached100 = false;
