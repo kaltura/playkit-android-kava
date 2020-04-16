@@ -425,7 +425,7 @@ class DataHandler {
             errorCode = ((PKAdErrorType) error.errorType).errorCode;
             errorDetails = getAdErrorDetails(event);;
         }
-        log.e("XXX Playback ERROR. errorCode : " + errorCode + " errorPosition-Type = " + errorPosition + " position = " + position);
+        log.e("Playback ERROR. errorCode : " + errorCode + " errorPosition-Type = " + errorPosition + " position = " + position);
         this.errorCode = errorCode;
     }
 
