@@ -524,9 +524,7 @@ class DataHandler {
         PrePlay(3),
         PrePlaying(1),
         MidStream(2);
-
-
-
+        
         private final int value;
 
         ErrorPositionType(int value) {
