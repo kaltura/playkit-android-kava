@@ -405,7 +405,7 @@ class DataHandler {
      *
      * @param event - current event.
      */
-    void handleError(PKEvent event) {
+    void handleError(PKEvent event, Boolean isFirstPlay, long position) {
         PKError error = null;
         if (event instanceof PlayerEvent.Error) {
             error = ((PlayerEvent.Error) event).error;
@@ -416,12 +416,16 @@ class DataHandler {
         if (error.errorType instanceof PKPlayerErrorType) {
             errorCode = ((PKPlayerErrorType) error.errorType).errorCode;
             errorDetails = getErrorDetails(event);
-            errorPosition = (currentPosition > 0) ? ErrorPositionType.MidStream.value : ErrorPositionType.PrePlaying.value;
+            if (isFirstPlay == null) {
+                errorPosition = ErrorPositionType.PrePlay.value;
+            } else {
+                errorPosition = (position > 0) ? ErrorPositionType.MidStream.value : ErrorPositionType.PrePlaying.value;
+            }
         } else if (error.errorType instanceof PKAdErrorType) {
             errorCode = ((PKAdErrorType) error.errorType).errorCode;
             errorDetails = getAdErrorDetails(event);;
         }
-        log.e("Playback ERROR. errorCode : " + errorCode + " errorPosition-Type = " + errorPosition);
+        log.e("Playback ERROR. errorCode : " + errorCode + " errorPosition-Type = " + errorPosition + " position = " + position);
         this.errorCode = errorCode;
     }
 
@@ -517,9 +521,10 @@ class DataHandler {
     }
 
     enum ErrorPositionType {
+        PrePlay(3),
         PrePlaying(1),
         MidStream(2);
-
+        
         private final int value;
 
         ErrorPositionType(int value) {
