@@ -178,11 +178,8 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         });
 
         messageBus.addListener(this, PlayerEvent.seeking, event -> {
-            PKMediaEntry.MediaEntryType mediaEntryType = PKMediaEntry.MediaEntryType.Unknown;
-            if (mediaConfig != null && mediaConfig.getMediaEntry() != null) {
-                mediaEntryType = mediaConfig.getMediaEntry().getMediaType();
-            }
-            if((isFirstPlay == null || isFirstPlay) && (PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType)|| PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType))) {
+            PKMediaEntry.MediaEntryType mediaEntryType = getMediaEntryType();
+            if((isFirstPlay == null || isFirstPlay) && (PKMediaEntry.MediaEntryType.Live.equals(mediaEntryType)|| PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType))) {
                 return;
             }
             dataHandler.handleSeek(event);
@@ -198,6 +195,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         });
 
         messageBus.addListener(this, PlayerEvent.ended, event -> {
+            PKMediaEntry.MediaEntryType mediaType = getMediaEntryType();
+            if (mediaType == PKMediaEntry.MediaEntryType.Live || mediaType == PKMediaEntry.MediaEntryType.DvrLive) {
+                return;
+            }
+
             maybeSentPlayerReachedEvent();
             if (!playReached100) {
                 playReached100 = true;
@@ -284,6 +286,11 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         messageBus.addListener(this, PlayerEvent.playheadUpdated, event -> {
             playheadUpdated = event;
             //log.d("playheadUpdated event  position = " + playheadUpdated.position + " duration = " + playheadUpdated.duration);
+            PKMediaEntry.MediaEntryType mediaType = getMediaEntryType();
+            if (mediaType == PKMediaEntry.MediaEntryType.Live || mediaType == PKMediaEntry.MediaEntryType.DvrLive) {
+                return;
+            }
+
             maybeSentPlayerReachedEvent();
         });
 
@@ -291,6 +298,14 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             dataHandler.handleConnectionAcquired(event);
         });
 
+    }
+
+    private PKMediaEntry.MediaEntryType getMediaEntryType() {
+        PKMediaEntry.MediaEntryType mediaType = PKMediaEntry.MediaEntryType.Unknown;
+        if (mediaConfig != null && mediaConfig.getMediaEntry() != null) {
+            mediaType = mediaConfig.getMediaEntry().getMediaType();
+        }
+        return mediaType;
     }
 
     @Override
@@ -316,10 +331,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
         applicationBackgroundTimeStamp = System.currentTimeMillis();
         if (dataHandler != null) {
-            PKMediaEntry.MediaEntryType mediaEntryType = PKMediaEntry.MediaEntryType.Unknown;
-            if (mediaConfig != null && mediaConfig.getMediaEntry() != null) {
-                mediaEntryType = mediaConfig.getMediaEntry().getMediaType();
-            }
+            PKMediaEntry.MediaEntryType mediaEntryType = getMediaEntryType();
             dataHandler.onApplicationPaused(mediaEntryType);
         }
         if (viewTimer != null) {
