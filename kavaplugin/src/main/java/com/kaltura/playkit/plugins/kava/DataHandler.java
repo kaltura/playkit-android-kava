@@ -92,7 +92,7 @@ class DataHandler {
     private boolean onApplicationPaused = false;
     AudioManager audioManager;
     private double targetBuffer;
-
+    private boolean isLive;
 
 
     DataHandler(Context context, Player player) {
@@ -157,7 +157,8 @@ class DataHandler {
      * @param event - current Kava event.
      * @return - Map with all the event relevant information
      */
-    Map<String, String> collectData(KavaEvents event, PKMediaEntry.MediaEntryType mediaEntryType, PlayerEvent.PlayheadUpdated playheadUpdated) {
+    Map<String, String> collectData(KavaEvents event, PKMediaEntry.MediaEntryType mediaEntryType, boolean isLiveMedia, PlayerEvent.PlayheadUpdated playheadUpdated) {
+        this.isLive = isLiveMedia;
         if (!onApplicationPaused) {
 
             long playerPosition = Consts.POSITION_UNSET;
@@ -701,7 +702,7 @@ class DataHandler {
         if (PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType)) {
             long distanceFromLive = playerDuration - playerPosition;
             return (distanceFromLive >= dvrThreshold) ? KavaMediaEntryType.Dvr : KavaMediaEntryType.Live;
-        } else if (PKMediaEntry.MediaEntryType.Live.equals(mediaEntryType)) {
+        } else if (isLive || PKMediaEntry.MediaEntryType.Live.equals(mediaEntryType)) {
             return KavaMediaEntryType.Live;
         }
         return KavaMediaEntryType.Vod;
@@ -740,6 +741,7 @@ class DataHandler {
         actualBitrate = -1;
         sessionStartTime = null;
         onApplicationPaused = false;
+        isLive = false;
         lastKnownBufferingTimestamp = 0;
         canPlayTimestamp = 0;
         loadedMetaDataTimestamp = 0;
