@@ -75,6 +75,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     private boolean isPaused = true;
     private Boolean isFirstPlay;
     private boolean isFatalError;
+    private boolean isLiveMedia;
 
     private ViewTimer viewTimer;
     private ViewTimer.ViewEventTrigger viewEventTrigger = initViewTrigger();
@@ -122,6 +123,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         });
 
         this.messageBus.addListener(this, PlayerEvent.canPlay, event -> {
+            isLiveMedia = player.isLive();
             if (isFirstPlay == null || isFirstPlay) {
                 dataHandler.handleCanPlay();
             }
@@ -181,7 +183,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
         messageBus.addListener(this, PlayerEvent.seeking, event -> {
             PKMediaEntry.MediaEntryType mediaEntryType = getMediaEntryType();
-            if((isFirstPlay == null || isFirstPlay) && (PKMediaEntry.MediaEntryType.Live.equals(mediaEntryType)|| PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType))) {
+            if((isFirstPlay == null || isFirstPlay) && (isLiveMedia || PKMediaEntry.MediaEntryType.Live.equals(mediaEntryType)|| PKMediaEntry.MediaEntryType.DvrLive.equals(mediaEntryType))) {
                 return;
             }
             dataHandler.handleSeek(event);
@@ -198,14 +200,13 @@ public class KavaAnalyticsPlugin extends PKPlugin {
 
         messageBus.addListener(this, PlayerEvent.ended, event -> {
             PKMediaEntry.MediaEntryType mediaType = getMediaEntryType();
-            if (mediaType == PKMediaEntry.MediaEntryType.Live || mediaType == PKMediaEntry.MediaEntryType.DvrLive) {
-                return;
-            }
-
-            maybeSentPlayerReachedEvent();
-            if (!playReached100) {
-                playReached100 = true;
-                sendAnalyticsEvent(KavaEvents.PLAY_REACHED_100_PERCENT);
+            boolean isLive = (isLiveMedia || mediaType == PKMediaEntry.MediaEntryType.Live || mediaType == PKMediaEntry.MediaEntryType.DvrLive);
+            if (!isLive) {
+                maybeSentPlayerReachedEvent();
+                if (!playReached100) {
+                    playReached100 = true;
+                    sendAnalyticsEvent(KavaEvents.PLAY_REACHED_100_PERCENT);
+                }
             }
 
             isEnded = true;
@@ -289,11 +290,10 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             playheadUpdated = event;
             //log.d("playheadUpdated event  position = " + playheadUpdated.position + " duration = " + playheadUpdated.duration);
             PKMediaEntry.MediaEntryType mediaType = getMediaEntryType();
-            if (mediaType == PKMediaEntry.MediaEntryType.Live || mediaType == PKMediaEntry.MediaEntryType.DvrLive) {
-                return;
+            boolean isLive = (isLiveMedia || mediaType == PKMediaEntry.MediaEntryType.Live || mediaType == PKMediaEntry.MediaEntryType.DvrLive);
+            if (!isLive) {
+                maybeSentPlayerReachedEvent();
             }
-
-            maybeSentPlayerReachedEvent();
         });
 
         messageBus.addListener(this, PlayerEvent.connectionAcquired, event -> {
@@ -314,11 +314,12 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     protected void onUpdateMedia(PKMediaConfig mediaConfig) {
         log.d("onUpdateMedia");
         this.mediaConfig = mediaConfig;
+        isLiveMedia = false;
         clearViewTimer();
-        viewTimer = new ViewTimer();
-        viewTimer.setViewEventTrigger(viewEventTrigger);
         dataHandler.onUpdateMedia(mediaConfig, pluginConfig);
         resetFlags();
+        viewTimer = new ViewTimer();
+        viewTimer.setViewEventTrigger(viewEventTrigger);
     }
 
     @Override
@@ -413,7 +414,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             isFatalError = true;
         }
 
-        Map<String, String> params = dataHandler.collectData(event, mediaConfig.getMediaEntry().getMediaType(), playheadUpdated);
+        Map<String, String> params = dataHandler.collectData(event, mediaConfig.getMediaEntry().getMediaType(), isLiveMedia, playheadUpdated);
 
         RequestBuilder requestBuilder = KavaService.sendAnalyticsEvent(pluginConfig.getBaseUrl(), dataHandler.getUserAgent(), params);
         requestBuilder.completion(new OnRequestCompletion() {
@@ -549,6 +550,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         setIsPaused(true);
         isEnded = false;
         isFirstPlay = null;
+        isLiveMedia = false;
         isFatalError = false;
         isImpressionSent = false;
         isBufferingStart = false;
