@@ -175,7 +175,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                     sendAnalyticsEvent(KavaEvents.RESUME);
                 }
             }
-            isEnded = false; // needed in order to prevent sending of RESUME event after REPLAY.
+            isEnded = false; // needed in order to prevent sending RESUME event after REPLAY.
             setIsPaused(false);
         });
 
