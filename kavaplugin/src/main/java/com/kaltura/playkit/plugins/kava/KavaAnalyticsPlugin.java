@@ -149,7 +149,9 @@ public class KavaAnalyticsPlugin extends PKPlugin {
             } else {
                 isAutoPlay = true;
             }
-            isFirstPlay = true;
+            if (isFirstPlay == null) {
+                isFirstPlay = true;
+            }
         });
 
         messageBus.addListener(this, PlayerEvent.pause, event -> {
