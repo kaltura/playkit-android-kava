@@ -284,7 +284,7 @@ class DataHandler {
         if (totalSegmentDownloadTimeMs > 0 && totalSegmentDownloadSizeByte > 0) {
 
             double bandwidthInByteMS = totalSegmentDownloadSizeByte / (totalSegmentDownloadTimeMs * 1.0);
-            params.put("bandwidth", String.format("%.3f", convertToKbps(bandwidthInByteMS)));
+            params.put("bandwidth", String.format(Locale.US, "%.3f", convertToKbps(bandwidthInByteMS)));
             totalSegmentDownloadTimeMs = 0;
             totalSegmentDownloadSizeByte = 0;
         }
@@ -300,7 +300,7 @@ class DataHandler {
             params.put("targetBuffer", targetBuffer + "");
             if (currentBufferPosition > 0 && currentPosition > 0 && currentBufferPosition > currentPosition) {
                 double forwardBufferHealth = (((currentBufferPosition - currentPosition) / Consts.MILLISECONDS_MULTIPLIER_FLOAT) / targetBuffer);
-                params.put("forwardBufferHealth", String.format("%.3f", forwardBufferHealth));
+                params.put("forwardBufferHealth", String.format(Locale.US, "%.3f", forwardBufferHealth));
             }
         }
 
