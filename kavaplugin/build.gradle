@@ -43,4 +43,3 @@ repositories {
 }
 
 apply from: './gradle-mvn-push.gradle'
-
