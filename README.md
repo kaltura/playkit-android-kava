@@ -1,5 +1,5 @@
 [![CI Status](https://travis-ci.org/kaltura/playkit-android-kava.svg?branch=develop)](https://travis-ci.org/kaltura/playkit-android-kava)
-[![Download](https://img.shields.io/maven-central/v/com.kaltura.playkit/kavaplugin?label=Download)](https://search.maven.org/artifact/com.kaltura.playkit/kavasplugin)
+[![Download](https://img.shields.io/maven-central/v/com.kaltura.playkit/kavaplugin?label=Download)](https://search.maven.org/artifact/com.kaltura.playkit/kavaplugin)
 [![License](https://img.shields.io/badge/license-AGPLv3-black.svg)](https://github.com/kaltura/playkit-android-kava/blob/master/LICENSE)
 ![Android](https://img.shields.io/badge/platform-android-green.svg)
 
