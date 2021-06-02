@@ -199,7 +199,7 @@ public class KavaAnalyticsConfig {
     }
 
     boolean isPartnerIdValid() {
-        return partnerId != null && partnerId != 0;
+        return partnerId != null && partnerId > 0;
     }
 
     public JsonObject toJson() {
