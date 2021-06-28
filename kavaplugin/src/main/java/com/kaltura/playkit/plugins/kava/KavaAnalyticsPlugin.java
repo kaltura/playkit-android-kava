@@ -36,7 +36,6 @@ import com.kaltura.playkit.PlayerState;
 import com.kaltura.playkit.player.metadata.PKMetadata;
 import com.kaltura.playkit.player.metadata.PKTextInformationFrame;
 import com.kaltura.playkit.plugin.kava.BuildConfig;
-import com.kaltura.playkit.plugins.ads.AdEvent;
 import com.kaltura.playkit.utils.Consts;
 
 import org.json.JSONException;
@@ -454,15 +453,26 @@ public class KavaAnalyticsPlugin extends PKPlugin {
         }
 
         if (!isValidEntryId()) {
-            if (pluginConfig.getPartnerId() == null && pluginConfig.getEntryId() == null) {
+            if (dataHandler != null && pluginConfig.getPartnerId() == null && pluginConfig.getEntryId() == null) {
                 pluginConfig.setPartnerId(KavaAnalyticsConfig.DEFAULT_KAVA_PARTNER_ID);
                 pluginConfig.setEntryId(KavaAnalyticsConfig.DEFAULT_KAVA_ENTRY_ID);
+                dataHandler.updatePartnerAndEntryId(KavaAnalyticsConfig.DEFAULT_KAVA_PARTNER_ID, KavaAnalyticsConfig.DEFAULT_KAVA_ENTRY_ID);
             } else {
                 return true;
             }
         }
 
         if (!pluginConfig.isPartnerIdValid()) {
+            int ovpPartnerId = getOvpPartnerId(mediaConfig);
+            String entryId = dataHandler != null ? dataHandler.populateEntryId(mediaConfig, pluginConfig) : null;
+            if (dataHandler != null && ovpPartnerId > 0 && !TextUtils.isEmpty(entryId)) {
+                log.d("Getting ovpPartnerId from metadata");
+                pluginConfig.setPartnerId(ovpPartnerId);
+                pluginConfig.setEntryId(entryId);
+                dataHandler.updatePartnerAndEntryId(ovpPartnerId, entryId);
+                return false;
+            }
+
             log.w("Can not send analytics event. Mandatory field partnerId is missing");
             return true;
         }
@@ -498,6 +508,22 @@ public class KavaAnalyticsPlugin extends PKPlugin {
                 mediaConfig.getMediaEntry().getMetadata() != null) &&
                 mediaConfig.getMediaEntry().getMetadata().containsKey("entryId") &&
                 !TextUtils.isEmpty(mediaConfig.getMediaEntry().getMetadata().get("entryId"));
+    }
+
+    private int getOvpPartnerId(PKMediaConfig pkMediaConfig) {
+        if (mediaConfig == null) {
+            return 0;
+        }
+
+        final String kavaPartnerIdKey = "kavaPartnerId";
+        int ovpPartnerId = 0;
+        if (pkMediaConfig.getMediaEntry() != null && pkMediaConfig.getMediaEntry().getMetadata() != null) {
+            if (pkMediaConfig.getMediaEntry().getMetadata().containsKey(kavaPartnerIdKey)) {
+                String partnerId = pkMediaConfig.getMediaEntry().getMetadata().get(kavaPartnerIdKey);
+                ovpPartnerId = Integer.parseInt(partnerId != null && TextUtils.isDigitsOnly(partnerId) && !TextUtils.isEmpty(partnerId) ? partnerId : "0");
+            }
+        }
+        return ovpPartnerId;
     }
 
     private KavaAnalyticsConfig parsePluginConfig(Object config) {

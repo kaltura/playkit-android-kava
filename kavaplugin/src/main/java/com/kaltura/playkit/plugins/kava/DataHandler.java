@@ -131,7 +131,7 @@ class DataHandler {
         resetValues();
     }
 
-    private String populateEntryId(PKMediaConfig mediaConfig, KavaAnalyticsConfig pluginConfig) {
+    String populateEntryId(PKMediaConfig mediaConfig, KavaAnalyticsConfig pluginConfig) {
 
         String kavaEntryId = null;
         if (pluginConfig != null && pluginConfig.getEntryId() != null) {
@@ -147,6 +147,12 @@ class DataHandler {
     private boolean isValidMediaEntry(PKMediaConfig mediaConfig) {
 
         return mediaConfig != null && mediaConfig.getMediaEntry() != null;
+    }
+    
+    void updatePartnerAndEntryId(int partnerId, String entryId) {
+        log.d("Updating partner and entry id");
+        this.partnerId = String.valueOf(partnerId);
+        this.entryId = entryId;
     }
 
     /**
