@@ -756,7 +756,6 @@ class DataHandler {
         maxConnectDurationMs = -1;
         totalSegmentDownloadTimeMs = 0;
         totalSegmentDownloadSizeByte = 0;
-        lastKnownPlaybackSpeed = 1.0f;
         targetBuffer = -1;
 
         handleViewEventSessionClosed();
