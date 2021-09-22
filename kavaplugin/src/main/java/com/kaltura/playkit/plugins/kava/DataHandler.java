@@ -2,6 +2,7 @@ package com.kaltura.playkit.plugins.kava;
 
 import android.content.Context;
 import android.media.AudioManager;
+import android.util.Base64;
 
 import androidx.annotation.Nullable;
 
@@ -186,7 +187,7 @@ class DataHandler {
         params.put("entryId", entryId);
         params.put("sessionId", sessionId);
         params.put("eventIndex", Integer.toString(eventIndex));
-        params.put("referrer", referrer);
+        params.put("referrer", Base64.encodeToString(referrer.getBytes(), Base64.NO_WRAP));
         params.put("deliveryType", deliveryType);
         params.put("playbackType", playbackType.name().toLowerCase(Locale.ROOT));
         params.put("clientVer", PlayKitManager.CLIENT_TAG);
@@ -430,7 +431,7 @@ class DataHandler {
             }
         } else if (error.errorType instanceof PKAdErrorType) {
             errorCode = ((PKAdErrorType) error.errorType).errorCode;
-            errorDetails = getAdErrorDetails(event);;
+            errorDetails = getAdErrorDetails(event);
         }
         log.e("Playback ERROR. errorCode : " + errorCode + " errorPosition-Type = " + errorPosition + " position = " + position);
         this.errorCode = errorCode;
