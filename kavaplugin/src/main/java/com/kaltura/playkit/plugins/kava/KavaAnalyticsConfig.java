@@ -143,7 +143,7 @@ public class KavaAnalyticsConfig {
         return uiconfId;
     }
 
-    public Integer getPartnerId(virtualEventId) {
+    public Integer getPartnerId() {
         return partnerId;
     }
 
