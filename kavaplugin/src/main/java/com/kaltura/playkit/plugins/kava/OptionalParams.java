@@ -37,6 +37,10 @@ class OptionalParams {
             optionalParams.put("uiConfId", Integer.toString(config.getUiConfId()));
         }
 
+        if (config.getVirtualEventId() != null && config.getVirtualEventId() > 0) {
+            optionalParams.put("virtualEventId", Integer.toString(config.getVirtualEventId()));
+        }
+
         if(config.getApplicationVersion() != null) {
             optionalParams.put("applicationVer", config.getApplicationVersion());
         }

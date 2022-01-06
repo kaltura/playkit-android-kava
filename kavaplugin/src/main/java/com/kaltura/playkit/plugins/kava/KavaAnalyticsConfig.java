@@ -41,10 +41,12 @@ public class KavaAnalyticsConfig {
     public static final String DVR_THRESHOLD = "dvrThreshold";
     public static final String PLAYBACK_CONTEXT = "playbackContext";
     public static final String ENTRY_ID   = "entryId";
+    public static final String VIRTUAL_EVENT_ID   = "virtualEventId";
     public static final String DEFAULT_BASE_URL = "https://analytics.kaltura.com/api_v3/index.php";
 
     private Integer uiconfId;
     private Integer partnerId;
+    private Integer virtualEventId;
 
     private String ks;
     private String referrer;
@@ -87,6 +89,11 @@ public class KavaAnalyticsConfig {
 
     public KavaAnalyticsConfig setUiConfId(Integer uiConfId) {
         this.uiconfId = uiConfId;
+        return this;
+    }
+
+    public KavaAnalyticsConfig setVirtualEventId(Integer virtualEventId) {
+        this.virtualEventId = virtualEventId;
         return this;
     }
 
@@ -136,8 +143,12 @@ public class KavaAnalyticsConfig {
         return uiconfId;
     }
 
-    public Integer getPartnerId() {
+    public Integer getPartnerId(virtualEventId) {
         return partnerId;
+    }
+
+    public Integer getVirtualEventId() {
+        return virtualEventId;
     }
 
     public String getKs() {
@@ -206,6 +217,7 @@ public class KavaAnalyticsConfig {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty(PARTNER_ID, partnerId);
         jsonObject.addProperty(ENTRY_ID, entryId);
+        jsonObject.addProperty(VIRTUAL_EVENT_ID, virtualEventId);
         jsonObject.addProperty(BASE_URL, baseUrl);
         jsonObject.addProperty(DVR_THRESHOLD, dvrThreshold);
 
