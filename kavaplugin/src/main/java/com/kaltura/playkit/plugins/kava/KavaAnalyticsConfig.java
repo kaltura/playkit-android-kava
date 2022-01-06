@@ -40,8 +40,8 @@ public class KavaAnalyticsConfig {
     public static final String REFERRER = "referrer";
     public static final String DVR_THRESHOLD = "dvrThreshold";
     public static final String PLAYBACK_CONTEXT = "playbackContext";
-    public static final String ENTRY_ID   = "entryId";
-    public static final String VIRTUAL_EVENT_ID   = "virtualEventId";
+    public static final String ENTRY_ID = "entryId";
+    public static final String VIRTUAL_EVENT_ID = "virtualEventId";
     public static final String DEFAULT_BASE_URL = "https://analytics.kaltura.com/api_v3/index.php";
 
     private Integer uiconfId;
