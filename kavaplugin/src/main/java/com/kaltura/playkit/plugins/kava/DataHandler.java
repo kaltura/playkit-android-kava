@@ -79,8 +79,8 @@ class DataHandler {
     private String currentAudioLanguage;
     private String currentCaptionLanguage;
     private String flavorParamsId;
-    private long manifestMaxDownloadTime = -1;
-    private long segmentMaxDownloadTime = -1;
+    private float manifestMaxDownloadTime = -1;
+    private float segmentMaxDownloadTime = -1;
     private long maxConnectDurationMs = -1;
     private long totalSegmentDownloadTimeMs = 0;
     private long totalSegmentDownloadSizeByte = 0;
@@ -281,11 +281,11 @@ class DataHandler {
         }
 
         if (manifestMaxDownloadTime != -1) {
-            params.put("manifestDownloadTime", Long.toString(manifestMaxDownloadTime));
+            params.put("manifestDownloadTime", Float.toString(manifestMaxDownloadTime));
             manifestMaxDownloadTime = -1;
         }
         if (segmentMaxDownloadTime != -1) {
-            params.put("segmentDownloadTime", Long.toString(segmentMaxDownloadTime));
+            params.put("segmentDownloadTime", Float.toString(segmentMaxDownloadTime));
             segmentMaxDownloadTime = -1;
         }
         if (totalSegmentDownloadTimeMs > 0 && totalSegmentDownloadSizeByte > 0) {
@@ -395,13 +395,13 @@ class DataHandler {
     }
 
     void handleSegmentDownloadTime(PlayerEvent.BytesLoaded event) {
-        segmentMaxDownloadTime = Math.max(event.loadDuration, segmentMaxDownloadTime);
+        segmentMaxDownloadTime = Math.max(event.loadDuration / Consts.MILLISECONDS_MULTIPLIER_FLOAT, segmentMaxDownloadTime);
         totalSegmentDownloadSizeByte += event.bytesLoaded;
         totalSegmentDownloadTimeMs += event.loadDuration;
     }
 
     void handleManifestDownloadTime(PlayerEvent.BytesLoaded event) {
-        manifestMaxDownloadTime =  Math.max(event.loadDuration, manifestMaxDownloadTime);
+        manifestMaxDownloadTime =  Math.max(event.loadDuration / Consts.MILLISECONDS_MULTIPLIER_FLOAT, manifestMaxDownloadTime);
     }
 
     void handleSequenceId(String sequenceId) {
