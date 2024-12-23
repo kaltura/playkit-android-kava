@@ -17,7 +17,7 @@ import android.text.TextUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.kaltura.android.exoplayer2.C;
+import com.kaltura.androidx.media3.common.C;
 import com.kaltura.netkit.connect.executor.APIOkRequestsExecutor;
 import com.kaltura.netkit.connect.executor.RequestQueue;
 import com.kaltura.netkit.connect.request.RequestBuilder;
