@@ -12,6 +12,7 @@
 
 package com.kaltura.playkit.plugins.kava;
 
+import android.app.Activity;
 import android.content.Context;
 import android.text.TextUtils;
 
@@ -104,7 +105,7 @@ public class KavaAnalyticsPlugin extends PKPlugin {
     };
 
     @Override
-    protected void onLoad(Player player, Object config, MessageBus messageBus, Context context) {
+    protected void onLoad(Player player, Object config, MessageBus messageBus, Context context, Activity playerActivity) {
         log.d("onLoad");
         decimalFormat = new DecimalFormat("#");
         decimalFormat.setMaximumFractionDigits(3);
